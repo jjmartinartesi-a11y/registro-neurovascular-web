@@ -18,3 +18,4 @@
 .rnv-entrar input{box-sizing:border-box;width:100%;font:inherit;padding:8px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--ink)}
 .rnv-aviso{margin:0;padding:8px 10px;border-radius:var(--radius-sm);background:var(--warn-wash);font-size:13px}
 .rnv-err{color:var(--crit);font-size:13px;min-height:1em}
+.rnv-nota{margin:0;font-size:12px;color:var(--ink-3);line-height:1.4}

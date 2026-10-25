@@ -21994,7 +21994,10 @@ function pantallaEntrada() {
       <label>Contraseña<input id="rnvClave" type="password" autocomplete="current-password" required></label>
       <div class="rnv-err" id="rnvErr"></div>
       <button class="btn" type="submit">Entrar</button>
-      <button class="btn ghost" type="button" id="rnvLink">Mandarme un link al correo</button></form>`;
+      <button class="btn ghost" type="button" id="rnvLink">Mandarme un link al correo</button>
+      <p class="rnv-nota">¿Instalaste la app en la pantalla de inicio? Entrá con contraseña: el link se abre en el
+      navegador, que no comparte la sesión con la app instalada. La contraseña se elige una vez desde el navegador
+      donde abriste el link (abajo, «Contraseña»). El correo con link tiene un límite de envíos por hora.</p></form>`;
 		document.body.appendChild(caja);
 		caja.querySelector("#rnvLink").addEventListener("click", async () => {
 			const email = document.getElementById("rnvMail").value.trim();
@@ -22032,13 +22035,45 @@ function pantallaEntrada() {
 function insignia() {
 	const el = document.createElement("div");
 	el.id = "rnvSync";
-	el.innerHTML = "<span class=\"rnv-sync-dot\"></span><span class=\"rnv-sync-txt\">Conectando…</span><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvCfl\">Conflictos</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSalir\">Salir</button>";
+	el.innerHTML = "<span class=\"rnv-sync-dot\"></span><span class=\"rnv-sync-txt\">Conectando…</span><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvCfl\">Conflictos</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvBtnClave\">Contraseña</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSalir\">Salir</button>";
 	document.body.appendChild(el);
 	el.querySelector("#rnvSalir").addEventListener("click", async () => {
 		await sb.auth.signOut();
 		location.reload();
 	});
 	el.querySelector("#rnvCfl").addEventListener("click", () => void conflictos());
+	el.querySelector("#rnvBtnClave").addEventListener("click", elegirClave);
+}
+function elegirClave() {
+	const caja = document.createElement("div");
+	caja.id = "rnvEntrar";
+	caja.innerHTML = `<form class="rnv-entrar"><h2>Elegir contraseña</h2>
+    <label>Contraseña nueva<input id="rnvN1" type="password" autocomplete="new-password" minlength="10" required></label>
+    <label>Repetila<input id="rnvN2" type="password" autocomplete="new-password" minlength="10" required></label>
+    <div class="rnv-err" id="rnvNErr"></div>
+    <button class="btn" type="submit">Guardar</button><button class="btn ghost" type="button" id="rnvNNo">Cancelar</button></form>`;
+	document.body.appendChild(caja);
+	caja.querySelector("#rnvNNo").addEventListener("click", () => caja.remove());
+	caja.querySelector("form").addEventListener("submit", async (ev) => {
+		ev.preventDefault();
+		const a = document.getElementById("rnvN1").value, b = document.getElementById("rnvN2").value;
+		const err = document.getElementById("rnvNErr");
+		if (a.length < 10) {
+			err.textContent = "Al menos 10 caracteres.";
+			return;
+		}
+		if (a !== b) {
+			err.textContent = "No coinciden.";
+			return;
+		}
+		const { error } = await sb.auth.updateUser({ password: a });
+		if (error) {
+			err.textContent = describir(error);
+			return;
+		}
+		caja.remove();
+		toast("Contraseña guardada: ya podés entrar con correo y contraseña");
+	});
 }
 async function conflictos() {
 	const { data, error } = await sb.from("conflictos").select("*").is("resuelto_en", null).order("creado_en", { ascending: false }).limit(100);

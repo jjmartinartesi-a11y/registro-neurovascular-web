@@ -1,0 +1,20 @@
+/* Fase 2 · Bloque D: sólo la versión web. Usa los tokens de color de la app (src/estilos.css). */
+#rnvSync{position:fixed;right:14px;bottom:14px;z-index:900;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 28px);
+  padding:7px 10px 7px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);
+  font:12px/1.3 var(--sans);color:var(--ink-2)}
+#rnvSync .rnv-sync-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3);flex:none}
+#rnvSync[data-tono=good] .rnv-sync-dot{background:var(--good)}
+#rnvSync[data-tono=warn] .rnv-sync-dot{background:var(--warn)}
+#rnvSync[data-tono=crit] .rnv-sync-dot{background:var(--crit)}
+#rnvSync .rnv-sync-btn{border:0;background:none;color:var(--accent);font:inherit;cursor:pointer;padding:2px 4px}
+#rnvEntrar,#rnvCflBox{position:fixed;inset:0;z-index:950;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--bg) 85%,transparent);padding:16px}
+.rnv-entrar,.rnv-cfl{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px;color:var(--ink)}
+.rnv-cfl{max-width:900px;max-height:85vh;overflow:auto}
+.rnv-cfl table{border-collapse:collapse;font-size:13px}
+.rnv-cfl td,.rnv-cfl th{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+.rnv-entrar label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-2)}
+.rnv-entrar input{font:inherit;padding:8px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--ink)}
+.rnv-aviso{margin:0;padding:8px 10px;border-radius:var(--radius-sm);background:var(--warn-wash);font-size:13px}
+.rnv-err{color:var(--crit);font-size:13px;min-height:1em}

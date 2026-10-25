@@ -21832,6 +21832,7 @@ var est = {
 };
 var listo = false;
 var ultimoError = "";
+var errorDeRed = false;
 var noElegibles = 0;
 var programado;
 function idb() {
@@ -21873,7 +21874,7 @@ function pintar() {
 		tono = "warn";
 	} else if (ultimoError) {
 		txt = ultimoError + (pend ? ` · ${pend} sin subir` : "");
-		tono = "crit";
+		tono = errorDeRed ? "warn" : "crit";
 	} else if (pend) {
 		txt = `Subiendo ${pend} cambio${pend > 1 ? "s" : ""}…`;
 		tono = "warn";
@@ -21959,9 +21960,13 @@ async function bajar() {
 		if (data.length < 500) return;
 	}
 }
+function esDeRed(e) {
+	const x = e;
+	return !!x && (x.name === "TypeError" || /Failed to fetch|NetworkError|Load failed|Network request failed/i.test(String(x.message)));
+}
 function describir(e) {
 	const x = e;
-	if (x && x.name === "TypeError") return "El servidor no respondió (sin red o servidor caído)";
+	if (esDeRed(e)) return "Sin conexión con el servidor (reintenta sola)";
 	if (x && (x.status === 401 || x.code === "PGRST301")) return "La sesión venció: volvé a entrar";
 	return "Error del servidor" + (x?.code ? ` (${x.code})` : x?.status ? ` (HTTP ${x.status})` : "") + (x?.message ? ": " + x.message.slice(0, 120) : "");
 }
@@ -21976,8 +21981,10 @@ async function sincronizar() {
 			await subir();
 			await bajar();
 			ultimoError = "";
+			errorDeRed = false;
 		} catch (e) {
 			ultimoError = describir(e);
+			errorDeRed = esDeRed(e);
 		}
 		pintar();
 	});
@@ -22036,7 +22043,7 @@ function insignia() {
 	const el = document.createElement("div");
 	el.id = "rnvSync";
 	el.innerHTML = "<span class=\"rnv-sync-dot\"></span><span class=\"rnv-sync-txt\">Conectando…</span><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvCfl\">Conflictos</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvBtnClave\">Contraseña</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSalir\">Salir</button>";
-	document.body.appendChild(el);
+	document.body.prepend(el);
 	el.querySelector("#rnvSalir").addEventListener("click", async () => {
 		await sb.auth.signOut();
 		location.reload();
@@ -22127,6 +22134,7 @@ async function iniciar() {
 		await navigator.locks.request("rnv-sync", () => bajar());
 	} catch (e) {
 		ultimoError = describir(e);
+		errorDeRed = esDeRed(e);
 	}
 	encolar();
 	window.addEventListener("online", () => {

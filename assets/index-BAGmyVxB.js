@@ -22313,6 +22313,31 @@ var catalogos_default = {
 		"LACI": "LACI · lacunares",
 		"RET": "Retiniano"
 	},
+	LLEGADA: ["Directa", "Derivado de otro centro"],
+	PRESC_MOT: [
+		"Sí",
+		"No, con motivo documentado",
+		"No"
+	],
+	DESTINO_ALTA: [
+		"Domicilio",
+		"Domicilio con cuidados en casa",
+		"Rehabilitación con internación",
+		"Otra institución de cuidados",
+		"Derivado a otro hospital",
+		"Alta voluntaria (contra indicación médica)",
+		"Cuidados paliativos (hospice)",
+		"Falleció"
+	],
+	SEG_VIA: ["Presencial", "Telefónica"],
+	OCLUSION: [
+		"ACI",
+		"T carotídea",
+		"ACM M1",
+		"ACM M2",
+		"Basilar",
+		"Otra (no es gran vaso)"
+	],
 	MODO_ING_FUERA_DE_PLANILLA: ["Internado en otra institución"]
 };
 // supabase/functions/_shared/textos.ts
@@ -22322,12 +22347,13 @@ var LADO_CORTO = {
 	Bilateral: "Bilateral",
 	"No lateralizado": "No lateralizado"
 };
-var vacio = (v) => v === "" || v == null || Array.isArray(v) && !v.length;
-var lista = (v) => Array.isArray(v) ? v.map(String) : vacio(v) ? [] : [String(v)];
+var vacio$1 = (v) => v === "" || v == null || Array.isArray(v) && !v.length;
+var lista = (v) => Array.isArray(v) ? v.map(String) : vacio$1(v) ? [] : [String(v)];
+var libre = (v) => v && typeof v === "object" && v.$sobre === 1 ? "" : String(v ?? "");
 var siNo = (v) => v === true ? "Sí" : v === false ? "No" : "";
 function nihSev(n, cat) {
 	const x = Number(n);
-	if (vacio(n) || !Number.isFinite(x)) return "";
+	if (vacio$1(n) || !Number.isFinite(x)) return "";
 	const r = cat.NIH_SEV.find(([a, b]) => x >= a && x <= b);
 	return r ? r[2] : "";
 }
@@ -22339,30 +22365,30 @@ function presLinea(d, cat) {
 	const p = [];
 	const terr = lista(d.ocsp);
 	if (terr.length) p.push(terr.join(" + "));
-	const sind = lista(d.sindrome).map((k) => (k === "otro" || k === "lac_otro") && d.sindromeOtro ? String(d.sindromeOtro) : rotulo(cat, "SIND", k));
+	const sind = lista(d.sindrome).map((k) => (k === "otro" || k === "lac_otro") && libre(d.sindromeOtro) ? libre(d.sindromeOtro) : rotulo(cat, "SIND", k));
 	if (sind.length) p.push(sind.join(", "));
 	if (d.lado) p.push(LADO_CORTO[String(d.lado)] || String(d.lado));
 	if (!p.length) return "";
-	if (!vacio(d.nihss)) p.push("NIHSS " + d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : ""));
+	if (!vacio$1(d.nihss)) p.push("NIHSS " + d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : ""));
 	return p.join(" · ");
 }
 function nihTexto(d, cat) {
-	if (vacio(d.nihss)) return "";
+	if (vacio$1(d.nihss)) return "";
 	const items = d.nihssItems && typeof d.nihssItems === "object" ? Object.keys(d.nihssItems).length : 0;
 	return d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : "") + (items >= 15 ? " · por ítems" : "");
 }
 function aspTexto(d) {
 	const est = d.aspectsEstudio ? d.aspectsEstudio === "RM difusión (DWI)" ? " · RM-DWI" : " · TC" : "";
-	if (!vacio(d.aspects)) return d.aspects + est + (String(d.aspects) === "10" ? " (sin lesiones)" : "");
-	if (!vacio(d.pcAspects)) return "pc-ASPECTS " + d.pcAspects + est + (lista(d.pcAspectsReg).length ? " (" + lista(d.pcAspectsReg).join(", ") + ")" : "");
+	if (!vacio$1(d.aspects)) return d.aspects + est + (String(d.aspects) === "10" ? " (sin lesiones)" : "");
+	if (!vacio$1(d.pcAspects)) return "pc-ASPECTS " + d.pcAspects + est + (lista(d.pcAspectsReg).length ? " (" + lista(d.pcAspectsReg).join(", ") + ")" : "");
 	return "";
 }
 function taTexto(d) {
-	if (vacio(d.taSist) && vacio(d.taDiast)) return "";
-	return (vacio(d.taSist) ? "—" : d.taSist) + "/" + (vacio(d.taDiast) ? "—" : d.taDiast) + " mmHg";
+	if (vacio$1(d.taSist) && vacio$1(d.taDiast)) return "";
+	return (vacio$1(d.taSist) ? "—" : d.taSist) + "/" + (vacio$1(d.taDiast) ? "—" : d.taDiast) + " mmHg";
 }
 function ecgTexto(d) {
-	const e = String(d.ecg || ""), x = String(d.ecgDetalle || "");
+	const e = String(d.ecg || ""), x = libre(d.ecgDetalle);
 	return e ? x ? e + " — " + x : e : x;
 }
 function abcd2Texto(d, cat) {
@@ -22370,7 +22396,7 @@ function abcd2Texto(d, cat) {
 	const cl = cat.ABCD2_CLIN.find((x) => x[0] === d.abcd2Clin);
 	const du = cat.ABCD2_DUR.find((x) => x[0] === d.abcd2Dur);
 	const falta = [];
-	if (vacio(d.edad)) falta.push("edad");
+	if (vacio$1(d.edad)) falta.push("edad");
 	if (typeof d.abcd2PA !== "boolean") falta.push("PA");
 	if (!cl) falta.push("clínica");
 	if (!du) falta.push("duración");
@@ -22400,19 +22426,19 @@ function hace(desde, hasta) {
 }
 function repFaltan(d) {
 	const f = [];
-	if (vacio(d.inicioPuerta) && !String(d.tipoInicio || "").startsWith("Desconocido")) f.push("inicio-puerta");
-	if (d.trombolisis === true && vacio(d.puertaAguja)) f.push("puerta-aguja");
+	if (vacio$1(d.inicioPuerta) && !String(d.tipoInicio || "").startsWith("Desconocido")) f.push("inicio-puerta");
+	if (d.trombolisis === true && vacio$1(d.puertaAguja)) f.push("puerta-aguja");
 	if (d.trombectomia === true) {
-		if (vacio(d.puertaPuncion)) f.push("puerta-punción");
-		if (vacio(d.puertaRecanal)) f.push("puerta-recanalización");
-		if (vacio(d.tici)) f.push("mTICI");
+		if (vacio$1(d.puertaPuncion)) f.push("puerta-punción");
+		if (vacio$1(d.puertaRecanal)) f.push("puerta-recanalización");
+		if (vacio$1(d.tici)) f.push("mTICI");
 	}
-	if (vacio(d.nihssPost)) f.push("NIHSS post-reperfusión");
+	if (vacio$1(d.nihssPost)) f.push("NIHSS post-reperfusión");
 	return f;
 }
 var repTrat = (d) => [d.trombolisis === true ? "trombólisis" : "", d.trombectomia === true ? "trombectomía" : ""].filter(Boolean).join(" + ") || "—";
 function resumenWhatsApp(d, cat, quien, cargaIso) {
-	const nn = (v) => vacio(v) ? "—" : String(v);
+	const nn = (v) => vacio$1(v) ? "—" : String(v);
 	const f = String(d.fechaACV || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
 	const t = lkwMs(d.fechaLKW), p = Number.isFinite(t) ? partes(t) : null;
 	const inicio = p && d.tipoInicio ? p.hh + ":" + p.mm + " h del " + p.d + "/" + p.m + "/" + p.a + " (" + (String(d.tipoInicio).startsWith("Inicio presenciado") ? "presenciado" : "LKW: última vez visto bien") + ") · hace " + hace(t, Date.parse(cargaIso) || Date.now()) : "sin dato";
@@ -22422,7 +22448,7 @@ function resumenWhatsApp(d, cat, quien, cargaIso) {
 		"🧠 *Nuevo paciente — Registro Neurovascular*",
 		"Apellido y Nombre: " + nn(d.nombre),
 		"Documento: " + nn(d.documento),
-		"Sexo / Edad: " + nn(d.sexo) + " · " + nn(d.edad) + (vacio(d.edad) ? "" : " años"),
+		"Sexo / Edad: " + nn(d.sexo) + " · " + nn(d.edad) + (vacio$1(d.edad) ? "" : " años"),
 		"Fecha del evento: " + (f ? f[3] + "/" + f[2] + "/" + f[1] : "—"),
 		"Modo de ingreso: " + nn(d.modoIngreso),
 		"Tipo de evento: " + nn(d.tipo),
@@ -22432,9 +22458,9 @@ function resumenWhatsApp(d, cat, quien, cargaIso) {
 	if (siNo(d.deficitDiscap)) L.push("Déficit discapacitante: " + siNo(d.deficitDiscap));
 	if (aspTexto(d)) L.push("ASPECTS: " + aspTexto(d));
 	if (lista(d.presentacion).length) L.push("Rasgos: " + lista(d.presentacion).map((k) => rotulo(cat, "PRES", k)).join(", "));
-	L.push("mRS previo: " + nn(d.mrsPrevio), "TA: " + nn(taTexto(d)), "Glucemia: " + (vacio(d.glucemia) ? "—" : d.glucemia + " mg/dL"), "ECG: " + nn(ecgTexto(d)));
+	L.push("mRS previo: " + nn(d.mrsPrevio), "TA: " + nn(taTexto(d)), "Glucemia: " + (vacio$1(d.glucemia) ? "—" : d.glucemia + " mg/dL"), "ECG: " + nn(ecgTexto(d)));
 	if (d.tipo === "AIT") L.push("ABCD2: " + abcd2Texto(d, cat));
-	if (d.tipo === "Hemorrágico") L.push("Localización: " + nn(lista(d.hicLocaliza).join(", ")), "Volumen: " + (vacio(d.hicVolumen) ? "—" : d.hicVolumen + " mL"), "Anticoagulado: " + nn(siNo(d.hicAnticoag)));
+	if (d.tipo === "Hemorrágico") L.push("Localización: " + nn(lista(d.hicLocaliza).join(", ")), "Volumen: " + (vacio$1(d.hicVolumen) ? "—" : d.hicVolumen + " mL"), "Anticoagulado: " + nn(siNo(d.hicAnticoag)));
 	L.push("FRV: " + nn(lista(d.frv).join(", ")), "Antecedentes familiares: " + nn(lista(d.antFamiliares).join(", ")), "Cargado por: " + nn(quien), "Notas: " + nn(d.notas));
 	return L.join("\n");
 }
@@ -22532,11 +22558,10 @@ function filtrarFicha() {
 		const d = draft;
 		const aviso = document.createElement("div");
 		aviso.className = "rnv-res-pedido";
-		aviso.innerHTML = `<b>Pedido de reperfusión · Nº ${esc(d.nOrden ?? "—")}</b> · ${esc(iniciales(d.nombre))} · ${esc(repTrat(d))}<br>Completá sólo los tiempos que faltan.`;
+		aviso.innerHTML = `<b>Pedido de reperfusión · Nº ${esc(d.nOrden ?? "—")}</b> · ${esc(pedidos.find((p) => p.evento_id === editId)?.iniciales || "—")} · ${esc(repTrat(d))}<br>Completá sólo los tiempos que faltan.`;
 		host.prepend(aviso);
 	}
 }
-var iniciales = (n) => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 3).map((w) => w.charAt(0).toUpperCase() + ".").join(" ");
 function barra() {
 	let b = document.getElementById("rnvResBar");
 	if (!b) {
@@ -22601,14 +22626,14 @@ function vPedidos() {
     ${filas.length ? `<div class="rnv-res-lista">${filas.map(({ p, f }) => {
 		const falta = repFaltan(f);
 		return `<div class="rnv-res-item">
-      <div><b>Nº ${esc(f.nOrden ?? "—")}</b> · ${esc(iniciales(f.nombre))} · ${esc(repTrat(f))}<br>
+      <div><b>Nº ${esc(f.nOrden ?? "—")}</b> · ${esc(p.iniciales || "—")} · ${esc(repTrat(f))}<br>
       <span class="rnv-res-sub">${p.estado === "parcial" ? "Carga parcial · " : ""}${falta.length ? "Falta: " + esc(falta.join(", ")) : "Completo"}</span></div>
       <div class="rnv-res-acc"><button type="button" class="btn sm primary" data-ed="${esc(f.id)}">Completar</button></div></div>`;
 	}).join("")}</div>` : "<p class=\"rnv-res-vacio\">No hay pedidos abiertos.</p>"}</div>`;
 	document.getElementById("main").querySelectorAll("[data-ed]").forEach((b) => b.addEventListener("click", () => abrirFicha(b.dataset.ed)));
 }
 async function refrescar() {
-	const [{ data: ev }, { data: ped }] = await Promise.all([ctx.sb.from("eventos").select("id").eq("creado_por", ctx.uid), ctx.sb.from("pedidos_reperfusion").select("id, evento_id, estado, creado_en").order("creado_en")]);
+	const [{ data: ev }, { data: ped }] = await Promise.all([ctx.sb.from("eventos").select("id").eq("creado_por", ctx.uid), ctx.sb.from("pedidos_reperfusion").select("id, evento_id, estado, creado_en, iniciales").order("creado_en")]);
 	if (ev) for (const x of ev) mis.add(x.id);
 	if (ped) pedidos = ped;
 	guardarLocal();
@@ -22639,6 +22664,162 @@ function iniciar$2(c) {
 	w.repAuto = () => {};
 	go("list");
 	toast("Entraste como residente");
+}
+// src/web/cola.ts
+function canon(v) {
+	if (v === void 0) return "null";
+	if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
+	if (v && typeof v === "object") {
+		const o = v;
+		return "{" + Object.keys(o).filter((k) => o[k] !== void 0).sort().map((k) => JSON.stringify(k) + ":" + canon(o[k])).join(",") + "}";
+	}
+	return JSON.stringify(v);
+}
+var iniciales = (n) => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 3).map((w) => w.charAt(0).toUpperCase() + ".").join(" ");
+var igual = (a, b) => canon(a ?? null) === canon(b ?? null);
+var copia = (x) => JSON.parse(JSON.stringify(x));
+function esSintetica(f, altasWeb) {
+	if (altasWeb.has(f.id)) return true;
+	return /^DEMO-\d+$/.test(String(f.documento ?? "")) || /^(ZETAX|PRUEBA)\b/i.test(String(f.nombre ?? ""));
+}
+function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
+	const ok = (k, f) => !permitido || permitido(k, f);
+	const aSombra = (f) => permitido ? copia(Object.fromEntries(Object.entries(f).filter(([k]) => ok(k, f)))) : copia(f);
+	const s = { ...sombra };
+	const ops = [];
+	const vistos = /* @__PURE__ */ new Set();
+	let noElegibles = 0;
+	for (const f of db) {
+		if (!f || !f.id) continue;
+		vistos.add(f.id);
+		if (!elegible(f)) {
+			if (!s[f.id]) noElegibles++;
+			continue;
+		}
+		const prev = s[f.id];
+		if (!prev) {
+			ops.push({
+				op_id: nuevoId(),
+				fila_id: f.id,
+				editado_en: ahora,
+				campos: Object.fromEntries(Object.keys(f).filter((k) => f[k] !== void 0 && ok(k, f)).map((k) => [k, {
+					nuevo: copia(f[k]),
+					base: null
+				}])),
+				paciente: {
+					pac_id: String(f.pacienteId || "pac_" + f.id),
+					nombre: f.nombre ?? null,
+					documento: f.documento ?? null,
+					sexo: f.sexo ?? null
+				}
+			});
+			s[f.id] = aSombra(f);
+			continue;
+		}
+		const campos = {};
+		for (const k of /* @__PURE__ */ new Set([...Object.keys(f), ...Object.keys(prev)])) {
+			if (k === "__borrada" || !ok(k, f)) continue;
+			if (!igual(f[k], prev[k])) campos[k] = {
+				nuevo: copia(f[k] ?? null),
+				base: copia(prev[k] ?? null)
+			};
+		}
+		const restaurar = !!prev.__borrada;
+		if (Object.keys(campos).length || restaurar) {
+			ops.push({
+				op_id: nuevoId(),
+				fila_id: f.id,
+				editado_en: ahora,
+				campos,
+				...restaurar ? { restaurar: true } : {}
+			});
+			s[f.id] = aSombra(f);
+		}
+	}
+	for (const id of Object.keys(s)) {
+		if (vistos.has(id) || s[id].__borrada || permitido) continue;
+		ops.push({
+			op_id: nuevoId(),
+			fila_id: id,
+			editado_en: ahora,
+			campos: {},
+			borrar: true
+		});
+		s[id] = {
+			...s[id],
+			__borrada: true
+		};
+	}
+	return {
+		ops,
+		sombra: s,
+		noElegibles
+	};
+}
+function aplicarResultado(op, r) {
+	const poner = {};
+	if (r.estado === "rechazado") {
+		if (!op.borrar) {
+			for (const [k, c] of Object.entries(op.campos)) if (c.base !== null || !op.paciente) poner[k] = c.base;
+		}
+		return {
+			poner,
+			rechazo: r.motivo || "rechazado"
+		};
+	}
+	for (const [k, v] of Object.entries(r.campos || {})) if (typeof v === "object" && v.conflicto === "servidor") poner[k] = v.valor ?? null;
+	return { poner };
+}
+function incorporar(db, sombra, pendientes, filas) {
+	const pend = new Set(pendientes.flatMap((o) => Object.keys(o.campos).map((k) => o.fila_id + "\0" + k)));
+	const borrPend = new Set(pendientes.filter((o) => o.borrar).map((o) => o.fila_id));
+	let n = 0;
+	for (const fila of filas) {
+		const i = db.findIndex((f) => f && f.id === fila.id);
+		const s = sombra[fila.id];
+		if (fila.borrado_en) {
+			if (i >= 0 && !pendientes.some((o) => o.fila_id === fila.id)) {
+				db.splice(i, 1);
+				n++;
+			}
+			sombra[fila.id] = {
+				...copia(fila.datos),
+				id: fila.id,
+				__borrada: true
+			};
+			continue;
+		}
+		if (i < 0) {
+			if (borrPend.has(fila.id) || s?.__borrada) continue;
+			db.push({
+				...copia(fila.datos),
+				id: fila.id
+			});
+			sombra[fila.id] = {
+				...copia(fila.datos),
+				id: fila.id
+			};
+			n++;
+			continue;
+		}
+		const local = db[i];
+		const nueva = { ...s || local };
+		let cambio = false;
+		for (const k of /* @__PURE__ */ new Set([...Object.keys(fila.datos), ...Object.keys(s || {})])) {
+			if (k === "__borrada" || pend.has(fila.id + "\0" + k)) continue;
+			const srv = fila.datos[k] ?? null;
+			if (!igual(local[k], s ? s[k] : local[k])) continue;
+			if (!igual(local[k], srv)) {
+				local[k] = copia(srv);
+				cambio = true;
+			}
+			nueva[k] = copia(srv);
+		}
+		delete nueva.__borrada;
+		sombra[fila.id] = nueva;
+		if (cambio) n++;
+	}
+	return n;
 }
 // src/web/jefe.ts
 var sb$2;
@@ -22758,9 +22939,11 @@ async function sincronizarPedidos(enServidor) {
 	for (const id of [...porPedir]) {
 		if (!enServidor(id)) continue;
 		const { data: ya } = await sb$2.from("pedidos_reperfusion").select("id").eq("evento_id", id).in("estado", ["abierto", "parcial"]).is("borrado_en", null);
+		const q = DB.find((x) => x && x.id === id);
 		if (!ya?.length) {
 			const { error } = await sb$2.from("pedidos_reperfusion").insert({
 				evento_id: id,
+				iniciales: iniciales(q?.nombre) || null,
 				sintetico: true
 			});
 			if (error) throw error;
@@ -22880,7 +23063,7 @@ var pend = [];
 var bajas = [];
 var bajados = /* @__PURE__ */ new Map();
 var fallas = /* @__PURE__ */ new Map();
-function idb$1() {
+function idb$2() {
 	return new Promise((ok, mal) => {
 		const r = indexedDB.open("rnv_media", 1);
 		r.onupgradeneeded = () => {
@@ -22892,7 +23075,7 @@ function idb$1() {
 	});
 }
 async function tx(almacen, f) {
-	const db = await idb$1();
+	const db = await idb$2();
 	await new Promise((ok, mal) => {
 		const t = db.transaction(almacen, "readwrite");
 		f(t.objectStore(almacen));
@@ -22901,7 +23084,7 @@ async function tx(almacen, f) {
 	});
 }
 async function todo(almacen) {
-	const db = await idb$1();
+	const db = await idb$2();
 	return new Promise((ok, mal) => {
 		const q = db.transaction(almacen).objectStore(almacen).getAll();
 		q.onsuccess = () => ok(q.result);
@@ -23092,161 +23275,311 @@ async function instalar(cliente) {
 		nota: () => `En el servidor (Storage privado; se ve con un link firmado de 10 minutos)${pend.length ? ` · ${pend.length} archivo${pend.length > 1 ? "s" : ""} esperando subir` : ""}`
 	};
 }
-// src/web/cola.ts
-function canon(v) {
-	if (v === void 0) return "null";
-	if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
-	if (v && typeof v === "object") {
-		const o = v;
-		return "{" + Object.keys(o).filter((k) => o[k] !== void 0).sort().map((k) => JSON.stringify(k) + ":" + canon(o[k])).join(",") + "}";
-	}
-	return JSON.stringify(v);
+// src/web/sobre.ts
+var CIFRADO_VALOR = [
+	"casoMotivo",
+	"casoCarpeta",
+	"nombre",
+	"documento",
+	"sindromeOtro",
+	"ecgDetalle",
+	"imagen",
+	"doacDetalle",
+	"notas"
+];
+var CIFRADO_NOTA = ["controles", "txCambios"];
+var esCifrado = (k) => CIFRADO_VALOR.includes(k) || CIFRADO_NOTA.includes(k);
+var PBKDF2_IT = 6e5;
+var te = new TextEncoder();
+var td = new TextDecoder();
+var ECDH = {
+	name: "ECDH",
+	namedCurve: "P-256"
+};
+var b64 = (u) => {
+	const a = u instanceof Uint8Array ? u : new Uint8Array(u);
+	let s = "";
+	for (let i = 0; i < a.length; i += 32768) s += String.fromCharCode(...a.subarray(i, i + 32768));
+	return btoa(s);
+};
+var deB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+var azar = (n) => crypto.getRandomValues(new Uint8Array(n));
+function esSobre(v) {
+	const o = v;
+	return !!o && typeof o === "object" && !Array.isArray(o) && o.$sobre === 1 && typeof o.e === "string" && typeof o.iv === "string" && typeof o.c === "string";
 }
-var igual = (a, b) => canon(a ?? null) === canon(b ?? null);
-var copia = (x) => JSON.parse(JSON.stringify(x));
-function esSintetica(f, altasWeb) {
-	if (altasWeb.has(f.id)) return true;
-	return /^DEMO-\d+$/.test(String(f.documento ?? "")) || /^(ZETAX|PRUEBA)\b/i.test(String(f.nombre ?? ""));
+async function claveDeFrase(frase, salt, it) {
+	const base = await crypto.subtle.importKey("raw", te.encode(frase.normalize("NFC")), "PBKDF2", false, ["deriveKey"]);
+	return crypto.subtle.deriveKey({
+		name: "PBKDF2",
+		hash: "SHA-256",
+		salt,
+		iterations: it
+	}, base, {
+		name: "AES-GCM",
+		length: 256
+	}, false, ["encrypt", "decrypt"]);
 }
-function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
-	const ok = (k, f) => !permitido || permitido(k, f);
-	const aSombra = (f) => permitido ? copia(Object.fromEntries(Object.entries(f).filter(([k]) => ok(k, f)))) : copia(f);
-	const s = { ...sombra };
-	const ops = [];
-	const vistos = /* @__PURE__ */ new Set();
-	let noElegibles = 0;
-	for (const f of db) {
-		if (!f || !f.id) continue;
-		vistos.add(f.id);
-		if (!elegible(f)) {
-			if (!s[f.id]) noElegibles++;
-			continue;
-		}
-		const prev = s[f.id];
-		if (!prev) {
-			ops.push({
-				op_id: nuevoId(),
-				fila_id: f.id,
-				editado_en: ahora,
-				campos: Object.fromEntries(Object.keys(f).filter((k) => f[k] !== void 0 && ok(k, f)).map((k) => [k, {
-					nuevo: copia(f[k]),
-					base: null
-				}])),
-				paciente: {
-					pac_id: String(f.pacienteId || "pac_" + f.id),
-					nombre: f.nombre ?? null,
-					documento: f.documento ?? null,
-					sexo: f.sexo ?? null
-				}
-			});
-			s[f.id] = aSombra(f);
-			continue;
-		}
-		const campos = {};
-		for (const k of /* @__PURE__ */ new Set([...Object.keys(f), ...Object.keys(prev)])) {
-			if (k === "__borrada" || !ok(k, f)) continue;
-			if (!igual(f[k], prev[k])) campos[k] = {
-				nuevo: copia(f[k] ?? null),
-				base: copia(prev[k] ?? null)
-			};
-		}
-		const restaurar = !!prev.__borrada;
-		if (Object.keys(campos).length || restaurar) {
-			ops.push({
-				op_id: nuevoId(),
-				fila_id: f.id,
-				editado_en: ahora,
-				campos,
-				...restaurar ? { restaurar: true } : {}
-			});
-			s[f.id] = aSombra(f);
-		}
-	}
-	for (const id of Object.keys(s)) {
-		if (vistos.has(id) || s[id].__borrada || permitido) continue;
-		ops.push({
-			op_id: nuevoId(),
-			fila_id: id,
-			editado_en: ahora,
-			campos: {},
-			borrar: true
-		});
-		s[id] = {
-			...s[id],
-			__borrada: true
-		};
-	}
+async function generarClaves(frase) {
+	const par = await crypto.subtle.generateKey(ECDH, true, ["deriveBits"]);
+	const spki = new Uint8Array(await crypto.subtle.exportKey("spki", par.publicKey));
+	const pkcs8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", par.privateKey));
+	const salt = azar(16), iv = azar(12);
+	const c = await crypto.subtle.encrypt({
+		name: "AES-GCM",
+		iv
+	}, await claveDeFrase(frase, salt, PBKDF2_IT), pkcs8);
+	pkcs8.fill(0);
+	const kid = b64(new Uint8Array(await crypto.subtle.digest("SHA-256", spki)).subarray(0, 12)).replace(/[+/=]/g, "");
+	const envuelta = {
+		v: 1,
+		kdf: "PBKDF2-SHA256",
+		it: PBKDF2_IT,
+		salt: b64(salt),
+		iv: b64(iv),
+		c: b64(c)
+	};
 	return {
-		ops,
-		sombra: s,
-		noElegibles
+		kid,
+		publica: b64(spki),
+		envuelta,
+		privada: await abrirPrivada(envuelta, frase)
 	};
 }
-function aplicarResultado(op, r) {
-	const poner = {};
-	if (r.estado === "rechazado") {
-		if (!op.borrar) {
-			for (const [k, c] of Object.entries(op.campos)) if (c.base !== null || !op.paciente) poner[k] = c.base;
+async function abrirPrivada(env, frase) {
+	const pkcs8 = new Uint8Array(await crypto.subtle.decrypt({
+		name: "AES-GCM",
+		iv: deB64(env.iv)
+	}, await claveDeFrase(frase, deB64(env.salt), env.it), deB64(env.c)));
+	try {
+		return await crypto.subtle.importKey("pkcs8", pkcs8, ECDH, false, ["deriveBits"]);
+	} finally {
+		pkcs8.fill(0);
+	}
+}
+var importarPublica = (publica) => crypto.subtle.importKey("spki", deB64(publica), ECDH, false, []);
+async function claveAes(privada, publica, uso) {
+	const bits = await crypto.subtle.deriveBits({
+		name: "ECDH",
+		public: publica
+	}, privada, 256);
+	const hk = await crypto.subtle.importKey("raw", bits, "HKDF", false, ["deriveKey"]);
+	return crypto.subtle.deriveKey({
+		name: "HKDF",
+		hash: "SHA-256",
+		salt: /* @__PURE__ */ new Uint8Array(0),
+		info: te.encode("rnv-identidad-v1")
+	}, hk, {
+		name: "AES-GCM",
+		length: 256
+	}, false, [uso]);
+}
+async function cifrar(valor, campo, pub) {
+	const ef = await crypto.subtle.generateKey(ECDH, true, ["deriveBits"]);
+	const iv = azar(12);
+	const c = await crypto.subtle.encrypt({
+		name: "AES-GCM",
+		iv,
+		additionalData: te.encode("rnv1:" + campo)
+	}, await claveAes(ef.privateKey, pub.clave, "encrypt"), te.encode(JSON.stringify(valor)));
+	return {
+		$sobre: 1,
+		kid: pub.kid,
+		e: b64(await crypto.subtle.exportKey("raw", ef.publicKey)),
+		iv: b64(iv),
+		c: b64(c)
+	};
+}
+async function descifrar(s, campo, privada) {
+	const ef = await crypto.subtle.importKey("raw", deB64(s.e), ECDH, false, []);
+	const p = await crypto.subtle.decrypt({
+		name: "AES-GCM",
+		iv: deB64(s.iv),
+		additionalData: te.encode("rnv1:" + campo)
+	}, await claveAes(privada, ef, "decrypt"), deB64(s.c));
+	return JSON.parse(td.decode(p));
+}
+var vacio = (v) => v === null || v === void 0 || v === "";
+async function cifrarCampo(k, v, pub) {
+	if (CIFRADO_VALOR.includes(k)) return vacio(v) || esSobre(v) ? v : cifrar(v, k, pub);
+	if (CIFRADO_NOTA.includes(k) && Array.isArray(v)) return Promise.all(v.map(async (x, i) => x && typeof x === "object" && !vacio(x.nota) && !esSobre(x.nota) ? {
+		...x,
+		nota: await cifrar(x.nota, k + ".nota", pub)
+	} : x));
+	return v;
+}
+async function descifrarCampo(k, v, privada) {
+	if (CIFRADO_VALOR.includes(k)) return esSobre(v) ? privada ? descifrar(v, k, privada) : void 0 : v;
+	if (CIFRADO_NOTA.includes(k) && Array.isArray(v)) {
+		if (!v.some((x) => x && esSobre(x.nota))) return v;
+		if (!privada) return void 0;
+		return Promise.all(v.map(async (x) => x && esSobre(x.nota) ? {
+			...x,
+			nota: await descifrar(x.nota, k + ".nota", privada)
+		} : x));
+	}
+	return v;
+}
+// src/web/identidad.ts
+var pub = null;
+var priv = null;
+var publica = () => pub;
+var privada = () => priv;
+var IDB$1 = "rnv_identidad";
+function idb$1() {
+	return new Promise((ok, mal) => {
+		const r = indexedDB.open(IDB$1, 1);
+		r.onupgradeneeded = () => r.result.createObjectStore("kv");
+		r.onsuccess = () => ok(r.result);
+		r.onerror = () => mal(r.error);
+	});
+}
+async function kv(modo, clave, valor) {
+	const db = await idb$1();
+	return new Promise((ok, mal) => {
+		const t = db.transaction("kv", modo === "get" ? "readonly" : "readwrite");
+		const q = modo === "get" ? t.objectStore("kv").get(clave) : t.objectStore("kv").put(valor, clave);
+		t.oncomplete = () => ok(modo === "get" ? q.result : void 0);
+		t.onerror = () => mal(t.error);
+	});
+}
+async function cargarPublica(sb) {
+	const { data, error } = await sb.from("claves_jefe").select("kid, publica").eq("activa", true).maybeSingle();
+	if (!error) {
+		if (data) await kv("put", "publica", data);
+		return data;
+	}
+	return await kv("get", "publica") || null;
+}
+async function prepararResidente(sb) {
+	const p = await cargarPublica(sb);
+	pub = p ? {
+		kid: p.kid,
+		clave: await importarPublica(p.publica)
+	} : null;
+}
+function modal(html) {
+	const caja = document.createElement("div");
+	caja.id = "rnvEntrar";
+	caja.innerHTML = html;
+	document.body.appendChild(caja);
+	return caja;
+}
+async function prepararJefe(sb) {
+	const guardada = await kv("get", "privada");
+	const { data, error } = await sb.rpc("clave_jefe_envuelta");
+	if (error && !guardada) throw error;
+	const srv = error ? null : data;
+	if (error && guardada) {
+		const p = await kv("get", "publica");
+		if (p && p.kid === guardada.kid) {
+			pub = {
+				kid: p.kid,
+				clave: await importarPublica(p.publica)
+			};
+			priv = guardada.privada;
+			return;
 		}
-		return {
-			poner,
-			rechazo: r.motivo || "rechazado"
+		throw error;
+	}
+	if (srv && guardada && guardada.kid === srv.kid) {
+		priv = guardada.privada;
+		pub = {
+			kid: srv.kid,
+			clave: await importarPublica(srv.publica)
 		};
+		await kv("put", "publica", {
+			kid: srv.kid,
+			publica: srv.publica
+		});
+		return;
 	}
-	for (const [k, v] of Object.entries(r.campos || {})) if (typeof v === "object" && v.conflicto === "servidor") poner[k] = v.valor ?? null;
-	return { poner };
-}
-function incorporar(db, sombra, pendientes, filas) {
-	const pend = new Set(pendientes.flatMap((o) => Object.keys(o.campos).map((k) => o.fila_id + "\0" + k)));
-	const borrPend = new Set(pendientes.filter((o) => o.borrar).map((o) => o.fila_id));
-	let n = 0;
-	for (const fila of filas) {
-		const i = db.findIndex((f) => f && f.id === fila.id);
-		const s = sombra[fila.id];
-		if (fila.borrado_en) {
-			if (i >= 0 && !pendientes.some((o) => o.fila_id === fila.id)) {
-				db.splice(i, 1);
-				n++;
-			}
-			sombra[fila.id] = {
-				...copia(fila.datos),
-				id: fila.id,
-				__borrada: true
-			};
-			continue;
-		}
-		if (i < 0) {
-			if (borrPend.has(fila.id) || s?.__borrada) continue;
-			db.push({
-				...copia(fila.datos),
-				id: fila.id
-			});
-			sombra[fila.id] = {
-				...copia(fila.datos),
-				id: fila.id
-			};
-			n++;
-			continue;
-		}
-		const local = db[i];
-		const nueva = { ...s || local };
-		let cambio = false;
-		for (const k of /* @__PURE__ */ new Set([...Object.keys(fila.datos), ...Object.keys(s || {})])) {
-			if (k === "__borrada" || pend.has(fila.id + "\0" + k)) continue;
-			const srv = fila.datos[k] ?? null;
-			if (!igual(local[k], s ? s[k] : local[k])) continue;
-			if (!igual(local[k], srv)) {
-				local[k] = copia(srv);
-				cambio = true;
-			}
-			nueva[k] = copia(srv);
-		}
-		delete nueva.__borrada;
-		sombra[fila.id] = nueva;
-		if (cambio) n++;
+	if (srv) {
+		priv = await pedirFrase(srv.envuelta);
+		await kv("put", "privada", {
+			kid: srv.kid,
+			privada: priv
+		});
+		pub = {
+			kid: srv.kid,
+			clave: await importarPublica(srv.publica)
+		};
+		await kv("put", "publica", {
+			kid: srv.kid,
+			publica: srv.publica
+		});
+		return;
 	}
-	return n;
+	const g = await crearClaves();
+	const { error: e2 } = await sb.from("claves_jefe").insert({
+		kid: g.kid,
+		publica: g.publica,
+		privada_envuelta: g.envuelta
+	});
+	if (e2) throw e2;
+	await kv("put", "privada", {
+		kid: g.kid,
+		privada: g.privada
+	});
+	await kv("put", "publica", {
+		kid: g.kid,
+		publica: g.publica
+	});
+	priv = g.privada;
+	pub = {
+		kid: g.kid,
+		clave: await importarPublica(g.publica)
+	};
 }
+function crearClaves() {
+	return new Promise((ok) => {
+		const caja = modal(`<form class="rnv-entrar"><div class="eyebrow">Identidad cifrada</div><h2>Crear tu clave</h2>
+      <p class="rnv-nota">Los nombres, documentos y textos libres se guardan en el servidor cifrados con una clave que sólo
+      abren tus dispositivos. Elegí una frase para abrirla en otro dispositivo tuyo. <b>Si la perdés, lo cifrado en el
+      servidor no se puede recuperar</b> (la copia completa sigue en la Mac y en el respaldo cifrado).</p>
+      <label>Frase (al menos 12 caracteres)<input id="rnvF1" type="password" autocomplete="new-password" minlength="12" required></label>
+      <label>Repetila<input id="rnvF2" type="password" autocomplete="new-password" minlength="12" required></label>
+      <div class="rnv-err" id="rnvFErr"></div><button class="btn" type="submit">Crear la clave</button></form>`);
+		caja.querySelector("form").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const a = caja.querySelector("#rnvF1").value, b = caja.querySelector("#rnvF2").value;
+			const err = caja.querySelector("#rnvFErr");
+			if (a.length < 12) {
+				err.textContent = "Al menos 12 caracteres.";
+				return;
+			}
+			if (a !== b) {
+				err.textContent = "No coinciden.";
+				return;
+			}
+			err.textContent = "Creando…";
+			const g = await generarClaves(a);
+			caja.remove();
+			ok(g);
+		});
+	});
+}
+function pedirFrase(env) {
+	return new Promise((ok) => {
+		const caja = modal(`<form class="rnv-entrar"><div class="eyebrow">Identidad cifrada</div><h2>Abrir tu clave en este dispositivo</h2>
+      <p class="rnv-nota">Escribí la frase que elegiste al crear la clave. Se pide una sola vez por dispositivo.</p>
+      <label>Frase<input id="rnvF1" type="password" autocomplete="current-password" required></label>
+      <div class="rnv-err" id="rnvFErr"></div><button class="btn" type="submit">Abrir</button></form>`);
+		caja.querySelector("form").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const err = caja.querySelector("#rnvFErr");
+			err.textContent = "Abriendo…";
+			try {
+				const k = await abrirPrivada(env, caja.querySelector("#rnvF1").value);
+				caja.remove();
+				ok(k);
+			} catch {
+				err.textContent = "La frase no abre la clave.";
+			}
+		});
+	});
+}
+var sinClaveTexto = () => esc("Juan todavía no creó la clave de la identidad cifrada: las cargas quedan en este teléfono hasta entonces");
 // src/web/sync.ts
 var IDB = "rnv_sync";
 var sb;
@@ -23255,8 +23588,11 @@ var est = {
 	cola: [],
 	rev: 0,
 	altasWeb: [],
-	rechazos: []
+	rechazos: [],
+	cif: {},
+	envio: {}
 };
+var ilegibles = 0;
 var listo = false;
 var ultimoError = "";
 var errorDeRed = false;
@@ -23319,6 +23655,10 @@ function pintar() {
 		txt += ` · ${media} archivo${media > 1 ? "s" : ""} sin subir`;
 		if (tono === "good") tono = "warn";
 	}
+	if (ilegibles) {
+		txt += ` · ${ilegibles} campo${ilegibles > 1 ? "s" : ""} cifrado${ilegibles > 1 ? "s" : ""} que no se pudo abrir`;
+		tono = "crit";
+	}
 	if (noElegibles) txt += ` · ${noElegibles} ficha${noElegibles > 1 ? "s" : ""} sin marca sintética (no se suben)`;
 	el.dataset.tono = tono;
 	el.querySelector(".rnv-sync-txt").textContent = txt;
@@ -23357,16 +23697,72 @@ function aplicarEnLaApp() {
 		render();
 	} catch {}
 }
+var cache = (fila, k, p, s) => {
+	(est.cif[fila] ||= {})[k] = {
+		p: canon(p ?? null),
+		s
+	};
+};
+async function paraEnviar(op) {
+	const campos = {};
+	for (const [k, c] of Object.entries(op.campos)) {
+		if (!esCifrado(k)) {
+			campos[k] = c;
+			continue;
+		}
+		const pub = publica();
+		if (!pub) throw Object.assign(new Error(sinClaveTexto()), { name: "SinClave" });
+		const ca = est.cif[op.fila_id]?.[k];
+		const enSobre = async (v) => v === null || v === void 0 ? null : ca && ca.p === canon(v) ? ca.s : cifrarCampo(k, v, pub);
+		campos[k] = {
+			nuevo: await enSobre(c.nuevo),
+			base: await enSobre(c.base)
+		};
+	}
+	return {
+		...op,
+		campos,
+		...op.paciente ? { paciente: {
+			...op.paciente,
+			nombre: null,
+			documento: null
+		} } : {}
+	};
+}
 async function subir() {
 	while (est.cola.length) {
 		const lote = est.cola.slice(0, 50);
-		const { data, error } = await sb.rpc("aplicar_cambios", { ops: lote });
+		const envio = [];
+		for (const op of lote) envio.push(est.envio[op.op_id] ||= await paraEnviar(op));
+		await guardarEstado();
+		const { data, error } = await sb.rpc("aplicar_cambios", { ops: envio });
 		if (error) throw error;
 		const res = data;
 		let tocarApp = false;
-		lote.forEach((op, i) => {
-			const r = res[i];
+		for (let i = 0; i < lote.length; i++) {
+			const op = lote[i], r = res[i];
 			const { poner, rechazo } = aplicarResultado(op, r);
+			if (r.estado !== "rechazado") for (const k of Object.keys(op.campos)) {
+				if (!esCifrado(k)) continue;
+				const rk = r.campos?.[k];
+				if (r.estado === "creado" || rk === "aplicado" || rk === "igual" || typeof rk === "object" && rk.conflicto === "local") cache(op.fila_id, k, op.campos[k].nuevo, envio[i].campos[k].nuevo);
+				else if (typeof rk === "object" && rk.conflicto === "servidor") {
+					let plano;
+					try {
+						plano = await descifrarCampo(k, rk.valor ?? null, privada());
+					} catch {
+						plano = void 0;
+						ilegibles++;
+					}
+					if (plano === void 0) {
+						delete poner[k];
+						cache(op.fila_id, k, op.campos[k].nuevo, rk.valor ?? null);
+					} else {
+						poner[k] = plano;
+						cache(op.fila_id, k, plano, rk.valor ?? null);
+					}
+				}
+			}
 			const f = DB.find((x) => x && x.id === op.fila_id);
 			for (const [k, v] of Object.entries(poner)) {
 				if (f) {
@@ -23381,18 +23777,42 @@ async function subir() {
 				motivo: rechazo,
 				cuando: (/* @__PURE__ */ new Date()).toISOString()
 			});
-		});
+			delete est.envio[op.op_id];
+		}
 		est.cola.splice(0, lote.length);
 		await guardarEstado();
 		if (tocarApp) aplicarEnLaApp();
 	}
+}
+async function abrirFila(id, datos) {
+	const d = { ...datos };
+	for (const k of [...CIFRADO_VALOR, ...CIFRADO_NOTA]) {
+		if (!(k in d)) continue;
+		const v = d[k];
+		let plano;
+		try {
+			plano = await descifrarCampo(k, v, privada());
+		} catch {
+			plano = void 0;
+			ilegibles++;
+		}
+		if (plano === void 0) plano = est.sombra[id]?.[k] ?? DB.find((f) => f && f.id === id)?.[k] ?? null;
+		cache(id, k, plano, v);
+		d[k] = plano;
+	}
+	return d;
 }
 async function bajar() {
 	for (;;) {
 		const { data, error } = await sb.from("eventos").select("id, datos, borrado_en, rev").gt("rev", est.rev).order("rev").limit(500);
 		if (error) throw error;
 		if (!data.length) return;
-		const n = incorporar(DB, est.sombra, est.cola, data);
+		const filas = [];
+		for (const x of data) filas.push({
+			...x,
+			datos: await abrirFila(x.id, x.datos)
+		});
+		const n = incorporar(DB, est.sombra, est.cola, filas);
 		est.rev = Math.max(est.rev, ...data.map((x) => Number(x.rev)));
 		await guardarEstado();
 		if (n) {
@@ -23409,6 +23829,7 @@ function esDeRed(e) {
 function describir(e) {
 	const x = e;
 	if (esDeRed(e)) return "Sin conexión con el servidor (reintenta sola)";
+	if (x?.name === "SinClave") return String(x.message);
 	if (x && (x.status === 401 || x.code === "PGRST301")) return "La sesión venció: volvé a entrar";
 	return "Error del servidor" + (x?.code ? ` (${x.code})` : x?.status ? ` (HTTP ${x.status})` : "") + (x?.message ? ": " + x.message.slice(0, 120) : "");
 }
@@ -23545,6 +23966,16 @@ function elegirClave() {
 }
 async function conflictos() {
 	const { data, error } = await sb.from("conflictos").select("*").is("resuelto_en", null).order("creado_en", { ascending: false }).limit(100);
+	for (const x of data || []) if (esCifrado(x.campo)) for (const c of [
+		"base",
+		"valor_servidor",
+		"valor_local"
+	]) try {
+		const v = await descifrarCampo(x.campo, x[c], privada());
+		x[c] = v === void 0 ? "(cifrado)" : v;
+	} catch {
+		x[c] = "(no se pudo abrir)";
+	}
 	const caja = document.createElement("div");
 	caja.id = "rnvCflBox";
 	const filas = (data || []).map((x) => `<tr data-id="${esc(x.id)}"><td>${esc(x.fila_id)}</td><td>${esc(x.campo)}</td>
@@ -23632,12 +24063,16 @@ async function quienSoy() {
 	}
 	if (p.rol === "jefe") {
 		await asegurarDosPasos(sb);
+		await prepararJefe(sb);
 		rol = "jefe";
 		iniciar$1(sb);
 		return true;
 	}
 	rol = "residente";
 	document.body.classList.add("rnv-sin-jefe");
+	try {
+		await prepararResidente(sb);
+	} catch {}
 	const kc = "rnv_campos_residente";
 	let campos = [];
 	const { data: cr, error: ec } = await sb.from("campos_residente").select("campo, grupo");

@@ -58,3 +58,6 @@ body.rnv-residente #delBtn,body.rnv-residente #headStar,body.rnv-residente #head
 .rnv-res-card{display:flex;flex-direction:column;gap:8px;padding:12px 14px;margin-bottom:14px;border-radius:var(--radius-sm);background:var(--good-wash,var(--warn-wash));border:1px solid var(--border);font-size:13px}
 .rnv-res-card.rnv-flota{position:fixed;right:18px;bottom:64px;z-index:3000;max-width:360px;margin:0;box-shadow:var(--shadow);background:var(--surface)}
 .rnv-res-pedido{margin:0 0 14px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--warn-wash);font-size:13px;line-height:1.5}
+.rnv-res-pegar{font-size:13px;color:var(--ink-2)}
+.rnv-res-pegar summary{cursor:pointer;color:var(--accent)}
+.rnv-res-pegar[open]{display:flex;flex-direction:column;gap:8px}

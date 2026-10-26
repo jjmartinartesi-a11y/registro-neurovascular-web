@@ -23448,10 +23448,23 @@ function pantallaEntrada(aviso = "") {
       <div class="rnv-err" id="rnvErr">${esc(aviso)}</div>
       <button class="btn" type="submit">Entrar</button>
       <button class="btn ghost" type="button" id="rnvLink">Mandarme un link al correo</button>
+      <details class="rnv-res-pegar"><summary>Soy residente: tengo un link personal</summary>
+        <p class="rnv-nota">Si el link se abrió en la app instalada y te trajo acá, copialo de WhatsApp (mantené apretado → Copiar) y pegalo:</p>
+        <label>Link personal<input id="rnvLinkRes" type="url" autocomplete="off" placeholder="https://…#r=…"></label>
+        <button class="btn" type="button" id="rnvLinkResOk">Entrar con el link</button></details>
       <p class="rnv-nota">¿Instalaste la app en la pantalla de inicio? Entrá con contraseña: el link se abre en el
       navegador, que no comparte la sesión con la app instalada. La contraseña se elige una vez desde el navegador
       donde abriste el link (abajo, «Contraseña»). El correo con link tiene un límite de envíos por hora.</p></form>`;
 		document.body.appendChild(caja);
+		caja.querySelector("#rnvLinkResOk").addEventListener("click", () => {
+			const m = document.getElementById("rnvLinkRes").value.trim().match(/#r=([A-Za-z0-9_-]{43})\s*$/);
+			if (!m) {
+				document.getElementById("rnvErr").textContent = "Eso no parece un link personal (tiene que terminar en #r=…).";
+				return;
+			}
+			location.hash = "r=" + m[1];
+			location.reload();
+		});
 		caja.querySelector("#rnvLink").addEventListener("click", async () => {
 			const email = document.getElementById("rnvMail").value.trim();
 			const err = document.getElementById("rnvErr");
@@ -23660,6 +23673,9 @@ async function iniciar() {
 	};
 	window.RNV_TRAS_GUARDAR = encolar;
 	insignia();
+	window.addEventListener("hashchange", () => {
+		if (/^#r=[A-Za-z0-9_-]{43}$/.test(location.hash)) location.reload();
+	});
 	const errLink = await entrarConLink();
 	const { data } = await sb.auth.getSession();
 	if (!data.session) await pantallaEntrada(errLink);

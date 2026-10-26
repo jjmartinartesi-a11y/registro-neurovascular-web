@@ -21667,6 +21667,1151 @@ function shouldShowDeprecationWarning() {
 	return parseInt(versionMatch[1], 10) <= 20;
 }
 if (shouldShowDeprecationWarning()) console.warn("⚠️  Node.js 20 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 22 or later. For more information, visit: https://github.com/orgs/supabase/discussions/45715");
+// src/web/dospasos.ts
+function caja(html) {
+	const c = document.createElement("div");
+	c.id = "rnvEntrar";
+	c.innerHTML = `<form class="rnv-entrar">${html}<div class="rnv-err" id="rnvMfaErr"></div></form>`;
+	document.body.appendChild(c);
+	return c;
+}
+async function asegurarDosPasos(sb) {
+	const { data: n } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+	if (n?.currentLevel === "aal2") return;
+	const { data: fs } = await sb.auth.mfa.listFactors();
+	const totp = (fs?.totp || []).filter((f) => f.status === "verified");
+	for (const f of (fs?.all || []).filter((f) => f.factor_type === "totp" && f.status !== "verified")) await sb.auth.mfa.unenroll({ factorId: f.id });
+	let factorId = totp[0]?.id;
+	let html = `<div class="eyebrow">Registro Neurovascular · verificación en dos pasos</div>`;
+	if (!factorId) {
+		const { data, error } = await sb.auth.mfa.enroll({
+			factorType: "totp",
+			friendlyName: "Registro NV " + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
+		});
+		if (error || !data) throw error || /* @__PURE__ */ new Error("no se pudo empezar la configuración");
+		factorId = data.id;
+		html += `<h2>Configurar la app de códigos</h2>
+      <p class="rnv-nota">Una sola vez: abrí tu app de códigos (Google Authenticator, 1Password, Authy…), agregá una cuenta
+      escaneando este código y escribí abajo los 6 dígitos que muestra.</p>
+      <img class="rnv-qr" alt="Código QR para la app de códigos" src="${esc(data.totp.qr_code)}">
+      <p class="rnv-nota">¿No podés escanear? Clave para cargar a mano: <span class="mono" id="rnvMfaSecreto">${esc(data.totp.secret)}</span></p>`;
+	} else html += `<h2>Código de verificación</h2><p class="rnv-nota">Escribí los 6 dígitos que muestra tu app de códigos.</p>`;
+	html += `<label>Código<input id="rnvMfaCodigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+    <button class="btn" type="submit">Verificar</button><button class="btn ghost" type="button" id="rnvMfaSalir">Salir</button>`;
+	const c = caja(html);
+	const id = factorId;
+	return new Promise((ok) => {
+		c.querySelector("#rnvMfaSalir").addEventListener("click", async () => {
+			await sb.auth.signOut();
+			location.reload();
+		});
+		c.querySelector("form").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const code = document.getElementById("rnvMfaCodigo").value.trim();
+			const { error } = await sb.auth.mfa.challengeAndVerify({
+				factorId: id,
+				code
+			});
+			if (error) {
+				document.getElementById("rnvMfaErr").textContent = /invalid|expired/i.test(error.message) ? "Código incorrecto o vencido: probá con el que se ve ahora." : error.message;
+				return;
+			}
+			c.remove();
+			ok();
+		});
+	});
+}
+var catalogos_default = {
+	$comment: "Catálogos que comparten la app y la planilla de residentes. Fuente única: tools/catalogos_sync.mjs los inyecta en «Registro Neurovascular.html» y en planilla_residentes_apps_script.gs (bloque CATALOGOS). Las claves con $ no se inyectan.",
+	TIPOS: [
+		"Isquémico",
+		"AIT",
+		"Amaurosis fugaz",
+		"Hemorrágico",
+		"Disección",
+		"Trombosis venosa",
+		"Otro"
+	],
+	MODO_ING: [
+		"Internado en este Sanatorio",
+		"Internado en otra institución",
+		"Ambulatorio · con internación previa en otra institución",
+		"Ambulatorio · evento sin internación"
+	],
+	TIPO_INICIO: ["Inicio presenciado", "Desconocido o al despertar (LKW)"],
+	FRV: [
+		"HTA",
+		"Diabetes",
+		"Dislipemia",
+		"Tabaquismo",
+		"Fibrilación auricular",
+		"Arritmia no filiada",
+		"ACV/AIT previo",
+		"Cardiopatía isquémica",
+		"Obesidad",
+		"Sedentarismo",
+		"Alcoholismo",
+		"Estenosis carotídea",
+		"ERC",
+		"OSA (apneas del sueño)"
+	],
+	ANT_FAM: [
+		"ACV",
+		"Disección arterial",
+		"Aneurisma cerebral",
+		"Trombofilia / tromboembolismo venoso",
+		"Cardiopatía / muerte súbita precoz",
+		"Enfermedad del tejido conectivo (Ehlers-Danlos, Marfan, Loeys-Dietz)",
+		"Migraña",
+		"HTA"
+	],
+	NIH_ITEMS: [
+		[
+			"1a",
+			"1a · Nivel de conciencia",
+			[
+				"Alerta",
+				"Somnoliento: despierta con estímulo leve",
+				"Estuporoso: requiere estímulo repetido o doloroso",
+				"Coma: sólo reflejos o sin respuesta"
+			],
+			false
+		],
+		[
+			"1b",
+			"1b · Preguntas (mes, edad)",
+			[
+				"Responde las dos",
+				"Responde una",
+				"Ninguna"
+			],
+			false
+		],
+		[
+			"1c",
+			"1c · Órdenes (ojos, mano)",
+			[
+				"Realiza las dos",
+				"Realiza una",
+				"Ninguna"
+			],
+			false
+		],
+		[
+			"2",
+			"2 · Mirada conjugada",
+			[
+				"Normal",
+				"Parálisis parcial de la mirada",
+				"Desviación forzada o parálisis total"
+			],
+			false
+		],
+		[
+			"3",
+			"3 · Campos visuales",
+			[
+				"Sin pérdida",
+				"Hemianopsia parcial",
+				"Hemianopsia completa",
+				"Hemianopsia bilateral / ceguera"
+			],
+			false
+		],
+		[
+			"4",
+			"4 · Parálisis facial",
+			[
+				"Normal",
+				"Leve (asimetría)",
+				"Parcial (hemicara inferior)",
+				"Completa (superior e inferior)"
+			],
+			false
+		],
+		[
+			"5a",
+			"5a · Motor brazo izquierdo",
+			[
+				"Sin caída",
+				"Cae sin tocar la cama",
+				"Algún esfuerzo contra la gravedad",
+				"Sin esfuerzo contra la gravedad",
+				"Sin movimiento"
+			],
+			true
+		],
+		[
+			"5b",
+			"5b · Motor brazo derecho",
+			[
+				"Sin caída",
+				"Cae sin tocar la cama",
+				"Algún esfuerzo contra la gravedad",
+				"Sin esfuerzo contra la gravedad",
+				"Sin movimiento"
+			],
+			true
+		],
+		[
+			"6a",
+			"6a · Motor pierna izquierda",
+			[
+				"Sin caída",
+				"Cae sin tocar la cama",
+				"Algún esfuerzo contra la gravedad",
+				"Sin esfuerzo contra la gravedad",
+				"Sin movimiento"
+			],
+			true
+		],
+		[
+			"6b",
+			"6b · Motor pierna derecha",
+			[
+				"Sin caída",
+				"Cae sin tocar la cama",
+				"Algún esfuerzo contra la gravedad",
+				"Sin esfuerzo contra la gravedad",
+				"Sin movimiento"
+			],
+			true
+		],
+		[
+			"7",
+			"7 · Ataxia de miembros",
+			[
+				"Ausente",
+				"En un miembro",
+				"En dos miembros"
+			],
+			true
+		],
+		[
+			"8",
+			"8 · Sensibilidad",
+			[
+				"Normal",
+				"Pérdida leve a moderada",
+				"Pérdida grave o total"
+			],
+			false
+		],
+		[
+			"9",
+			"9 · Lenguaje",
+			[
+				"Normal",
+				"Afasia leve a moderada",
+				"Afasia grave",
+				"Mutismo / afasia global"
+			],
+			false
+		],
+		[
+			"10",
+			"10 · Disartria",
+			[
+				"Normal",
+				"Leve a moderada",
+				"Grave / anartria"
+			],
+			true
+		],
+		[
+			"11",
+			"11 · Extinción / inatención",
+			[
+				"Sin alteración",
+				"En una modalidad",
+				"Grave o en más de una modalidad"
+			],
+			false
+		]
+	],
+	NIH_MOT: [
+		"Sin caída",
+		"Cae sin tocar la cama",
+		"Algún esfuerzo contra la gravedad",
+		"Sin esfuerzo contra la gravedad",
+		"Sin movimiento"
+	],
+	NIH_SEV: [
+		[
+			0,
+			0,
+			"sin déficit medible"
+		],
+		[
+			1,
+			4,
+			"menor"
+		],
+		[
+			5,
+			15,
+			"moderado"
+		],
+		[
+			16,
+			20,
+			"moderado-grave"
+		],
+		[
+			21,
+			42,
+			"grave"
+		]
+	],
+	SIND_GRP: [
+		["LACI", "LACI · lacunares (Fisher)"],
+		["TACI", "TACI"],
+		["PACI", "PACI"],
+		["POCI", "POCI"],
+		["RET", "Retiniano · sin OCSP"],
+		["", "Otro"]
+	],
+	SIND: [
+		[
+			"lac_mp",
+			"LACI",
+			"Hemiparesia motora pura",
+			"Cara, brazo y pierna (≥ 2 de 3), sin otros signos"
+		],
+		[
+			"lac_sp",
+			"LACI",
+			"Síndrome sensitivo puro",
+			"Hemihipoestesia (≥ 2 de 3); tálamo"
+		],
+		[
+			"lac_sm",
+			"LACI",
+			"Síndrome sensitivo-motor",
+			"Motor + sensitivo, sin signos corticales"
+		],
+		[
+			"lac_ah",
+			"LACI",
+			"Hemiparesia atáxica",
+			"Paresia (crural predominante) + ataxia ipsilateral desproporcionada"
+		],
+		[
+			"lac_dch",
+			"LACI",
+			"Disartria–mano torpe",
+			"Disartria + torpeza de una mano (variante de la hemiparesia atáxica)"
+		],
+		[
+			"lac_otro",
+			"LACI",
+			"Otro lacunar",
+			"Hemicorea-hemibalismo, etc. — escribilo en el detalle"
+		],
+		[
+			"taci_acm",
+			"TACI",
+			"ACM completo (o ACI terminal)",
+			"Hemiplejía + hemianopsia + afasia (izq.) o negligencia (der.), desviación de la mirada"
+		],
+		[
+			"paci_sup",
+			"PACI",
+			"ACM división superior",
+			"Paresia faciobraquial + afasia no fluente (izq.) / negligencia (der.)"
+		],
+		[
+			"paci_inf",
+			"PACI",
+			"ACM división inferior",
+			"Afasia fluente (izq.) o negligencia/anosognosia (der.) ± cuadrantopsia, sin paresia"
+		],
+		[
+			"paci_afa",
+			"PACI",
+			"Afasia aislada",
+			""
+		],
+		[
+			"paci_neg",
+			"PACI",
+			"Negligencia aislada",
+			"Síndrome hemisférico derecho sin déficit motor"
+		],
+		[
+			"paci_mano",
+			"PACI",
+			"Monoparesia / mano cortical",
+			"Un solo miembro, o cara + mano"
+		],
+		[
+			"paci_aca",
+			"PACI",
+			"ACA",
+			"Paresia crural predominante ± abulia, incontinencia, mano ajena"
+		],
+		[
+			"paci_coroid",
+			"PACI",
+			"Coroidea anterior",
+			"Hemiparesia + hemihipoestesia + hemianopsia sin signos corticales"
+		],
+		[
+			"paci_limit",
+			"PACI",
+			"Zona limítrofe",
+			"Paresia proximal (bilateral: «hombre en barril»), afasia transcortical; pensar en hipoperfusión/estenosis"
+		],
+		[
+			"poci_wall",
+			"POCI",
+			"Bulbar lateral (Wallenberg)",
+			"Hipoestesia facial ipsi + termoalgésica contralateral, Horner, disfagia, ataxia, vértigo"
+		],
+		[
+			"poci_bmed",
+			"POCI",
+			"Bulbar medial (Dejerine)",
+			"Paresia del XII ipsi + hemiparesia y alteración propioceptiva contralateral"
+		],
+		[
+			"poci_alt",
+			"POCI",
+			"Alterno de tronco",
+			"Par craneal ipsi + vía larga contralateral. Epónimo en el detalle: Weber, Benedikt, Claude, Millard-Gubler, Foville"
+		],
+		[
+			"poci_cbl",
+			"POCI",
+			"Cerebeloso (PICA / AICA / ACS)",
+			"Ataxia, vértigo, nistagmo; AICA con hipoacusia"
+		],
+		[
+			"poci_vest",
+			"POCI",
+			"Vestibular agudo aislado",
+			"Vértigo agudo continuo con HINTS central, sin otros signos"
+		],
+		[
+			"poci_acp",
+			"POCI",
+			"ACP",
+			"Hemianopsia homónima ± hemihipoestesia, alexia sin agrafia (izq.), amnesia"
+		],
+		[
+			"poci_ceg",
+			"POCI",
+			"Ceguera cortical (ACP bilateral)",
+			"± anosognosia (Anton)"
+		],
+		[
+			"poci_top",
+			"POCI",
+			"Top de la basilar",
+			"Alteración de conciencia + trastornos oculomotores y visuales, alucinosis"
+		],
+		[
+			"poci_bas",
+			"POCI",
+			"Oclusión basilar / enclaustramiento",
+			"Tetraparesia, oftalmoplejía, coma o locked-in; pródromos fluctuantes"
+		],
+		[
+			"poci_tal",
+			"POCI",
+			"Talámico paramediano (Percheron si bilateral)",
+			"Hipersomnia, paresia de la mirada vertical, amnesia"
+		],
+		[
+			"poci_ocul",
+			"POCI",
+			"Trastorno oculomotor aislado",
+			"Oftalmoplejía internuclear, one-and-a-half, III aislado"
+		],
+		[
+			"ret_af",
+			"RET",
+			"Amaurosis fugaz",
+			"Ceguera monocular transitoria"
+		],
+		[
+			"ret_oacr",
+			"RET",
+			"Oclusión de la arteria central de la retina",
+			"Equivalente de ACV: se estudia como tal"
+		],
+		[
+			"ret_rama",
+			"RET",
+			"Oclusión de rama arterial retiniana",
+			""
+		],
+		[
+			"otro",
+			"",
+			"Otro síndrome",
+			"Escribilo en el detalle"
+		]
+	],
+	SIND_DET: [
+		"lac_otro",
+		"otro",
+		"poci_alt"
+	],
+	SIND_DET_OBLIG: ["lac_otro", "otro"],
+	LADO: [
+		"Izquierdo",
+		"Derecho",
+		"Bilateral",
+		"No lateralizado"
+	],
+	PRES: [
+		[
+			"pr_crisis",
+			"Crisis epiléptica al inicio",
+			""
+		],
+		[
+			"pr_cefalea",
+			"Cefalea al inicio",
+			""
+		],
+		[
+			"pr_trueno",
+			"Cefalea en trueno",
+			"Máxima intensidad en menos de 1 minuto"
+		],
+		[
+			"pr_vomitos",
+			"Vómitos",
+			""
+		],
+		[
+			"pr_conc",
+			"Depresión de conciencia",
+			""
+		],
+		[
+			"pr_confus",
+			"Confusión / síndrome confusional agudo",
+			"Delirium: alteración aguda y fluctuante de la atención y la cognición"
+		],
+		[
+			"pr_sincope",
+			"Síncope / caída",
+			""
+		],
+		[
+			"pr_fluct",
+			"Curso fluctuante o progresivo",
+			""
+		],
+		[
+			"pr_warning",
+			"AITs repetidos estereotipados",
+			"Síndrome de alarma capsular o pontino: ≥ 3 episodios en 24 h"
+		],
+		[
+			"pr_limbshake",
+			"Sacudidas de un miembro (limb-shaking)",
+			"AIT por hipoperfusión carotídea"
+		],
+		[
+			"pr_vertigo",
+			"Vértigo",
+			""
+		]
+	],
+	ECG_RES: [
+		"Ritmo sinusal, sin alteraciones agudas",
+		"Fibrilación auricular / aleteo",
+		"Otra arritmia",
+		"Signos de isquemia aguda",
+		"Otro hallazgo"
+	],
+	ABCD2_CLIN: [
+		["Debilidad unilateral", 2],
+		["Trastorno del habla sin debilidad", 1],
+		["Otros síntomas", 0]
+	],
+	ABCD2_DUR: [
+		["60 min o más", 2],
+		["10 a 59 min", 1],
+		["Menos de 10 min", 0]
+	],
+	ASP_EST: ["TC sin contraste", "RM difusión (DWI)"],
+	PCA_R: [
+		["Tálamo D", 1],
+		["Tálamo I", 1],
+		["Mesencéfalo", 2],
+		["Protuberancia", 2],
+		["Cerebelo D", 1],
+		["Cerebelo I", 1],
+		["ACP D", 1],
+		["ACP I", 1]
+	],
+	HIC_LOC: [
+		"Lobar",
+		"Cortical",
+		"Ganglios basales",
+		"Talámica",
+		"Cerebelosa",
+		"Tronco",
+		"Intraventricular",
+		"Subaracnoidea"
+	],
+	TICI: [
+		"0",
+		"1",
+		"2a",
+		"2b",
+		"2c",
+		"3"
+	],
+	PLANILLA_COLUMNAS: [
+		["Timestamp", null],
+		["Apellido y Nombre", "nombre"],
+		["Documento", "documento"],
+		["Sexo", "sexo"],
+		["Edad", "edad"],
+		["Fecha del evento", "fechaACV"],
+		["Modo de ingreso", "modoIngreso"],
+		["Tipo de evento", "tipo"],
+		["NIHSS de ingreso", "nihss"],
+		["Factores de riesgo clásicos", "frv"],
+		["Antecedentes familiares", "antFamiliares"],
+		["Residente que carga", null],
+		["Notas / datos adicionales", null],
+		["Tipo de inicio", "tipoInicio"],
+		["Fecha y hora de inicio/LKW", "fechaLKW"],
+		["ABCD2 · PA ≥ 140/90", "abcd2PA"],
+		["ABCD2 · Clínica", "abcd2Clin"],
+		["ABCD2 · Duración", "abcd2Dur"],
+		["Hemorragia · localización", "hicLocaliza"],
+		["Hemorragia · volumen (mL)", "hicVolumen"],
+		["Hemorragia · anticoagulado", "hicAnticoag"],
+		["mRS previo", "mrsPrevio"],
+		["NIHSS · ítems", "nihssItems"],
+		["Territorio (OCSP)", "__territorio"],
+		["Síndrome", "sindrome"],
+		["Síndrome · detalle", "sindromeOtro"],
+		["Lado de la lesión", "lado"],
+		["Déficit discapacitante", "deficitDiscap"],
+		["Rasgos de presentación", "presentacion"],
+		["TA sistólica", "taSist"],
+		["TA diastólica", "taDiast"],
+		["Glucemia (mg/dL)", "glucemia"],
+		["ECG", "ecg"],
+		["ECG · detalle", "ecgDetalle"],
+		["ASPECTS", "aspects"],
+		["ASPECTS · regiones", null],
+		["ASPECTS · estudio", "aspectsEstudio"],
+		["pc-ASPECTS", "pcAspects"],
+		["pc-ASPECTS · regiones", "pcAspectsReg"]
+	],
+	SIND_GRP_PLANILLA: {
+		"LACI": "LACI · lacunares",
+		"RET": "Retiniano"
+	},
+	MODO_ING_FUERA_DE_PLANILLA: ["Internado en otra institución"]
+};
+// supabase/functions/_shared/textos.ts
+var LADO_CORTO = {
+	Izquierdo: "Izq",
+	Derecho: "Der",
+	Bilateral: "Bilateral",
+	"No lateralizado": "No lateralizado"
+};
+var vacio = (v) => v === "" || v == null || Array.isArray(v) && !v.length;
+var lista = (v) => Array.isArray(v) ? v.map(String) : vacio(v) ? [] : [String(v)];
+var siNo = (v) => v === true ? "Sí" : v === false ? "No" : "";
+function nihSev(n, cat) {
+	const x = Number(n);
+	if (vacio(n) || !Number.isFinite(x)) return "";
+	const r = cat.NIH_SEV.find(([a, b]) => x >= a && x <= b);
+	return r ? r[2] : "";
+}
+function rotulo(cat, nombre, k) {
+	const r = cat[nombre]?.find((x) => x[0] === k);
+	return r ? String(nombre === "SIND" ? r[2] : r[1]) : k;
+}
+function presLinea(d, cat) {
+	const p = [];
+	const terr = lista(d.ocsp);
+	if (terr.length) p.push(terr.join(" + "));
+	const sind = lista(d.sindrome).map((k) => (k === "otro" || k === "lac_otro") && d.sindromeOtro ? String(d.sindromeOtro) : rotulo(cat, "SIND", k));
+	if (sind.length) p.push(sind.join(", "));
+	if (d.lado) p.push(LADO_CORTO[String(d.lado)] || String(d.lado));
+	if (!p.length) return "";
+	if (!vacio(d.nihss)) p.push("NIHSS " + d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : ""));
+	return p.join(" · ");
+}
+function nihTexto(d, cat) {
+	if (vacio(d.nihss)) return "";
+	const items = d.nihssItems && typeof d.nihssItems === "object" ? Object.keys(d.nihssItems).length : 0;
+	return d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : "") + (items >= 15 ? " · por ítems" : "");
+}
+function aspTexto(d) {
+	const est = d.aspectsEstudio ? d.aspectsEstudio === "RM difusión (DWI)" ? " · RM-DWI" : " · TC" : "";
+	if (!vacio(d.aspects)) return d.aspects + est + (String(d.aspects) === "10" ? " (sin lesiones)" : "");
+	if (!vacio(d.pcAspects)) return "pc-ASPECTS " + d.pcAspects + est + (lista(d.pcAspectsReg).length ? " (" + lista(d.pcAspectsReg).join(", ") + ")" : "");
+	return "";
+}
+function taTexto(d) {
+	if (vacio(d.taSist) && vacio(d.taDiast)) return "";
+	return (vacio(d.taSist) ? "—" : d.taSist) + "/" + (vacio(d.taDiast) ? "—" : d.taDiast) + " mmHg";
+}
+function ecgTexto(d) {
+	const e = String(d.ecg || ""), x = String(d.ecgDetalle || "");
+	return e ? x ? e + " — " + x : e : x;
+}
+function abcd2Texto(d, cat) {
+	if (d.tipo !== "AIT") return "";
+	const cl = cat.ABCD2_CLIN.find((x) => x[0] === d.abcd2Clin);
+	const du = cat.ABCD2_DUR.find((x) => x[0] === d.abcd2Dur);
+	const falta = [];
+	if (vacio(d.edad)) falta.push("edad");
+	if (typeof d.abcd2PA !== "boolean") falta.push("PA");
+	if (!cl) falta.push("clínica");
+	if (!du) falta.push("duración");
+	if (falta.length) return "incompleto (falta " + falta.join(", ") + ")";
+	const s = (Number(d.edad) >= 60 ? 1 : 0) + (d.abcd2PA === true ? 1 : 0) + cl[1] + du[1] + (lista(d.frv).includes("Diabetes") ? 1 : 0);
+	return s + "/7, riesgo " + (s <= 3 ? "bajo" : s <= 5 ? "moderado" : "alto");
+}
+var AR = -108e5;
+function partes(t) {
+	const x = new Date(t + AR);
+	const z = (n) => String(n).padStart(2, "0");
+	return {
+		d: z(x.getUTCDate()),
+		m: z(x.getUTCMonth() + 1),
+		a: String(x.getUTCFullYear()),
+		hh: z(x.getUTCHours()),
+		mm: z(x.getUTCMinutes())
+	};
+}
+var lkwMs = (s) => {
+	const m = String(s || "").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+	return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - AR : NaN;
+};
+function hace(desde, hasta) {
+	const min = Math.max(0, Math.floor((hasta - desde) / 6e4)), h = Math.floor(min / 60);
+	return (h ? h + " h " : "") + min % 60 + " min";
+}
+function repFaltan(d) {
+	const f = [];
+	if (vacio(d.inicioPuerta) && !String(d.tipoInicio || "").startsWith("Desconocido")) f.push("inicio-puerta");
+	if (d.trombolisis === true && vacio(d.puertaAguja)) f.push("puerta-aguja");
+	if (d.trombectomia === true) {
+		if (vacio(d.puertaPuncion)) f.push("puerta-punción");
+		if (vacio(d.puertaRecanal)) f.push("puerta-recanalización");
+		if (vacio(d.tici)) f.push("mTICI");
+	}
+	if (vacio(d.nihssPost)) f.push("NIHSS post-reperfusión");
+	return f;
+}
+var repTrat = (d) => [d.trombolisis === true ? "trombólisis" : "", d.trombectomia === true ? "trombectomía" : ""].filter(Boolean).join(" + ") || "—";
+function resumenWhatsApp(d, cat, quien, cargaIso) {
+	const nn = (v) => vacio(v) ? "—" : String(v);
+	const f = String(d.fechaACV || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+	const t = lkwMs(d.fechaLKW), p = Number.isFinite(t) ? partes(t) : null;
+	const inicio = p && d.tipoInicio ? p.hh + ":" + p.mm + " h del " + p.d + "/" + p.m + "/" + p.a + " (" + (String(d.tipoInicio).startsWith("Inicio presenciado") ? "presenciado" : "LKW: última vez visto bien") + ") · hace " + hace(t, Date.parse(cargaIso) || Date.now()) : "sin dato";
+	const pl = presLinea(d, cat);
+	const L = [
+		"*** Unidad de Stroke - CUENTA 350.000 ***",
+		"🧠 *Nuevo paciente — Registro Neurovascular*",
+		"Apellido y Nombre: " + nn(d.nombre),
+		"Documento: " + nn(d.documento),
+		"Sexo / Edad: " + nn(d.sexo) + " · " + nn(d.edad) + (vacio(d.edad) ? "" : " años"),
+		"Fecha del evento: " + (f ? f[3] + "/" + f[2] + "/" + f[1] : "—"),
+		"Modo de ingreso: " + nn(d.modoIngreso),
+		"Tipo de evento: " + nn(d.tipo),
+		"🕒 Inicio de síntomas: " + inicio,
+		pl ? "Presentación: " + pl : "NIHSS: " + nn(nihTexto(d, cat))
+	];
+	if (siNo(d.deficitDiscap)) L.push("Déficit discapacitante: " + siNo(d.deficitDiscap));
+	if (aspTexto(d)) L.push("ASPECTS: " + aspTexto(d));
+	if (lista(d.presentacion).length) L.push("Rasgos: " + lista(d.presentacion).map((k) => rotulo(cat, "PRES", k)).join(", "));
+	L.push("mRS previo: " + nn(d.mrsPrevio), "TA: " + nn(taTexto(d)), "Glucemia: " + (vacio(d.glucemia) ? "—" : d.glucemia + " mg/dL"), "ECG: " + nn(ecgTexto(d)));
+	if (d.tipo === "AIT") L.push("ABCD2: " + abcd2Texto(d, cat));
+	if (d.tipo === "Hemorrágico") L.push("Localización: " + nn(lista(d.hicLocaliza).join(", ")), "Volumen: " + (vacio(d.hicVolumen) ? "—" : d.hicVolumen + " mL"), "Anticoagulado: " + nn(siNo(d.hicAnticoag)));
+	L.push("FRV: " + nn(lista(d.frv).join(", ")), "Antecedentes familiares: " + nn(lista(d.antFamiliares).join(", ")), "Cargado por: " + nn(quien), "Notas: " + nn(d.notas));
+	return L.join("\n");
+}
+// src/web/residente.ts
+var SISTEMA = [
+	"id",
+	"pacienteId",
+	"schemaVersion",
+	"creado",
+	"modificado"
+];
+var CHIPS = {
+	frv: "frv",
+	atip: "frvAtipicos",
+	antFam: "antFamiliares",
+	ocsp: "ocsp",
+	pres: "presentacion",
+	hicLoc: "hicLocaliza",
+	txAlta: "txAlta",
+	tvc: "tvcSenos",
+	disTto: "disTto",
+	disSignos: "disSignos",
+	disArt: "disArterias",
+	proto: "protocolos"
+};
+var ctx;
+var mis = /* @__PURE__ */ new Set();
+var pedidos = [];
+var ultimaAlta = "";
+var LS = () => "rnv_res_" + ctx.uid;
+function guardarLocal() {
+	try {
+		localStorage.setItem(LS(), JSON.stringify({
+			mis: [...mis],
+			pedidos
+		}));
+	} catch {}
+}
+function leerLocal() {
+	try {
+		const x = JSON.parse(localStorage.getItem(LS()) || "{}");
+		mis = new Set(x.mis || []);
+		pedidos = x.pedidos || [];
+	} catch {}
+}
+function permitido(k, f) {
+	if (SISTEMA.includes(k)) return true;
+	const g = ctx.campos.get(k);
+	return !!g && (mis.has(f.id) || g === "reperfusion");
+}
+function claveDe(el) {
+	const id = el.id || "";
+	if (id.startsWith("f_")) return id.slice(2);
+	if (id.startsWith("chips_")) {
+		const k = id.slice(6);
+		return k.startsWith("sind_") ? "sindrome" : CHIPS[k] || "__" + k;
+	}
+	return el.dataset?.k || null;
+}
+function filtrarFicha() {
+	const host = document.getElementById("formHost");
+	if (!host) return;
+	const propio = !editId || mis.has(editId);
+	const vale = (k) => {
+		const g = ctx.campos.get(k);
+		return !!g && (propio || g === "reperfusion");
+	};
+	const marcados = [...host.querySelectorAll("[id^=\"f_\"],[id^=\"chips_\"],[data-k]")];
+	for (const el of marcados) {
+		const k = claveDe(el);
+		if (!k || vale(k)) continue;
+		const caja = el.closest(".field") || el;
+		if ([...caja.querySelectorAll("[id^=\"f_\"],[id^=\"chips_\"],[data-k]")].some((x) => {
+			const kk = claveDe(x);
+			return !!kk && vale(kk);
+		})) continue;
+		caja.classList.add("rnv-res-oculto");
+		const prev = caja.previousElementSibling;
+		if (caja.classList.contains("chips") && prev && !prev.className && prev.tagName === "DIV") prev.classList.add("rnv-res-oculto");
+	}
+	for (const g of host.querySelectorAll(".fgrid")) {
+		if ([...g.children].some((x) => !x.classList.contains("rnv-res-oculto"))) continue;
+		g.classList.add("rnv-res-oculto");
+		const prev = g.previousElementSibling;
+		if (prev && !prev.className && prev.tagName === "DIV") prev.classList.add("rnv-res-oculto");
+	}
+	for (const sec of host.querySelectorAll(".fsec")) {
+		const algo = [...sec.querySelectorAll("[id^=\"f_\"],[id^=\"chips_\"],[data-k]")].some((x) => {
+			const k = claveDe(x);
+			return !!k && vale(k) && !x.closest(".rnv-res-oculto");
+		});
+		sec.classList.toggle("rnv-res-oculto", !algo);
+	}
+	if (!propio) {
+		const d = draft;
+		const aviso = document.createElement("div");
+		aviso.className = "rnv-res-pedido";
+		aviso.innerHTML = `<b>Pedido de reperfusión · Nº ${esc(d.nOrden ?? "—")}</b> · ${esc(iniciales(d.nombre))} · ${esc(repTrat(d))}<br>Completá sólo los tiempos que faltan.`;
+		host.prepend(aviso);
+	}
+}
+var iniciales = (n) => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 3).map((w) => w.charAt(0).toUpperCase() + ".").join(" ");
+function barra() {
+	let b = document.getElementById("rnvResBar");
+	if (!b) {
+		b = document.createElement("div");
+		b.id = "rnvResBar";
+		document.getElementById("main").before(b);
+	}
+	const t = (v, txt) => `<button type="button" class="${view === v ? "on" : ""}" data-v="${v}">${txt}</button>`;
+	b.innerHTML = `<div class="rnv-res-quien"><b>Registro Neurovascular</b> · residente: ${esc(ctx.nombre)}</div>
+    <div class="rnv-res-tabs">${t("form", "Nueva carga")}${t("list", "Mis cargas")}${t("dash", "Pedidos de reperfusión" + (pedidos.length ? ` (${pedidos.length})` : ""))}</div>`;
+	b.querySelectorAll("button").forEach((x) => x.addEventListener("click", () => {
+		const v = x.dataset.v;
+		if (v === "form") {
+			editId = null;
+			draft = blank();
+		}
+		go(v);
+	}));
+}
+function wa(id) {
+	const f = DB.find((x) => x && x.id === id);
+	if (!f) return;
+	window.open("https://wa.me/?text=" + encodeURIComponent(resumenWhatsApp(f, catalogos_default, ctx.nombre, String(f.creado || (/* @__PURE__ */ new Date()).toISOString()))), "_blank", "noopener");
+}
+function vMisCargas() {
+	barra();
+	const L = DB.filter((f) => f && mis.has(f.id)).sort((a, b) => String(b.creado || "").localeCompare(String(a.creado || "")));
+	const nueva = ultimaAlta && L.some((f) => f.id === ultimaAlta);
+	document.getElementById("main").innerHTML = `<div class="rnv-res">
+    ${nueva ? `<div class="rnv-res-card"><b>Carga guardada.</b> ¿Mandás el resumen al grupo de WhatsApp?
+      <div><button type="button" class="btn sm primary" data-wa="${esc(ultimaAlta)}">Resumen para WhatsApp</button>
+      <button type="button" class="btn sm ghost" id="rnvResNo">Ahora no</button></div></div>` : ""}
+    <div class="rnv-res-top"><h2>Mis cargas</h2><button type="button" class="btn primary" id="rnvResNueva">Nueva carga</button></div>
+    ${L.length ? `<div class="rnv-res-lista">${L.map((f) => `<div class="rnv-res-item">
+      <div><b>${esc(f.nombre || "(sin nombre)")}</b> <span class="mono">${esc(f.documento || "")}</span><br>
+      <span class="rnv-res-sub">${esc(f.tipo || "—")} · ${esc(f.fechaACV || "sin fecha")} · NIHSS ${esc(f.nihss ?? "—")}${ctx.pendiente(f.id) ? " · <b>sin subir</b>" : ""}</span></div>
+      <div class="rnv-res-acc"><button type="button" class="btn sm ghost" data-ed="${esc(f.id)}">Editar</button>
+      <button type="button" class="btn sm ghost" data-wa="${esc(f.id)}">WhatsApp</button></div></div>`).join("")}</div>` : "<p class=\"rnv-res-vacio\">Todavía no cargaste ningún paciente desde este teléfono.</p>"}</div>`;
+	const m = document.getElementById("main");
+	m.querySelector("#rnvResNueva").addEventListener("click", () => {
+		editId = null;
+		draft = blank();
+		go("form");
+	});
+	m.querySelector("#rnvResNo")?.addEventListener("click", () => {
+		ultimaAlta = "";
+		vMisCargas();
+	});
+	m.querySelectorAll("[data-wa]").forEach((b) => b.addEventListener("click", () => {
+		wa(b.dataset.wa);
+		ultimaAlta = "";
+	}));
+	m.querySelectorAll("[data-ed]").forEach((b) => b.addEventListener("click", () => abrirFicha(b.dataset.ed)));
+}
+function vPedidos() {
+	barra();
+	const filas = pedidos.map((p) => ({
+		p,
+		f: DB.find((x) => x && x.id === p.evento_id)
+	})).filter((x) => x.f);
+	document.getElementById("main").innerHTML = `<div class="rnv-res"><div class="rnv-res-top"><h2>Pedidos de reperfusión</h2></div>
+    ${filas.length ? `<div class="rnv-res-lista">${filas.map(({ p, f }) => {
+		const falta = repFaltan(f);
+		return `<div class="rnv-res-item">
+      <div><b>Nº ${esc(f.nOrden ?? "—")}</b> · ${esc(iniciales(f.nombre))} · ${esc(repTrat(f))}<br>
+      <span class="rnv-res-sub">${p.estado === "parcial" ? "Carga parcial · " : ""}${falta.length ? "Falta: " + esc(falta.join(", ")) : "Completo"}</span></div>
+      <div class="rnv-res-acc"><button type="button" class="btn sm primary" data-ed="${esc(f.id)}">Completar</button></div></div>`;
+	}).join("")}</div>` : "<p class=\"rnv-res-vacio\">No hay pedidos abiertos.</p>"}</div>`;
+	document.getElementById("main").querySelectorAll("[data-ed]").forEach((b) => b.addEventListener("click", () => abrirFicha(b.dataset.ed)));
+}
+async function refrescar() {
+	const [{ data: ev }, { data: ped }] = await Promise.all([ctx.sb.from("eventos").select("id").eq("creado_por", ctx.uid), ctx.sb.from("pedidos_reperfusion").select("id, evento_id, estado, creado_en").order("creado_en")]);
+	if (ev) for (const x of ev) mis.add(x.id);
+	if (ped) pedidos = ped;
+	guardarLocal();
+	if (view === "list" || view === "dash") (view === "list" ? vMisCargas : vPedidos)();
+	else barra();
+}
+function nuevaCarga(id) {
+	mis.add(id);
+	ultimaAlta = id;
+	guardarLocal();
+}
+function iniciar$2(c) {
+	ctx = c;
+	leerLocal();
+	document.body.classList.add("rnv-residente");
+	const w = window;
+	const vFormApp = w.vForm;
+	w.vForm = () => {
+		vFormApp();
+		barra();
+		filtrarFicha();
+	};
+	w.vList = vMisCargas;
+	w.vDash = vPedidos;
+	w.vT1 = vMisCargas;
+	w.vCfg = vMisCargas;
+	w.repPedir = () => Promise.resolve(false);
+	w.repAuto = () => {};
+	go("list");
+	toast("Entraste como residente");
+}
+// src/web/jefe.ts
+var sb$2;
+var porPedir = [];
+function guardarPorPedir() {
+	try {
+		localStorage.setItem("rnv_por_pedir", JSON.stringify(porPedir));
+	} catch {}
+}
+var linkDe = (clave) => location.href.split("#")[0] + "#r=" + clave;
+async function llamar(cuerpo) {
+	const { data, error } = await sb$2.functions.invoke("residentes", { body: cuerpo });
+	if (error) {
+		let msg = error.message;
+		try {
+			const j = await error.context?.json();
+			if (j?.error) msg = j.error;
+		} catch {}
+		throw new Error(msg);
+	}
+	return data;
+}
+function mostrarLink(nombre, clave) {
+	const l = linkDe(clave);
+	const texto = `Hola ${nombre}: este es tu link personal para cargar en el Registro Neurovascular (versión de prueba, datos sintéticos). Abrilo una vez en tu celular y agregalo a la pantalla de inicio. No lo compartas: entra como vos.\n${l}`;
+	return `<div class="rnv-link"><p><b>Link de ${esc(nombre)}</b> — se muestra una sola vez. Mandáselo sólo a esa persona.</p>
+    <input class="mono" readonly value="${esc(l)}" id="rnvLinkTxt">
+    <div><button type="button" class="btn sm" id="rnvLinkCopiar">Copiar</button>
+    <a class="btn sm primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(texto)}">Mandar por WhatsApp</a></div></div>`;
+}
+async function panelResidentes() {
+	const caja = document.createElement("div");
+	caja.id = "rnvCflBox";
+	document.body.appendChild(caja);
+	let extra = "";
+	const pintar = async () => {
+		let filas = "", err = "";
+		try {
+			filas = (await llamar({ accion: "listar" })).residentes.map((x) => `<tr data-id="${esc(x.user_id)}" data-n="${esc(x.nombre)}"><td>${esc(x.nombre)}</td>
+        <td>${x.activo ? x.clave ? x.clave.usada_en ? "entró el " + esc(x.clave.usada_en.slice(0, 10)) : "link sin usar" : "sin link" : "dado de baja"}</td>
+        <td>${x.activo ? "<button type=\"button\" class=\"btn sm ghost\" data-a=\"link\">Link nuevo</button> <button type=\"button\" class=\"btn sm ghost\" data-a=\"baja\">Dar de baja</button>" : ""}</td></tr>`).join("");
+		} catch (e) {
+			err = e.message;
+		}
+		caja.innerHTML = `<div class="rnv-cfl"><h3>Residentes</h3>
+      <p class="rnv-nota">Cada residente entra con su link personal, sin contraseña ni códigos. Ve sólo lo que cargó y los
+      pedidos de reperfusión abiertos. En esta fase, con nombres de prueba.</p>
+      ${err ? `<p class="rnv-err">${esc(err)}</p>` : filas ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>${filas}</tbody></table>` : "<p>Todavía no hay residentes.</p>"}
+      ${extra}
+      <form id="rnvResAlta" class="rnv-res-alta"><input id="rnvResNombre" placeholder="Nombre del residente" minlength="3" required>
+      <button class="btn sm primary" type="submit">Dar de alta</button></form>
+      <button type="button" class="btn sm" id="rnvCflCerrar">Cerrar</button></div>`;
+		caja.querySelector("#rnvCflCerrar").addEventListener("click", () => caja.remove());
+		caja.querySelector("#rnvLinkCopiar")?.addEventListener("click", async () => {
+			const v = document.getElementById("rnvLinkTxt").value;
+			try {
+				await navigator.clipboard.writeText(v);
+				toast("Link copiado");
+			} catch {
+				document.getElementById("rnvLinkTxt").select();
+			}
+		});
+		caja.querySelector("#rnvResAlta").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const nombre = document.getElementById("rnvResNombre").value.trim();
+			try {
+				const r = await llamar({
+					accion: "alta",
+					nombre
+				});
+				extra = mostrarLink(nombre, String(r.clave));
+			} catch (e) {
+				extra = `<p class="rnv-err">${esc(e.message)}</p>`;
+			}
+			pintar();
+		});
+		caja.querySelectorAll("button[data-a]").forEach((b) => b.addEventListener("click", async () => {
+			const tr = b.closest("tr"), id = tr.dataset.id, nombre = tr.dataset.n;
+			const a = b.dataset.a;
+			if (a === "baja" && !confirm(`¿Dar de baja a ${nombre}? Su link deja de servir y su sesión se cierra.`)) return;
+			if (a === "link" && !confirm(`¿Link nuevo para ${nombre}? El anterior deja de servir.`)) return;
+			try {
+				const r = await llamar({
+					accion: a,
+					user_id: id
+				});
+				extra = a === "link" ? mostrarLink(nombre, String(r.clave)) : `<p>${esc(nombre)} quedó dado de baja.</p>`;
+			} catch (e) {
+				extra = `<p class="rnv-err">${esc(e.message)}</p>`;
+			}
+			pintar();
+		}));
+	};
+	await pintar();
+}
+function marca(id, rp) {
+	const q = DB.find((x) => x && x.id === id);
+	if (q) {
+		q.repPedido = rp;
+		save();
+	}
+	if (draft && editId === id) draft.repPedido = rp;
+}
+function pedir(p) {
+	if (!porPedir.includes(p.id)) porPedir.push(p.id);
+	guardarPorPedir();
+	marca(p.id, {
+		estado: "pendiente",
+		pedido: nowISO(),
+		tl: p.trombolisis === true,
+		te: p.trombectomia === true
+	});
+	toast("Pedido a residentes: completar reperfusión de Nº " + (p.nOrden ?? "—") + " — sale con la sincronización");
+	return Promise.resolve(true);
+}
+async function sincronizarPedidos(enServidor) {
+	for (const id of [...porPedir]) {
+		if (!enServidor(id)) continue;
+		const { data: ya } = await sb$2.from("pedidos_reperfusion").select("id").eq("evento_id", id).in("estado", ["abierto", "parcial"]).is("borrado_en", null);
+		if (!ya?.length) {
+			const { error } = await sb$2.from("pedidos_reperfusion").insert({
+				evento_id: id,
+				sintetico: true
+			});
+			if (error) throw error;
+		}
+		porPedir.splice(porPedir.indexOf(id), 1);
+		guardarPorPedir();
+		const p = DB.find((x) => x && x.id === id);
+		if (p) repCardWeb(p);
+	}
+	const { data } = await sb$2.from("pedidos_reperfusion").select("evento_id, estado, modificado_en").is("borrado_en", null).order("creado_en");
+	for (const r of data || []) {
+		const p = DB.find((x) => x && x.id === r.evento_id);
+		const est = r.estado === "abierto" ? "pendiente" : r.estado;
+		if (p?.repPedido && p.repPedido.estado !== est && p.repPedido.estado !== "error") marca(p.id, {
+			...p.repPedido,
+			estado: est,
+			resp: r.modificado_en
+		});
+	}
+}
+function repCardWeb(p) {
+	const old = document.getElementById("repCard");
+	if (old) old.remove();
+	const c = document.createElement("div");
+	c.id = "repCard";
+	c.className = "rnv-res-card rnv-flota";
+	c.innerHTML = `<b>Pedido de reperfusión creado</b><div>Nº ${esc(String(p.nOrden ?? "—"))} ya les aparece a los residentes en «Pedidos de reperfusión». ¿Les avisás al grupo?</div>
+    <div><button type="button" class="btn sm primary" id="repCardWa">Avisar por WhatsApp</button> <button type="button" class="btn sm ghost" id="repCardNo">Ahora no</button></div>`;
+	document.body.appendChild(c);
+	c.querySelector("#repCardWa").addEventListener("click", () => {
+		repAvisarWa(p);
+		c.remove();
+	});
+	c.querySelector("#repCardNo").addEventListener("click", () => c.remove());
+}
+function iniciar$1(cliente) {
+	sb$2 = cliente;
+	try {
+		porPedir = JSON.parse(localStorage.getItem("rnv_por_pedir") || "[]");
+	} catch {
+		porPedir = [];
+	}
+	const w = window;
+	w.repPedir = pedir;
+	w.repWaTexto = (p) => {
+		const f = repFaltanApp(p).map((k) => REP_LAB_APP[k] || k);
+		const tr = [p.trombolisis === true ? "trombólisis" : "", p.trombectomia === true ? "trombectomía" : ""].filter(Boolean).join(" + ");
+		return "*** Unidad de Stroke - CUENTA 350.000 ***\n⏱️ *Pedido de reperfusión* (versión de prueba)\nCompletar los tiempos del Nº " + (p.nOrden ?? "—") + (tr ? " (" + tr + ")" : "") + (f.length ? "\nFalta: " + f.join(", ") : "") + "\nEntrá con tu link personal → «Pedidos de reperfusión».";
+	};
+	w.repEstadoTxt = (rp) => !rp ? "" : rp.estado === "error" ? "no se pudo pedir (" + (rp.msg || "error") + ")" : rp.estado === "completo" ? "completado por los residentes" : rp.estado === "parcial" ? "carga parcial de los residentes" : "pendiente para los residentes";
+}
 var MIME = {
 	jpg: "image/jpeg",
 	png: "image/png",
@@ -21963,7 +23108,9 @@ function esSintetica(f, altasWeb) {
 	if (altasWeb.has(f.id)) return true;
 	return /^DEMO-\d+$/.test(String(f.documento ?? "")) || /^(ZETAX|PRUEBA)\b/i.test(String(f.nombre ?? ""));
 }
-function diferencias(sombra, db, elegible, ahora, nuevoId) {
+function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
+	const ok = (k, f) => !permitido || permitido(k, f);
+	const aSombra = (f) => permitido ? copia(Object.fromEntries(Object.entries(f).filter(([k]) => ok(k, f)))) : copia(f);
 	const s = { ...sombra };
 	const ops = [];
 	const vistos = /* @__PURE__ */ new Set();
@@ -21981,7 +23128,7 @@ function diferencias(sombra, db, elegible, ahora, nuevoId) {
 				op_id: nuevoId(),
 				fila_id: f.id,
 				editado_en: ahora,
-				campos: Object.fromEntries(Object.keys(f).filter((k) => f[k] !== void 0).map((k) => [k, {
+				campos: Object.fromEntries(Object.keys(f).filter((k) => f[k] !== void 0 && ok(k, f)).map((k) => [k, {
 					nuevo: copia(f[k]),
 					base: null
 				}])),
@@ -21992,12 +23139,12 @@ function diferencias(sombra, db, elegible, ahora, nuevoId) {
 					sexo: f.sexo ?? null
 				}
 			});
-			s[f.id] = copia(f);
+			s[f.id] = aSombra(f);
 			continue;
 		}
 		const campos = {};
 		for (const k of /* @__PURE__ */ new Set([...Object.keys(f), ...Object.keys(prev)])) {
-			if (k === "__borrada") continue;
+			if (k === "__borrada" || !ok(k, f)) continue;
 			if (!igual(f[k], prev[k])) campos[k] = {
 				nuevo: copia(f[k] ?? null),
 				base: copia(prev[k] ?? null)
@@ -22012,11 +23159,11 @@ function diferencias(sombra, db, elegible, ahora, nuevoId) {
 				campos,
 				...restaurar ? { restaurar: true } : {}
 			});
-			s[f.id] = copia(f);
+			s[f.id] = aSombra(f);
 		}
 	}
 	for (const id of Object.keys(s)) {
-		if (vistos.has(id) || s[id].__borrada) continue;
+		if (vistos.has(id) || s[id].__borrada || permitido) continue;
 		ops.push({
 			op_id: nuevoId(),
 			fila_id: id,
@@ -22115,6 +23262,7 @@ var ultimoError = "";
 var errorDeRed = false;
 var noElegibles = 0;
 var programado;
+var rol = "";
 function idb() {
 	return new Promise((ok, mal) => {
 		const r = indexedDB.open(IDB, 1);
@@ -22187,7 +23335,7 @@ function encolar() {
 }
 function encolarCampos() {
 	const altas = new Set(est.altasWeb);
-	const d = diferencias(est.sombra, DB, (f) => esSintetica(f, altas), (/* @__PURE__ */ new Date()).toISOString(), () => crypto.randomUUID());
+	const d = diferencias(est.sombra, DB, (f) => esSintetica(f, altas), (/* @__PURE__ */ new Date()).toISOString(), () => crypto.randomUUID(), rol === "residente" ? permitido : void 0);
 	noElegibles = d.noElegibles;
 	if (d.ops.length) {
 		est.sombra = d.sombra;
@@ -22273,8 +23421,11 @@ async function sincronizar() {
 		if (!lock) return;
 		try {
 			await subir();
-			await subirMedia((id) => !!est.sombra[id] && !est.sombra[id].__borrada && !est.cola.some((o) => o.fila_id === id));
+			const enServidor = (id) => !!est.sombra[id] && !est.sombra[id].__borrada && !est.cola.some((o) => o.fila_id === id);
+			await subirMedia(enServidor);
+			if (rol === "jefe") await sincronizarPedidos(enServidor);
 			await bajar();
+			if (rol === "residente") await refrescar();
 			ultimoError = "";
 			errorDeRed = false;
 		} catch (e) {
@@ -22284,7 +23435,7 @@ async function sincronizar() {
 		pintar();
 	});
 }
-function pantallaEntrada() {
+function pantallaEntrada(aviso = "") {
 	return new Promise((ok) => {
 		const caja = document.createElement("div");
 		caja.id = "rnvEntrar";
@@ -22294,7 +23445,7 @@ function pantallaEntrada() {
       <p class="rnv-aviso">Proyecto <b>sintético</b>: sólo datos de prueba. Ningún dato real se carga acá.</p>
       <label>Correo<input id="rnvMail" type="email" autocomplete="username" required></label>
       <label>Contraseña<input id="rnvClave" type="password" autocomplete="current-password" required></label>
-      <div class="rnv-err" id="rnvErr"></div>
+      <div class="rnv-err" id="rnvErr">${esc(aviso)}</div>
       <button class="btn" type="submit">Entrar</button>
       <button class="btn ghost" type="button" id="rnvLink">Mandarme un link al correo</button>
       <p class="rnv-nota">¿Instalaste la app en la pantalla de inicio? Entrá con contraseña: el link se abre en el
@@ -22337,12 +23488,14 @@ function pantallaEntrada() {
 function insignia() {
 	const el = document.createElement("div");
 	el.id = "rnvSync";
-	el.innerHTML = "<span class=\"rnv-sync-dot\"></span><span class=\"rnv-sync-txt\">Conectando…</span><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvCfl\">Conflictos</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvBtnClave\">Contraseña</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSalir\">Salir</button>";
+	el.innerHTML = "<span class=\"rnv-sync-dot\"></span><span class=\"rnv-sync-txt\">Conectando…</span><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvCfl\">Conflictos</button><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvRes\">Residentes</button><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvBtnClave\">Contraseña</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSalir\">Salir</button>";
 	document.body.prepend(el);
 	el.querySelector("#rnvSalir").addEventListener("click", async () => {
+		if (rol === "residente" && !confirm("¿Salir? Para volver a entrar vas a necesitar tu link personal.")) return;
 		await sb.auth.signOut();
 		location.reload();
 	});
+	el.querySelector("#rnvRes").addEventListener("click", () => void panelResidentes());
 	el.querySelector("#rnvCfl").addEventListener("click", () => void conflictos());
 	el.querySelector("#rnvBtnClave").addEventListener("click", elegirClave);
 }
@@ -22411,6 +23564,89 @@ async function conflictos() {
 		tr.remove();
 	}));
 }
+async function entrarConLink() {
+	const m = location.hash.match(/^#r=([A-Za-z0-9_-]{43})$/);
+	if (!m) return "";
+	history.replaceState(null, "", location.pathname + location.search);
+	try {
+		const r = await fetch("https://xynzajsqixkohvbezsvy.supabase.co/functions/v1/entrar", {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+				apikey: "sb_publishable_hflnUDn9TK376hqujaL7qw_f5yvEFwG"
+			},
+			body: JSON.stringify({ clave: m[1] })
+		});
+		const j = await r.json().catch(() => ({}));
+		if (!r.ok || !j.access_token) return j.error || "No se pudo entrar con el link (HTTP " + r.status + ").";
+		await sb.auth.signOut({ scope: "local" });
+		const { error } = await sb.auth.setSession({
+			access_token: j.access_token,
+			refresh_token: j.refresh_token
+		});
+		return error ? describir(error) : "";
+	} catch (e) {
+		return esDeRed(e) ? "Sin conexión: abrí el link de nuevo cuando tengas señal." : describir(e);
+	}
+}
+async function quienSoy() {
+	const { data: s } = await sb.auth.getSession();
+	const uid = s.session?.user.id || "";
+	const k = "rnv_perfil_" + uid;
+	let p = null;
+	const { data, error } = await sb.from("perfiles").select("rol, nombre, activo").eq("user_id", uid).maybeSingle();
+	if (!error) {
+		p = data;
+		try {
+			localStorage.setItem(k, JSON.stringify(p));
+		} catch {}
+	} else try {
+		p = JSON.parse(localStorage.getItem(k) || "null");
+	} catch {
+		p = null;
+	}
+	if (!p || !p.activo) {
+		const c = document.createElement("div");
+		c.id = "rnvEntrar";
+		c.innerHTML = `<div class="rnv-entrar"><h2>Sin acceso</h2><p>${error && !p ? "No se pudo comprobar tu acceso: " + esc(describir(error)) : "Tu acceso a esta versión no está activo. Si sos residente, pedile a Juan un link nuevo."}</p>
+      <button class="btn" type="button" id="rnvSinSalir">Salir</button></div>`;
+		document.body.appendChild(c);
+		c.querySelector("#rnvSinSalir").addEventListener("click", async () => {
+			await sb.auth.signOut();
+			location.reload();
+		});
+		return false;
+	}
+	if (p.rol === "jefe") {
+		await asegurarDosPasos(sb);
+		rol = "jefe";
+		iniciar$1(sb);
+		return true;
+	}
+	rol = "residente";
+	document.body.classList.add("rnv-sin-jefe");
+	const kc = "rnv_campos_residente";
+	let campos = [];
+	const { data: cr, error: ec } = await sb.from("campos_residente").select("campo, grupo");
+	if (!ec && cr) {
+		campos = cr;
+		try {
+			localStorage.setItem(kc, JSON.stringify(cr));
+		} catch {}
+	} else try {
+		campos = JSON.parse(localStorage.getItem(kc) || "[]");
+	} catch {
+		campos = [];
+	}
+	iniciar$2({
+		sb,
+		uid,
+		nombre: p.nombre,
+		campos: new Map(campos.map((x) => [x.campo, x.grupo])),
+		pendiente: (id) => est.cola.some((o) => o.fila_id === id)
+	});
+	return true;
+}
 async function iniciar() {
 	sb = createClient("https://xynzajsqixkohvbezsvy.supabase.co", "sb_publishable_hflnUDn9TK376hqujaL7qw_f5yvEFwG", { auth: {
 		persistSession: true,
@@ -22420,11 +23656,14 @@ async function iniciar() {
 	await instalar(sb);
 	window.RNV_FICHA_NUEVA = (f) => {
 		if (f.id && !est.altasWeb.includes(f.id)) est.altasWeb.push(f.id);
+		if (rol === "residente" && f.id) nuevaCarga(f.id);
 	};
 	window.RNV_TRAS_GUARDAR = encolar;
 	insignia();
+	const errLink = await entrarConLink();
 	const { data } = await sb.auth.getSession();
-	if (!data.session) await pantallaEntrada();
+	if (!data.session) await pantallaEntrada(errLink);
+	if (!await quienSoy()) return;
 	listo = true;
 	try {
 		await navigator.locks.request("rnv-sync", () => bajar());

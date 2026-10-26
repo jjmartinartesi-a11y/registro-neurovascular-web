@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src https://script.google.com https://script.googleusercontent.com https://clinicaltrials.gov https://xynzajsqixkohvbezsvy.supabase.co">
 <title>Registro Neurovascular</title>
 <meta name="theme-color" content="#0E6E7A">
-  <script type="module" crossorigin src="./assets/index-BMLyLkqv.js"></script>
+  <script type="module" crossorigin src="./assets/index-DgPP6Nxc.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-Csb6k9SV.css">
 <link rel="manifest" href="./manifest.webmanifest"></head>
 <body>
@@ -3518,7 +3518,9 @@ const VID_MAX_S=60,VID_MAX_LADO=1280;
 function esVid(x){return !!x&&(x.tipo==='video'||/\.(mp4|webm|mov|m4v)$/i.test(String(x.archivo||'')))}
 function esVidFile(f){return !!f&&(/^video\//.test(f.type)||/\.(mp4|mov|m4v|webm)$/i.test(f.name||''))}
 function casoTieneDato(p){return !!(p&&(String(p.casoMotivo||'').trim()||imgList(p).length))}
-function casoFsOk(){return typeof window.showDirectoryPicker==='function'&&window.self===window.top}
+/* Versión web (Fase 2 · Bloque E): RNV_CASOS reemplaza la carpeta del disco por Storage privado, con los mismos
+   handles. En la app local no existe y nada de esto cambia. */
+function casoFsOk(){return !!window.RNV_CASOS||typeof window.showDirectoryPicker==='function'&&window.self===window.top}
 function casoIdb(){return new Promise((res,rej)=>{const q=indexedDB.open('nv_casos',1);
   q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
 async function casoKv(k,v){const db=await casoIdb();return new Promise((res,rej)=>{
@@ -3526,6 +3528,7 @@ async function casoKv(k,v){const db=await casoIdb();return new Promise((res,rej)
   const q=v===undefined?st.get(k):st.put(v,k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
 /* Sin gesto: sólo consulta. Devuelve el handle si ya hay permiso de escritura. */
 async function casoInit(){
+  if(window.RNV_CASOS){casoRoot=window.RNV_CASOS.raiz();casoPerm='granted';casoMovida=false;return casoRoot}
   if(casoRoot&&casoPerm==='granted')return casoRoot;
   if(!casoFsOk())return null;
   try{const h=casoRoot||await casoKv('root');if(!h)return null;casoRoot=h;
@@ -3585,13 +3588,13 @@ async function casoGalRender(){
   const urls=files.map(f=>{if(!f)return null;const u=URL.createObjectURL(f);casoUrls.push(u);return u});
   host.innerHTML=`${L.length?`<div class="caso-grid">${L.map((x,i)=>`<figure class="cimg">
       ${urls[i]?`<button type="button" class="cimg-th" data-cver="${i}" title="${esVid(x)?'Reproducir':'Ver en grande'}">${esVid(x)?`<video src="${urls[i]}#t=0.1" muted preload="metadata"></video><span class="vbadge">▶ video${x.dur?' · '+Math.round(x.dur)+' s':''}</span>`:`<img src="${urls[i]}" alt="${esc(x.epigrafe||x.archivo)}">`}</button>`
-        :`<div class="cimg-th falta">Archivo no encontrado<br><span class="mono">${esc(d.casoCarpeta||'')}/${esc(x.archivo)}</span></div>`}
+        :`<div class="cimg-th falta">${esc(window.RNV_CASOS?window.RNV_CASOS.falta(x):'Archivo no encontrado')}<br><span class="mono">${esc(d.casoCarpeta||'')}/${esc(x.archivo)}</span></div>`}
       <input class="cimg-cap" data-ccap="${i}" value="${esc(x.epigrafe||'')}" placeholder="Epígrafe: secuencia, fecha, hallazgo">
       <div class="cimg-act">${urls[i]?`<button type="button" class="btn sm ghost" data-cedit="${i}">${icon('img')} Tapar datos</button>`:''}<button type="button" class="btn sm ghost" data-cdel="${i}">${icon('trash')} Quitar</button></div>
     </figure>`).join('')}</div>`:''}
     <div class="caso-drop" id="casoDrop">${icon('img')}<span>Arrastrá imágenes o videos (hasta ${VID_MAX_S} s) acá, pegá imágenes con <b>Cmd+V</b> o</span>
       <label class="btn sm">Elegir archivos<input type="file" id="casoIn" accept="image/*,video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden></label></div>
-    ${pie}<p class="caso-nota mono">Carpeta: Registro-Neurovascular/casos/${esc(d.casoCarpeta||casoCarpetaDe(Object.assign({},d)))} · respaldo a Google Drive cada 2 h</p>`;
+    ${pie}<p class="caso-nota mono">${window.RNV_CASOS?esc(window.RNV_CASOS.nota()):`Carpeta: Registro-Neurovascular/casos/${esc(d.casoCarpeta||casoCarpetaDe(Object.assign({},d)))} · respaldo a Google Drive cada 2 h`}</p>`;
   $('#casoIn').onchange=e=>{casoEncolar([...e.target.files]);e.target.value=''};
   const dz=$('#casoDrop');
   dz.ondragover=e=>{e.preventDefault();dz.classList.add('on')};
@@ -3607,11 +3610,13 @@ async function casoGalRender(){
 }
 /* Quitar no borra: mueve el archivo a casos/_papelera/ (se vacía a mano). La ficha deja de listarla. */
 async function casoQuitar(i){const M=imgList(draft),x=M[i];if(!x)return;
-  if(!confirm('¿Quitar esta imagen de la ficha?\nEl archivo se mueve a casos/_papelera (no se borra).'))return;
-  try{const r=await casoInit(),dir=await casoDir(draft,false),f=dir&&await casoFile(dir,x.archivo);
-    if(f){const pap=await r.getDirectoryHandle('_papelera',{create:true});
+  if(!confirm(window.RNV_CASOS?'¿Quitar esta imagen de la ficha?\nEn el servidor va a la papelera (no se borra).':'¿Quitar esta imagen de la ficha?\nEl archivo se mueve a casos/_papelera (no se borra).'))return;
+  try{const r=await casoInit(),dir=await casoDir(draft,false);
+    /* web: la fila va a la papelera aunque el archivo no se pueda bajar (sin red) */
+    if(window.RNV_CASOS){if(dir)await dir.removeEntry(x.archivo)}
+    else{const f=dir&&await casoFile(dir,x.archivo);if(f){const pap=await r.getDirectoryHandle('_papelera',{create:true});
       const w=await (await pap.getFileHandle(draft.casoCarpeta+'_'+Date.now().toString(36)+'_'+x.archivo,{create:true})).createWritable();
-      await w.write(f);await w.close();await dir.removeEntry(x.archivo)}
+      await w.write(f);await w.close();await dir.removeEntry(x.archivo)}}
   }catch(e){toast('No se pudo mover el archivo: '+(e.message||e.name));return}
   M.splice(i,1);draft.imagenes=M;casoPersist();casoGalRender();toast('Imagen quitada')}
 function casoEncolar(files){const ok=files.filter(f=>f&&(/^image\//.test(f.type)||esVidFile(f)));

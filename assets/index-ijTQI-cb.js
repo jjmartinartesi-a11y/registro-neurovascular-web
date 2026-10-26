@@ -23467,9 +23467,16 @@ function modal(html) {
 }
 async function prepararJefe(sb) {
 	const guardada = await kv("get", "privada");
-	const { data, error } = await sb.rpc("clave_jefe_envuelta");
+	const { data, error } = await sb.from("claves_jefe").select("kid, publica, claves_jefe_privadas(privada_envuelta)").eq("activa", true).maybeSingle();
 	if (error && !guardada) throw error;
-	const srv = error ? null : data;
+	const fila = error ? null : data;
+	const env = fila ? [fila.claves_jefe_privadas].flat()[0]?.privada_envuelta : void 0;
+	if (fila && !env) throw new Error("No se pudo leer tu clave envuelta (¿falta la verificación en dos pasos?)");
+	const srv = fila ? {
+		kid: fila.kid,
+		publica: fila.publica,
+		envuelta: env
+	} : null;
 	if (error && guardada) {
 		const p = await kv("get", "publica");
 		if (p && p.kid === guardada.kid) {
@@ -23513,10 +23520,14 @@ async function prepararJefe(sb) {
 	const g = await crearClaves();
 	const { error: e2 } = await sb.from("claves_jefe").insert({
 		kid: g.kid,
-		publica: g.publica,
-		privada_envuelta: g.envuelta
+		publica: g.publica
 	});
 	if (e2) throw e2;
+	const { error: e3 } = await sb.from("claves_jefe_privadas").insert({
+		kid: g.kid,
+		privada_envuelta: g.envuelta
+	});
+	if (e3) throw e3;
 	await kv("put", "privada", {
 		kid: g.kid,
 		privada: g.privada

@@ -24096,12 +24096,45 @@ async function quienSoy() {
 	});
 	return true;
 }
+async function cambioDeModo() {
+	const { data, error } = await sb.from("proyecto").select("clave, valor");
+	if (error || !data) return;
+	const marca = data.map((x) => x.clave + "=" + x.valor).sort().join(";");
+	let vista = "";
+	try {
+		vista = localStorage.getItem("rnv_modo_proyecto") || "";
+	} catch {}
+	if (vista === marca) return;
+	if (data.some((x) => x.clave === "modo" && x.valor === "real")) {
+		DB.length = 0;
+		save();
+		est = {
+			sombra: {},
+			cola: [],
+			rev: 0,
+			altasWeb: [],
+			rechazos: [],
+			cif: {},
+			envio: {}
+		};
+		await guardarEstado();
+		await new Promise((ok) => {
+			const r = indexedDB.deleteDatabase("rnv_media");
+			r.onsuccess = r.onerror = r.onblocked = () => ok();
+		});
+		toast("La versión web pasó a los datos reales: se borraron de este dispositivo los datos de prueba");
+	}
+	try {
+		localStorage.setItem("rnv_modo_proyecto", marca);
+	} catch {}
+}
 async function iniciar() {
 	sb = createClient("https://xynzajsqixkohvbezsvy.supabase.co", "sb_publishable_hflnUDn9TK376hqujaL7qw_f5yvEFwG", { auth: {
 		persistSession: true,
 		autoRefreshToken: true
 	} });
 	await leerEstado();
+	await cambioDeModo();
 	await instalar(sb);
 	window.RNV_FICHA_NUEVA = (f) => {
 		if (f.id && !est.altasWeb.includes(f.id)) est.altasWeb.push(f.id);

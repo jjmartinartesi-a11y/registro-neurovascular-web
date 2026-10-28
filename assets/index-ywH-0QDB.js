@@ -22678,10 +22678,6 @@ function canon(v) {
 var iniciales = (n) => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 3).map((w) => w.charAt(0).toUpperCase() + ".").join(" ");
 var igual = (a, b) => canon(a ?? null) === canon(b ?? null);
 var copia = (x) => JSON.parse(JSON.stringify(x));
-function esSintetica(f, altasWeb) {
-	if (altasWeb.has(f.id)) return true;
-	return /^DEMO-\d+$/.test(String(f.documento ?? "")) || /^(ZETAX|PRUEBA)\b/i.test(String(f.nombre ?? ""));
-}
 function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
 	const ok = (k, f) => !permitido || permitido(k, f);
 	const aSombra = (f) => permitido ? copia(Object.fromEntries(Object.entries(f).filter(([k]) => ok(k, f)))) : copia(f);
@@ -22844,7 +22840,7 @@ async function llamar(cuerpo) {
 }
 function mostrarLink(nombre, clave) {
 	const l = linkDe(clave);
-	const texto = `Hola ${nombre}: este es tu link personal para cargar en el Registro Neurovascular (versión de prueba, datos sintéticos). Abrilo una vez en tu celular y agregalo a la pantalla de inicio. No lo compartas: entra como vos.\n${l}`;
+	const texto = `Hola ${nombre}: este es tu link personal para cargar en el Registro Neurovascular. Abrilo una vez en tu celular y agregalo a la pantalla de inicio. No lo compartas: entra como vos.\n${l}`;
 	return `<div class="rnv-link"><p><b>Link de ${esc(nombre)}</b> — se muestra una sola vez. Mandáselo sólo a esa persona.</p>
     <input class="mono" readonly value="${esc(l)}" id="rnvLinkTxt">
     <div><button type="button" class="btn sm" id="rnvLinkCopiar">Copiar</button>
@@ -22866,7 +22862,7 @@ async function panelResidentes() {
 		}
 		caja.innerHTML = `<div class="rnv-cfl"><h3>Residentes</h3>
       <p class="rnv-nota">Cada residente entra con su link personal, sin contraseña ni códigos. Ve sólo lo que cargó y los
-      pedidos de reperfusión abiertos. En esta fase, con nombres de prueba.</p>
+      pedidos de reperfusión abiertos.</p>
       ${err ? `<p class="rnv-err">${esc(err)}</p>` : filas ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>${filas}</tbody></table>` : "<p>Todavía no hay residentes.</p>"}
       ${extra}
       <form id="rnvResAlta" class="rnv-res-alta"><input id="rnvResNombre" placeholder="Nombre del residente" minlength="3" required>
@@ -22943,8 +22939,7 @@ async function sincronizarPedidos(enServidor) {
 		if (!ya?.length) {
 			const { error } = await sb$2.from("pedidos_reperfusion").insert({
 				evento_id: id,
-				iniciales: iniciales(q?.nombre) || null,
-				sintetico: true
+				iniciales: iniciales(q?.nombre) || null
 			});
 			if (error) throw error;
 		}
@@ -22991,7 +22986,7 @@ function iniciar$1(cliente) {
 	w.repWaTexto = (p) => {
 		const f = repFaltanApp(p).map((k) => REP_LAB_APP[k] || k);
 		const tr = [p.trombolisis === true ? "trombólisis" : "", p.trombectomia === true ? "trombectomía" : ""].filter(Boolean).join(" + ");
-		return "*** Unidad de Stroke - CUENTA 350.000 ***\n⏱️ *Pedido de reperfusión* (versión de prueba)\nCompletar los tiempos del Nº " + (p.nOrden ?? "—") + (tr ? " (" + tr + ")" : "") + (f.length ? "\nFalta: " + f.join(", ") : "") + "\nEntrá con tu link personal → «Pedidos de reperfusión».";
+		return "*** Unidad de Stroke - CUENTA 350.000 ***\n⏱️ *Pedido de reperfusión*\nCompletar los tiempos del Nº " + (p.nOrden ?? "—") + (tr ? " (" + tr + ")" : "") + (f.length ? "\nFalta: " + f.join(", ") : "") + "\nEntrá con tu link personal → «Pedidos de reperfusión».";
 	};
 	w.repEstadoTxt = (rp) => !rp ? "" : rp.estado === "error" ? "no se pudo pedir (" + (rp.msg || "error") + ")" : rp.estado === "completo" ? "completado por los residentes" : rp.estado === "parcial" ? "carga parcial de los residentes" : "pendiente para los residentes";
 }
@@ -23241,8 +23236,7 @@ async function subirMedia(enServidor) {
 			mime: fila.mime,
 			bytes: fila.bytes,
 			sha256: fila.sha256,
-			tapado: true,
-			sintetico: true
+			tapado: true
 		});
 		if (e1 && e1.code !== "23505") throw e1;
 		const { error: e2 } = await sb$1.storage.from("casos").upload(fila.ruta, blob, {
@@ -23607,7 +23601,6 @@ var ilegibles = 0;
 var listo = false;
 var ultimoError = "";
 var errorDeRed = false;
-var noElegibles = 0;
 var programado;
 var rol = "";
 function idb() {
@@ -23670,7 +23663,6 @@ function pintar() {
 		txt += ` · ${ilegibles} campo${ilegibles > 1 ? "s" : ""} cifrado${ilegibles > 1 ? "s" : ""} que no se pudo abrir`;
 		tono = "crit";
 	}
-	if (noElegibles) txt += ` · ${noElegibles} ficha${noElegibles > 1 ? "s" : ""} sin marca sintética (no se suben)`;
 	el.dataset.tono = tono;
 	el.querySelector(".rnv-sync-txt").textContent = txt;
 }
@@ -23685,9 +23677,7 @@ function encolar() {
 	});
 }
 function encolarCampos() {
-	const altas = new Set(est.altasWeb);
-	const d = diferencias(est.sombra, DB, (f) => esSintetica(f, altas), (/* @__PURE__ */ new Date()).toISOString(), () => crypto.randomUUID(), rol === "residente" ? permitido : void 0);
-	noElegibles = d.noElegibles;
+	const d = diferencias(est.sombra, DB, () => true, (/* @__PURE__ */ new Date()).toISOString(), () => crypto.randomUUID(), rol === "residente" ? permitido : void 0);
 	if (d.ops.length) {
 		est.sombra = d.sombra;
 		est.cola.push(...d.ops);
@@ -23872,9 +23862,9 @@ function pantallaEntrada(aviso = "") {
 		const caja = document.createElement("div");
 		caja.id = "rnvEntrar";
 		caja.innerHTML = `<form class="rnv-entrar">
-      <div class="eyebrow">Registro Neurovascular · versión web de prueba</div>
+      <div class="eyebrow">Registro Neurovascular · versión web</div>
       <h2>Entrar</h2>
-      <p class="rnv-aviso">Proyecto <b>sintético</b>: sólo datos de prueba. Ningún dato real se carga acá.</p>
+      <p class="rnv-aviso">Datos de pacientes: nombre y documento viajan cifrados y sólo los abre el jefe.</p>
       <label>Correo<input id="rnvMail" type="email" autocomplete="username" required></label>
       <label>Contraseña<input id="rnvClave" type="password" autocomplete="current-password" required></label>
       <div class="rnv-err" id="rnvErr">${esc(aviso)}</div>

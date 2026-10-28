@@ -22752,6 +22752,39 @@ function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
 		noElegibles
 	};
 }
+function sembrarEn(db, sombra, filas) {
+	const sinMediaId = (v) => Array.isArray(v) ? v.map((x) => {
+		if (!x || typeof x !== "object") return x;
+		const { media_id: _m, ...r } = x;
+		return r;
+	}) : v;
+	let agregadas = 0;
+	for (const x of filas) {
+		if (x.borrado_en) {
+			sombra[x.id] = {
+				...copia(x.datos),
+				id: x.id,
+				__borrada: true
+			};
+			continue;
+		}
+		sombra[x.id] = {
+			...copia(x.datos),
+			id: x.id
+		};
+		const f = db.find((y) => y && y.id === x.id);
+		if (!f) {
+			db.push({
+				...copia(x.datos),
+				id: x.id
+			});
+			agregadas++;
+			continue;
+		}
+		if (Array.isArray(x.datos.imagenes) && canon(sinMediaId(x.datos.imagenes)) === canon(f.imagenes ?? null)) f.imagenes = copia(x.datos.imagenes);
+	}
+	return { agregadas };
+}
 function aplicarResultado(op, r) {
 	const poner = {};
 	if (r.estado === "rechazado") {
@@ -22856,13 +22889,14 @@ async function panelResidentes() {
 		try {
 			filas = (await llamar({ accion: "listar" })).residentes.map((x) => `<tr data-id="${esc(x.user_id)}" data-n="${esc(x.nombre)}"><td>${esc(x.nombre)}</td>
         <td>${x.activo ? x.clave ? x.clave.usada_en ? "entró el " + esc(x.clave.usada_en.slice(0, 10)) : "link sin usar" : "sin link" : "dado de baja"}</td>
-        <td>${x.activo ? "<button type=\"button\" class=\"btn sm ghost\" data-a=\"link\">Link nuevo</button> <button type=\"button\" class=\"btn sm ghost\" data-a=\"baja\">Dar de baja</button>" : ""}</td></tr>`).join("");
+        <td><button type="button" class="btn sm ghost" data-a="renombrar">Cambiar nombre</button> ${x.activo ? "<button type=\"button\" class=\"btn sm ghost\" data-a=\"link\">Link nuevo</button> <button type=\"button\" class=\"btn sm ghost\" data-a=\"baja\">Dar de baja</button>" : "<button type=\"button\" class=\"btn sm ghost\" data-a=\"reactivar\">Reactivar</button>"}</td></tr>`).join("");
 		} catch (e) {
 			err = e.message;
 		}
 		caja.innerHTML = `<div class="rnv-cfl"><h3>Residentes</h3>
       <p class="rnv-nota">Cada residente entra con su link personal, sin contraseña ni códigos. Ve sólo lo que cargó y los
-      pedidos de reperfusión abiertos.</p>
+      pedidos de reperfusión abiertos. Dar de baja corta su acceso; sus cargas quedan. Un residente que vuelve se reactiva
+      con un link nuevo.</p>
       ${err ? `<p class="rnv-err">${esc(err)}</p>` : filas ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>${filas}</tbody></table>` : "<p>Todavía no hay residentes.</p>"}
       ${extra}
       <form id="rnvResAlta" class="rnv-res-alta"><input id="rnvResNombre" placeholder="Nombre del residente" minlength="3" required>
@@ -22897,12 +22931,18 @@ async function panelResidentes() {
 			const a = b.dataset.a;
 			if (a === "baja" && !confirm(`¿Dar de baja a ${nombre}? Su link deja de servir y su sesión se cierra.`)) return;
 			if (a === "link" && !confirm(`¿Link nuevo para ${nombre}? El anterior deja de servir.`)) return;
+			let nuevo = "";
+			if (a === "renombrar") {
+				nuevo = (prompt("Nombre del residente", nombre) || "").trim();
+				if (nuevo.length < 3 || nuevo === nombre) return;
+			}
 			try {
 				const r = await llamar({
 					accion: a,
-					user_id: id
+					user_id: id,
+					...nuevo ? { nombre: nuevo } : {}
 				});
-				extra = a === "link" ? mostrarLink(nombre, String(r.clave)) : `<p>${esc(nombre)} quedó dado de baja.</p>`;
+				extra = a === "link" || a === "reactivar" ? mostrarLink(nombre, String(r.clave)) : a === "renombrar" ? `<p>Ahora se llama ${esc(nuevo)}.</p>` : `<p>${esc(nombre)} quedó dado de baja.</p>`;
 			} catch (e) {
 				extra = `<p class="rnv-err">${esc(e.message)}</p>`;
 			}
@@ -22976,6 +23016,20 @@ function repCardWeb(p) {
 }
 function iniciar$1(cliente) {
 	sb$2 = cliente;
+	const w0 = window;
+	const vCfgApp = w0.vCfg;
+	w0.vCfg = () => {
+		vCfgApp();
+		const head = document.querySelector("#main .head");
+		if (!head || document.getElementById("rnvCfgRes")) return;
+		const c = document.createElement("div");
+		c.className = "card";
+		c.id = "rnvCfgRes";
+		c.style.cssText = "max-width:760px;margin-bottom:18px";
+		c.innerHTML = "<h3>Residentes</h3><div class=\"hint\">Quiénes cargan desde el celular: alta (con su link personal), cambio de nombre, link nuevo, baja y reactivación.</div><button type=\"button\" class=\"btn\" id=\"rnvCfgResBtn\">Administrar residentes</button>";
+		head.after(c);
+		c.querySelector("#rnvCfgResBtn").addEventListener("click", () => void panelResidentes());
+	};
 	try {
 		porPedir = JSON.parse(localStorage.getItem("rnv_por_pedir") || "[]");
 	} catch {
@@ -23603,6 +23657,7 @@ var ultimoError = "";
 var errorDeRed = false;
 var programado;
 var rol = "";
+var LOCAL = false;
 function idb() {
 	return new Promise((ok, mal) => {
 		const r = indexedDB.open(IDB, 1);
@@ -23654,7 +23709,7 @@ function pintar() {
 		txt += ` · ${est.rechazos.length} rechazado${est.rechazos.length > 1 ? "s" : ""}`;
 		tono = "crit";
 	}
-	const media = pendientes();
+	const media = LOCAL ? 0 : pendientes();
 	if (media && !ultimoError) {
 		txt += ` · ${media} archivo${media > 1 ? "s" : ""} sin subir`;
 		if (tono === "good") tono = "warn";
@@ -23668,6 +23723,10 @@ function pintar() {
 }
 function encolar() {
 	if (!listo) return;
+	if (LOCAL) {
+		encolarCampos();
+		return;
+	}
 	anotarFichas().then((cambio) => {
 		if (cambio) save();
 		else encolarCampos();
@@ -23803,7 +23862,30 @@ async function abrirFila(id, datos) {
 	}
 	return d;
 }
+async function sembrar() {
+	const filas = [];
+	let rev = 0;
+	for (let desde = 0;; desde += 500) {
+		const { data, error } = await sb.from("eventos").select("id, datos, borrado_en, rev").order("id").range(desde, desde + 499);
+		if (error) throw error;
+		for (const x of data) {
+			rev = Math.max(rev, Number(x.rev));
+			filas.push({
+				id: x.id,
+				datos: await abrirFila(x.id, x.datos),
+				borrado_en: x.borrado_en
+			});
+		}
+		if (data.length < 500) break;
+	}
+	const { agregadas } = sembrarEn(DB, est.sombra, filas);
+	est.rev = rev;
+	await guardarEstado();
+	save();
+	toast(`Sincronización activada: ${filas.length} fichas en la nube` + (agregadas ? `, ${agregadas} nueva${agregadas > 1 ? "s" : ""} desde ahí` : ""));
+}
 async function bajar() {
+	if (LOCAL && !est.rev && !Object.keys(est.sombra).length) return sembrar();
 	for (;;) {
 		const { data, error } = await sb.from("eventos").select("id, datos, borrado_en, rev").gt("rev", est.rev).order("rev").limit(500);
 		if (error) throw error;
@@ -23844,7 +23926,7 @@ async function sincronizar() {
 		try {
 			await subir();
 			const enServidor = (id) => !!est.sombra[id] && !est.sombra[id].__borrada && !est.cola.some((o) => o.fila_id === id);
-			await subirMedia(enServidor);
+			if (!LOCAL) await subirMedia(enServidor);
 			if (rol === "jefe") await sincronizarPedidos(enServidor);
 			await bajar();
 			if (rol === "residente") await refrescar();
@@ -23903,6 +23985,19 @@ function pantallaEntrada(aviso = "") {
 			});
 			err.textContent = error ? describir(error) : "Listo: abrí el link que te llegó al correo desde este mismo teléfono o navegador.";
 		});
+		if (LOCAL) {
+			caja.querySelector(".rnv-entrar .eyebrow").textContent = "Registro Neurovascular · sincronizar esta Mac con la nube";
+			caja.querySelector(".rnv-res-pegar").remove();
+			caja.querySelector("form > p.rnv-nota")?.remove();
+			const no = caja.querySelector("#rnvLink");
+			no.id = "rnvSinSync";
+			no.textContent = "Ahora no (seguir sin sincronizar)";
+			no.replaceWith(no.cloneNode(true));
+			caja.querySelector("#rnvSinSync").addEventListener("click", () => {
+				caja.remove();
+				ok();
+			});
+		}
 		caja.querySelector("form").addEventListener("submit", async (ev) => {
 			ev.preventDefault();
 			const email = document.getElementById("rnvMail").value.trim();
@@ -24128,27 +24223,62 @@ async function cambioDeModo() {
 		localStorage.setItem("rnv_modo_proyecto", marca);
 	} catch {}
 }
-async function iniciar() {
+async function iniciar(opc = {}) {
+	LOCAL = !!opc.local;
 	sb = createClient("https://xynzajsqixkohvbezsvy.supabase.co", "sb_publishable_hflnUDn9TK376hqujaL7qw_f5yvEFwG", { auth: {
 		persistSession: true,
 		autoRefreshToken: true
 	} });
 	await leerEstado();
-	await cambioDeModo();
-	await instalar(sb);
+	if (!LOCAL) {
+		await cambioDeModo();
+		await instalar(sb);
+	}
 	window.RNV_FICHA_NUEVA = (f) => {
 		if (f.id && !est.altasWeb.includes(f.id)) est.altasWeb.push(f.id);
 		if (rol === "residente" && f.id) nuevaCarga(f.id);
 	};
 	window.RNV_TRAS_GUARDAR = encolar;
 	insignia();
-	window.addEventListener("hashchange", () => {
-		if (/^#r=[A-Za-z0-9_-]{43}$/.test(location.hash)) location.reload();
-	});
-	const errLink = await entrarConLink();
+	let errLink = "";
+	if (!LOCAL) {
+		window.addEventListener("hashchange", () => {
+			if (/^#r=[A-Za-z0-9_-]{43}$/.test(location.hash)) location.reload();
+		});
+		errLink = await entrarConLink();
+	}
 	const { data } = await sb.auth.getSession();
-	if (!data.session) await pantallaEntrada(errLink);
+	if (!data.session) {
+		if (LOCAL) {
+			sinSesionLocal();
+			return;
+		}
+		await pantallaEntrada(errLink);
+	}
+	await arrancar();
+}
+function sinSesionLocal() {
+	const el = document.getElementById("rnvSync");
+	if (!el) return;
+	el.dataset.tono = "warn";
+	el.querySelector(".rnv-sync-txt").textContent = "Sin sincronizar con la nube";
+	const b = el.querySelector("#rnvSalir");
+	b.textContent = "Entrar";
+	b.replaceWith(b.cloneNode(true));
+	el.querySelector("#rnvSalir").addEventListener("click", async () => {
+		await pantallaEntrada();
+		const { data } = await sb.auth.getSession();
+		if (data.session) location.reload();
+	});
+}
+async function arrancar() {
 	if (!await quienSoy()) return;
+	if (LOCAL && rol !== "jefe") {
+		await sb.auth.signOut({ scope: "local" });
+		sinSesionLocal();
+		toast("En la app de la Mac sólo entra el jefe");
+		return;
+	}
 	listo = true;
 	try {
 		await navigator.locks.request("rnv-sync", () => bajar());

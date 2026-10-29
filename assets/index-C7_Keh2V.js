@@ -23030,6 +23030,7 @@ function iniciar$1(cliente) {
 		head.after(c);
 		c.querySelector("#rnvCfgResBtn").addEventListener("click", () => void panelResidentes());
 	};
+	if (view === "cfg") w0.vCfg && w0.vCfg();
 	try {
 		porPedir = JSON.parse(localStorage.getItem("rnv_por_pedir") || "[]");
 	} catch {

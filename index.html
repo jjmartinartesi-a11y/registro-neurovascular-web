@@ -2235,9 +2235,11 @@ const WIZARD_HTML = `<title>Tamaño del infarto y anticoagulación — ELAN</tit
     document.getElementById('guidedBtn').addEventListener('click',function(){ path=['start']; renderNode(mode==='single'?'circ':'multi'); });
   }
 
+  // La app pone el título «ELAN #<nº de orden>» mientras dura la impresión: es el nombre sugerido del PDF.
+  function imprimir(){ if(EMBED){ try{ window.parent.postMessage({type:'elan-print'}, '*'); }catch(e){} } window.print(); }
   function printResBtn(){
     var b=document.getElementById("printRes");
-    if(b) b.addEventListener("click",function(){ document.body.classList.add("print-result"); window.print(); });
+    if(b) b.addEventListener("click",function(){ document.body.classList.add("print-result"); imprimir(); });
   }
 
   // ---- Phase 1 result: infarct size ----
@@ -2260,16 +2262,19 @@ const WIZARD_HTML = `<title>Tamaño del infarto y anticoagulación — ELAN</tit
       '</div></div>'+
       '<div class="backbar"><button class="btn" id="backBtn" type="button">'+ICONS.back+' Atrás</button>'+
         '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
-        (EMBED?'<button class="btn" id="saveSize" type="button">'+ICONS.check+' Guardar solo tamaño</button>':'')+
+        (EMBED?'<button class="btn" id="saveSize" type="button">'+ICONS.check+' Guardar tamaño y cerrar</button>':'')+
         '<button class="btn" id="printRes" type="button">'+ICONS.print+' Imprimir</button>'+
         '<button class="btn primary" id="recBtn" type="button">Recomendar anticoagulación →</button></div></div>'+
       '</div></div>';
     document.getElementById("backBtn").addEventListener("click",function(){ resultBack(); });
     document.getElementById("recBtn").addEventListener("click",renderModifiers);
     printResBtn();
-    if(EMBED){ document.getElementById("saveSize").addEventListener("click",function(){
-      emitToFicha({ elanSize:r.grade, elanCriterio:criterion||'', doacDia:'', doacTono:'', doacDetalle:'' });
-    }); }
+    if(EMBED){
+      // Calculado = guardado en la ficha (Juan, 31/10); el botón además cierra el clasificador.
+      emitToFicha({ auto:true, soloTamano:true, elanSize:r.grade, elanCriterio:criterion||'' });
+      document.getElementById("saveSize").addEventListener("click",function(){
+        emitToFicha({ soloTamano:true, elanSize:r.grade, elanCriterio:criterion||'' });
+      }); }
   }
 
   // ---- Phase 2: modifiers ----
@@ -2361,31 +2366,33 @@ const WIZARD_HTML = `<title>Tamaño del infarto y anticoagulación — ELAN</tit
         '<p class="disc">Esquema actualizado <b>0–2–7</b> (reemplaza al empírico 1-3-6-12): día 0–2 en menor/moderado · día 6–7 en mayor · diferido si TH sintomática o HTA no controlada. Síntesis de ELAN, OPTIMAS y TIMING + guías AHA/ASA 2026 y Continuum 2026 (cuaderno NotebookLM). No sustituye el juicio clínico ni las guías locales. Día 0 = día del ictus.</p>'+
         '<div class="backbar"><button class="btn" id="backBtn" type="button">'+ICONS.back+' Modificadores</button>'+
           '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
-          (EMBED?'<button class="btn primary" id="saveFicha" type="button">'+ICONS.check+' Guardar en la ficha</button>':'')+
+          (EMBED?'<button class="btn primary" id="saveFicha" type="button">'+ICONS.check+' Guardar y cerrar</button>':'')+
           '<button class="btn" id="printRes" type="button">'+ICONS.print+' Imprimir recomendación</button>'+
           '<button class="btn'+(EMBED?'':' primary')+'" id="resetBtn" type="button">Nuevo caso</button></div></div>'+
       '</div></div>';
     document.getElementById("backBtn").addEventListener("click",renderModifiers);
     document.getElementById("resetBtn").addEventListener("click",reset);
     printResBtn();
-    if(EMBED){ document.getElementById("saveFicha").addEventListener("click",function(){
-      emitToFicha({
+    if(EMBED){
+      var res = {
         elanSize: r.grade,
         elanCriterio: state.criterion || '',
         doacDia: rc.win + (rc.sub?' — '+rc.sub:''),
         doacTono: rc.tone,
         doacDetalle: rc.evid,
         mods: mods
-      });
-    }); }
+      };
+      emitToFicha(Object.assign({ auto:true }, res));
+      document.getElementById("saveFicha").addEventListener("click",function(){ emitToFicha(res); }); }
   }
 
   function reset(){ path=[]; state={}; renderNode("start"); }
 
   document.getElementById("printAll").addEventListener("click",function(){
-    document.body.classList.remove("print-result"); window.print();
+    document.body.classList.remove("print-result"); imprimir();
   });
-  window.addEventListener("afterprint",function(){ document.body.classList.remove("print-result"); });
+  window.addEventListener("afterprint",function(){ document.body.classList.remove("print-result");
+    if(EMBED){ try{ window.parent.postMessage({type:'elan-printed'}, '*'); }catch(e){} } });
 
   reset();
 })();
@@ -7349,16 +7356,30 @@ function elanSummaryHtml(d){
     ${d.elanCriterio?`<div class="elan-sub"><b>Criterio:</b> ${esc(d.elanCriterio)}</div>`:''}
     ${d.doacDetalle?`<div class="elan-sub">${esc(d.doacDetalle)}</div>`:''}</div>`;
 }
+/* Nombre sugerido del PDF al imprimir desde el clasificador (Juan, 31/10): «ELAN #<nº de orden>». Una ficha nueva
+   recibe su número al agregarla (ordFill): no se adivina, para no rotular un PDF con el número de otro paciente. */
+function elanNombre(){const c=$('#f_nOrden'),n=(c&&c.value.trim())||(draft&&draft.nOrden!=null?String(draft.nOrden):'');
+  return n?'ELAN #'+n:'ELAN (sin Nº de orden)'}
+let elanTituloPrevio=null;
 function openElanWizard(){
   const ov=$('#elanOverlay'),host=$('#elanFrameHost');host.innerHTML='';
   const f=document.createElement('iframe');f.className='elan-frame';f.setAttribute('title','Clasificador ELAN');
-  f.srcdoc=WIZARD_HTML;host.appendChild(f);ov.style.display='flex';
+  f.srcdoc=WIZARD_HTML.replace(/<title>[^<]*<\/title>/,'<title>'+esc(elanNombre())+'</title>');host.appendChild(f);ov.style.display='flex';
 }
-function closeElanWizard(){$('#elanOverlay').style.display='none';$('#elanFrameHost').innerHTML=''}
+function closeElanWizard(){$('#elanOverlay').style.display='none';$('#elanFrameHost').innerHTML='';
+  if(elanTituloPrevio!=null){document.title=elanTituloPrevio;elanTituloPrevio=null}}
+/* El resultado entra en la ficha apenas se calcula (`auto`: el clasificador sigue abierto y la sección E se
+   actualiza en el lugar); los botones «… y cerrar» además lo cierran. Sólo el tamaño: si es el mismo que ya estaba,
+   la recomendación de DOAC guardada se conserva; si cambió, se borra (dependía del tamaño anterior). */
 window.addEventListener('message',function(ev){
-  const m=ev.data;if(!m||m.type!=='elan-result')return;
-  draft.elanSize=m.elanSize||'';draft.elanCriterio=m.elanCriterio||'';
-  draft.doacDia=m.doacDia||'';draft.doacTono=m.doacTono||'';draft.doacDetalle=m.doacDetalle||'';
+  const m=ev.data,fr=$('#elanFrameHost iframe');if(!m||!fr||ev.source!==fr.contentWindow)return;
+  if(m.type==='elan-print'){if(elanTituloPrevio==null)elanTituloPrevio=document.title;document.title=elanNombre();return}
+  if(m.type==='elan-printed'){if(elanTituloPrevio!=null){document.title=elanTituloPrevio;elanTituloPrevio=null}return}
+  if(m.type!=='elan-result')return;
+  const tam=m.elanSize||'',mismo=draft.elanSize===tam;
+  draft.elanSize=tam;draft.elanCriterio=m.elanCriterio||'';
+  if(!m.soloTamano||!mismo){draft.doacDia=m.doacDia||'';draft.doacTono=m.doacTono||'';draft.doacDetalle=m.doacDetalle||''}
+  if(m.auto){const s=$('#elanSummary');if(s)s.innerHTML=elanSummaryHtml(draft);const sec=$('#elanSec');if(sec&&tam)sec.style.display='';return}
   closeElanWizard();if(view==='form')vForm();
   toast('Clasificación ELAN cargada en la ficha ✓');
 });

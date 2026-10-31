@@ -12871,7 +12871,7 @@ function generatePKCEVerifier() {
 	crypto.getRandomValues(array);
 	return Array.from(array, dec2hex).join("");
 }
-async function sha256$1(randomString) {
+async function sha256$2(randomString) {
 	const encodedData = new TextEncoder().encode(randomString);
 	const hash = await crypto.subtle.digest("SHA-256", encodedData);
 	const bytes = new Uint8Array(hash);
@@ -12882,7 +12882,7 @@ async function generatePKCEChallenge(verifier) {
 		console.warn("WebCrypto API is not supported. Code challenge method will default to use plain instead of sha256.");
 		return verifier;
 	}
-	const hashed = await sha256$1(verifier);
+	const hashed = await sha256$2(verifier);
 	return btoa(hashed).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 var PKCE_FLOW_ID_PATTERN = /^[a-zA-Z0-9_-]{8,64}$/;
@@ -22461,7 +22461,7 @@ function resumenWhatsApp(d, cat, quien, cargaIso) {
 	L.push("mRS previo: " + nn(d.mrsPrevio), "TA: " + nn(taTexto(d)), "Glucemia: " + (vacio$1(d.glucemia) ? "—" : d.glucemia + " mg/dL"), "ECG: " + nn(ecgTexto(d)));
 	if (d.tipo === "AIT") L.push("ABCD2: " + abcd2Texto(d, cat));
 	if (d.tipo === "Hemorrágico") L.push("Localización: " + nn(lista(d.hicLocaliza).join(", ")), "Volumen: " + (vacio$1(d.hicVolumen) ? "—" : d.hicVolumen + " mL"), "Anticoagulado: " + nn(siNo(d.hicAnticoag)));
-	L.push("FRV: " + nn(lista(d.frv).join(", ")), "Antecedentes familiares: " + nn(lista(d.antFamiliares).join(", ")), "Cargado por: " + nn(quien), "Notas: " + nn(d.notas));
+	L.push("FRV: " + nn(lista(d.frv).join(", ")), "FR atípicos: " + nn(lista(d.frvAtipicos).join(", ")), "Antecedentes familiares: " + nn(lista(d.antFamiliares).join(", ")), "Cargado por: " + nn(quien), "Notas: " + nn(d.notas));
 	return L.join("\n");
 }
 // src/web/residente.ts
@@ -22662,6 +22662,7 @@ function iniciar$2(c) {
 	w.vCfg = vMisCargas;
 	w.repPedir = () => Promise.resolve(false);
 	w.repAuto = () => {};
+	w.openFopWizard = () => {};
 	go("list");
 	toast("Entraste como residente");
 }
@@ -22858,7 +22859,8 @@ function guardarPorPedir() {
 		localStorage.setItem("rnv_por_pedir", JSON.stringify(porPedir));
 	} catch {}
 }
-var linkDe = (clave) => location.href.split("#")[0] + "#r=" + clave;
+var WEB_PUBLICADA = "https://jjmartinartesi-a11y.github.io/registro-neurovascular-web/";
+var linkDe = (clave, href = location.href) => (/^https?:/.test(href) ? href.split("#")[0] : WEB_PUBLICADA) + "#r=" + clave;
 async function llamar(cuerpo) {
 	const { data, error } = await sb$2.functions.invoke("residentes", { body: cuerpo });
 	if (error) {
@@ -23072,7 +23074,7 @@ function nuevoPendiente(evento_id, archivo, bytes, sha256, media_id, ahora) {
 		creado: ahora
 	};
 }
-var items = (f) => f && Array.isArray(f.imagenes) ? f.imagenes : [];
+var items$1 = (f) => f && Array.isArray(f.imagenes) ? f.imagenes : [];
 function anotar(db, borrador, pendientes) {
 	const ultimo = /* @__PURE__ */ new Map();
 	for (const p of pendientes) {
@@ -23085,7 +23087,7 @@ function anotar(db, borrador, pendientes) {
 	let cambio = false;
 	for (const f of [...db, borrador]) {
 		if (!f || !f.id) continue;
-		for (const it of items(f)) {
+		for (const it of items$1(f)) {
 			const p = it && it.archivo ? ultimo.get(f.id + "\0" + it.archivo) : void 0;
 			if (!p) continue;
 			anotados.add(p.media_id);
@@ -23104,7 +23106,7 @@ function anotar(db, borrador, pendientes) {
 	};
 }
 function itemDe(f, archivo) {
-	return items(f).find((it) => it && it.archivo === archivo);
+	return items$1(f).find((it) => it && it.archivo === archivo);
 }
 // src/web/casos.ts
 var FIRMA_S = 600;
@@ -23141,7 +23143,7 @@ async function todo(almacen) {
 		q.onerror = () => mal(q.error);
 	});
 }
-async function sha256(b) {
+async function sha256$1(b) {
 	const h = await crypto.subtle.digest("SHA-256", await b.arrayBuffer());
 	return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
@@ -23182,7 +23184,7 @@ async function dar(media_id) {
 		throw noEsta();
 	}
 	const b = await r.blob();
-	if (await sha256(b) !== fila.sha256) {
+	if (await sha256$1(b) !== fila.sha256) {
 		fallas.set(media_id, "Lo bajado no coincide con lo subido (sha256): no se muestra");
 		throw noEsta();
 	}
@@ -23209,7 +23211,7 @@ function archivoHandle(nombre, ev) {
 				},
 				async close() {
 					const blob = new Blob(partes, { type: partes[0] instanceof Blob ? partes[0].type : "" });
-					const p = nuevoPendiente(ev, nombre, blob.size, await sha256(blob), crypto.randomUUID(), (/* @__PURE__ */ new Date()).toISOString());
+					const p = nuevoPendiente(ev, nombre, blob.size, await sha256$1(blob), crypto.randomUUID(), (/* @__PURE__ */ new Date()).toISOString());
 					const g = {
 						...p,
 						blob: blob.type === p.mime ? blob : new Blob([blob], { type: p.mime })
@@ -23323,6 +23325,86 @@ async function instalar(cliente) {
 		falta: (x) => x && x.media_id && fallas.get(x.media_id) || "Archivo no encontrado",
 		nota: () => `En el servidor (Storage privado; se ve con un link firmado de 10 minutos)${pend.length ? ` · ${pend.length} archivo${pend.length > 1 ? "s" : ""} esperando subir` : ""}`
 	};
+}
+// src/web/casos_local.ts
+async function sha256(b) {
+	const h = await crypto.subtle.digest("SHA-256", b);
+	return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function uuidDe(t) {
+	const h = await sha256(new TextEncoder().encode("rnv-media:" + t).buffer);
+	return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+var items = (f) => Array.isArray(f.imagenes) ? f.imagenes.filter((x) => x && typeof x === "object" && x.archivo) : [];
+function pendientesLocal() {
+	return DB.reduce((n, f) => n + (f ? items(f).filter((x) => !x.media_id).length : 0), 0);
+}
+var sinPermiso = false;
+var esperaPermiso = () => sinPermiso;
+async function subirMediaLocal(sb, enServidor) {
+	const conImagenes = DB.filter((f) => f && f.casoCarpeta && items(f).length && enServidor(f.id));
+	if (!conImagenes.length) {
+		sinPermiso = false;
+		return;
+	}
+	const raiz = await casoInit();
+	sinPermiso = !raiz;
+	if (!raiz) return;
+	let cambio = false;
+	for (const f of conImagenes) {
+		let dir;
+		try {
+			dir = await raiz.getDirectoryHandle(f.casoCarpeta);
+		} catch {
+			continue;
+		}
+		for (const it of items(f)) {
+			let file;
+			try {
+				file = await (await dir.getFileHandle(it.archivo)).getFile();
+			} catch {
+				continue;
+			}
+			if (it.media_id && (it.media_mod === void 0 || file.lastModified <= it.media_mod)) continue;
+			const buf = await file.arrayBuffer();
+			const h = await sha256(buf);
+			const media_id = await uuidDe(f.id + "/" + it.archivo + "/" + h);
+			if (it.media_id === media_id) {
+				it.media_mod = file.lastModified;
+				cambio = true;
+				continue;
+			}
+			const p = nuevoPendiente(f.id, it.archivo, buf.byteLength, h, media_id, (/* @__PURE__ */ new Date()).toISOString());
+			const { error: e1 } = await sb.from("casos_media").insert({
+				id: p.media_id,
+				evento_id: p.evento_id,
+				ruta: p.ruta,
+				tipo: p.tipo,
+				mime: p.mime,
+				bytes: p.bytes,
+				sha256: p.sha256,
+				tapado: true
+			});
+			if (e1 && e1.code !== "23505") throw e1;
+			const { error: e2 } = await sb.storage.from("casos").upload(p.ruta, new Blob([buf], { type: p.mime }), {
+				contentType: p.mime,
+				upsert: false,
+				cacheControl: "0"
+			});
+			if (e2 && !/exists|Duplicate/i.test(e2.message) && e2.statusCode !== "409") throw e2;
+			if (it.media_id) {
+				const { data: s } = await sb.auth.getSession();
+				await sb.from("casos_media").update({
+					borrado_en: (/* @__PURE__ */ new Date()).toISOString(),
+					borrado_por: s.session?.user.id ?? null
+				}).eq("id", it.media_id).is("borrado_en", null);
+			}
+			it.media_id = media_id;
+			it.media_mod = file.lastModified;
+			cambio = true;
+		}
+	}
+	if (cambio) save();
 }
 // src/web/sobre.ts
 var CIFRADO_VALOR = [
@@ -23710,9 +23792,9 @@ function pintar() {
 		txt += ` · ${est.rechazos.length} rechazado${est.rechazos.length > 1 ? "s" : ""}`;
 		tono = "crit";
 	}
-	const media = LOCAL ? 0 : pendientes();
+	const media = LOCAL ? pendientesLocal() : pendientes();
 	if (media && !ultimoError) {
-		txt += ` · ${media} archivo${media > 1 ? "s" : ""} sin subir`;
+		txt += ` · ${media} archivo${media > 1 ? "s" : ""} sin subir` + (LOCAL && esperaPermiso() ? " (falta dar acceso a la carpeta casos: abrí un caso)" : "");
 		if (tono === "good") tono = "warn";
 	}
 	if (ilegibles) {
@@ -23928,6 +24010,7 @@ async function sincronizar() {
 			await subir();
 			const enServidor = (id) => !!est.sombra[id] && !est.sombra[id].__borrada && !est.cola.some((o) => o.fila_id === id);
 			if (!LOCAL) await subirMedia(enServidor);
+			else await subirMediaLocal(sb, enServidor);
 			if (rol === "jefe") await sincronizarPedidos(enServidor);
 			await bajar();
 			if (rol === "residente") await refrescar();

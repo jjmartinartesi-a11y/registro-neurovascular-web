@@ -7,8 +7,8 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src https://script.google.com https://script.googleusercontent.com https://clinicaltrials.gov https://xynzajsqixkohvbezsvy.supabase.co">
 <title>Registro Neurovascular</title>
 <meta name="theme-color" content="#0E6E7A">
-  <script type="module" crossorigin src="./assets/index-C7_Keh2V.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BnCQ3JCK.css">
+  <script type="module" crossorigin src="./assets/index-CzQF-uKt.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-E94FfCkq.css">
 <link rel="manifest" href="./manifest.webmanifest"></head>
 <body>
 <title>Registro Neurovascular</title>
@@ -691,7 +691,6 @@
         <button class="btn sm ghost" style="flex:1" id="btnImport"><span class="ic" data-ic="up"></span> Importar</button>
         <button class="btn sm ghost" style="flex:1" id="btnExport"><span class="ic" data-ic="down"></span> Exportar</button>
       </div>
-      <button class="btn sm ghost" id="btnPlanilla" style="width:100%">Planilla de residentes</button>
       <button class="theme-btn" id="themeBtn"><span class="ic" data-ic="moon"></span><span id="themeLbl">Tema</span></button>
       <button class="btn sm ghost" id="btnTC" style="width:100%">Términos y Condiciones</button>
       <input type="file" id="fileIn" accept=".json,.csv,.xlsx" class="file-hidden">
@@ -711,22 +710,25 @@
       <h3>2. Datos que se registran</h3>
       <p>Se cargan datos identificatorios (nombre, número de documento) y datos clínicos: fechas del evento, de internación y de alta, tipo y clasificación etiológica, factores de riesgo, escalas de gravedad y funcionalidad, tratamientos recibidos, resultados de estudios complementarios (imagen, monitoreo cardíaco, estudios genéticos y de laboratorio) y evolución, incluidos la fecha, el momento (durante la internación del evento o posterior al alta) y la causa de fallecimiento cuando corresponde. Cuando corresponde, se registra además la participación del paciente en un protocolo de investigación y el código de paciente asignado en ese estudio; ese código es un seudónimo del propio protocolo y no reemplaza a los datos identificatorios ni se difunde fuera del registro. Estos datos constituyen información de salud, considerada dato sensible conforme a la legislación de protección de datos personales aplicable (en Argentina, art. 2 de la Ley 25.326) y a los principios de confidencialidad de la información clínica reconocidos internacionalmente (JCI, capítulo de Gestión de la Información — MOI).</p>
       <h3>3. Dónde y cómo se almacenan</h3>
-      <p>Los datos se guardan exclusivamente en el navegador del dispositivo donde se usa la aplicación (localStorage), sin transmisión a servidores externos ni a terceros, y sin sincronización automática entre dispositivos. La seguridad depende directamente del control de acceso físico y de sesión del dispositivo utilizado. Esta versión no incorpora cifrado en reposo ni contraseña de acceso propios de la aplicación: es una limitación reconocida (ver sección 8).</p>
-      <p><b>Excepción — planilla de ingreso para residentes:</b> los datos de un paciente nuevo pueden cargarse primero en un formulario en línea, accesible con el link, para que el residente lo complete al ingreso desde su teléfono. Mientras no se importan a esta aplicación, esos datos —incluidos nombre y documento— residen en la cuenta de Google del responsable (Google Forms/Sheets), fuera del navegador local. Al importarlos desde el botón "Planilla de residentes", el registro los borra de esa planilla; hasta ese momento, quien tenga el link del formulario puede completarlo, y quien tenga acceso a la Hoja de respuestas puede leerlos. La lectura y el borrado de lo pendiente desde la aplicación exigen una clave que sólo conocen la aplicación y el script.</p>
-      <p><b>Excepción — pedidos de reperfusión a los residentes:</b> cuando un evento reciente registra trombólisis o trombectomía y faltan sus tiempos, la aplicación envía a la misma cuenta de Google un pedido para que los residentes los completen. El pedido contiene el número de orden del registro, las iniciales, el sexo, la edad, la fecha del evento, el tratamiento, los tiempos ya cargados y el número de documento. El documento se usa sólo para que quien completa confirme que se trata del paciente correcto: no se muestra en la página, que exhibe a quien tenga el link únicamente número de orden, iniciales, sexo, edad, fecha y tratamiento. El pedido se borra de la planilla cuando la aplicación importa los tiempos completos. Los avisos por Telegram que genera la carga llevan sólo el número de orden y los tiempos, sin nombre ni documento.</p>
+      <p>Los datos se guardan en el navegador de la computadora del responsable (almacenamiento local de Chrome) y, desde el 28 de octubre de 2026, también en una base de datos en la nube de un proveedor contratado, con servidores en Frankfurt (Unión Europea), con la que la aplicación se sincroniza cuando el responsable inicia sesión. La copia local y la de la nube se mantienen iguales.</p>
+      <p><b>Identidad cifrada:</b> el nombre, el documento, las notas y los demás textos libres viajan y se guardan en la nube cifrados con una clave que sólo abren los dispositivos del responsable. Ni el proveedor de la nube ni los residentes pueden leerlos desde el servidor, que rechaza esos datos si llegan sin cifrar. Las imágenes de casos se guardan en un almacenamiento privado al que sólo accede el responsable.</p>
+      <p><b>Acceso:</b> el responsable entra con contraseña y verificación en dos pasos. Los residentes de la Unidad entran desde su teléfono con un link personal que les da el responsable; sólo pueden cargar los campos de ingreso y completar los pedidos de reperfusión, sólo ven los eventos que ellos cargaron, y su acceso se revoca dando de baja el link. Cada cambio en la nube queda registrado con su autor y su fecha.</p>
+      <p><b>Pedidos de reperfusión y avisos:</b> cuando un evento registra trombólisis o trombectomía y faltan sus tiempos, la aplicación crea un pedido que los residentes ven sólo con el número de orden y las iniciales del paciente. Los avisos por Telegram llevan el número de orden, sin nombre ni documento.</p>
+      <p><b>Respaldos:</b> la copia local se respalda cada 2 horas en la misma computadora, y a Google Drive sube sólo cifrada; la base de la nube tiene su propio respaldo cifrado.</p>
+      <p>La planilla de ingreso en Google Forms/Sheets que usaron los residentes hasta el 29 de octubre de 2026 se dio de baja ese día, sin datos pendientes: ya no recibe cargas.</p>
       <h3>4. Uso secundario: investigación y publicaciones</h3>
       <p>Los campos identificatorios (nombre, documento) no se incluyen en ninguna salida estadística, en la Tabla, ni en ninguna exportación o material destinado a difusión científica. Toda comunicación o publicación se realiza sobre datos agregados y anonimizados, conforme a los principios de la Declaración de Helsinki y a las recomendaciones del ICMJE sobre confidencialidad del paciente en publicaciones científicas.</p>
       <h3>5. Base para el tratamiento de los datos</h3>
       <p>El registro de datos clínicos de pacientes propios, en el marco de la atención habitual, se realiza en ejercicio de la práctica profesional del responsable. El uso secundario de esos datos con fines de investigación y eventual publicación se ajustará a los procedimientos de consentimiento informado, dispensa de consentimiento para estudios retrospectivos con datos anonimizados, y aprobación del comité de ética/investigación que correspondan según la institución bajo la cual se tramite cada estudio.</p>
       <h3>6. Retención y eliminación</h3>
-      <p>Mientras no exista una política de retención formalizada junto con una institución de referencia, los datos se conservan en el dispositivo local a criterio del profesional responsable. Se recomienda exportar (JSON) periódicamente como respaldo y definir, junto con la institución, un plazo de retención y un procedimiento de baja/destrucción segura equivalente al de la historia clínica.</p>
+      <p>Mientras no exista una política de retención formalizada junto con una institución de referencia, los datos se conservan en la computadora del responsable y en la nube descripta en la sección 3, a criterio del profesional responsable. Se recomienda exportar (JSON) periódicamente como respaldo y definir, junto con la institución, un plazo de retención y un procedimiento de baja/destrucción segura equivalente al de la historia clínica.</p>
       <h3>7. Derechos de los pacientes</h3>
       <p>Los pacientes cuyos datos figuran en este registro pueden solicitar acceso, rectificación o supresión de su información, dirigiéndose al responsable del tratamiento indicado en la sección 9.</p>
       <h3>8. Limitaciones reconocidas</h3>
-      <p>Esta aplicación es un registro de apoyo a la práctica y a la investigación clínica individual. <b>No reemplaza la historia clínica oficial</b> de ninguna institución, no está integrada a ningún sistema hospitalario, y no cuenta con controles de acceso, cifrado ni trazabilidad de usuario/autor propios de un sistema de información clínica institucional. Su uso <b>no implica ni constituye una certificación o acreditación JCI</b> de la aplicación: Joint Commission International acredita instituciones de salud mediante un proceso formal de evaluación, no aplicaciones o software de uso individual. Ver el documento "Cumplimiento JCI — Registro Neurovascular" (en el Obsidian Vault) para el detalle de alineación con los estándares JCI y las brechas identificadas.</p>
+      <p>Esta aplicación es un registro de apoyo a la práctica y a la investigación clínica individual. <b>No reemplaza la historia clínica oficial</b> de ninguna institución, no está integrada a ningún sistema hospitalario, y sus controles de acceso, cifrado y registro de cambios (sección 3) son los de una herramienta individual, no los de un sistema de información clínica institucional auditado. Su uso <b>no implica ni constituye una certificación o acreditación JCI</b> de la aplicación: Joint Commission International acredita instituciones de salud mediante un proceso formal de evaluación, no aplicaciones o software de uso individual. Ver el documento "Cumplimiento JCI — Registro Neurovascular" (en el Obsidian Vault) para el detalle de alineación con los estándares JCI y las brechas identificadas.</p>
       <h3>9. Responsable</h3>
       <p>Dr. Juan José Martín — contacto: j.j.martin.artesi@gmail.com.</p>
-      <p class="hint">Versión 1.6 — 17 de octubre de 2026.</p>
+      <p class="hint">Versión 1.7 — 29 de octubre de 2026.</p>
     </div>
     <div class="tc-foot">
       <label class="tc-check" id="tcCheckWrap"><input type="checkbox" id="tcCheck"> He leído y acepto los Términos y Condiciones de uso de este registro.</label>
@@ -2400,6 +2402,11 @@ const SCHEMA_VERSION=6;
    acentos) y el 24/10 la base más su snapshot `_prev` ocupaban el 73 %. Si al abrir la base no se
    pudo leer, save() se niega a escribir: guardar [] encima la borraría. */
 const LS_QUOTA=5242880, PREV_KEY='registro_neurovascular_prev';
+/* Espejo comprimido (28/10): con IndexedDB, el espejo de la base se guarda como gzip en base64 con este prefijo
+   (≈7 % del JSON). Se descomprime en almacenAbrir(), que es asíncrono; hasta entonces load() lo marca como no leído
+   para que nada pueda guardar una base vacía encima. Una versión vieja de la app que lo encuentre tampoco puede:
+   no es JSON y su load() le niega el guardado. */
+const ESPEJO_Z='rnvz1:';
 let _loadFallo=null;
 const _noGuardado=new Map(); /* qué no se pudo guardar → motivo; se vacía cuando vuelve a guardarse */
 let DB=load();
@@ -2420,6 +2427,7 @@ let editId=null, draft=blank();
 function load(){let r;
   try{r=localStorage.getItem(KEY)}catch(e){_loadFallo='no se pudo leer el almacenamiento ('+e.name+')';return[]}
   if(!r)return[];
+  if(r.startsWith(ESPEJO_Z)){_loadFallo='la base comprimida todavía no se leyó';return[]}
   try{const a=JSON.parse(r);if(Array.isArray(a))return a;_loadFallo='la base guardada no es una lista'}
   catch(e){_loadFallo='la base guardada no es JSON válido'}
   return[]}
@@ -2433,9 +2441,11 @@ function lsSet(k,v,que){
    Desde la Fase 1.7 la FUENTE de la base y del deshacer (`_prev`) es IndexedDB (`registro_nv`, almacén `kv`), sin
    tope práctico. La base se sigue escribiendo, además, en localStorage como ESPEJO: es lo que leen el respaldo
    automático (`registro_backup.py`, que lee el LevelDB de Chrome) y, a través de él, las consultas de Ingrid —
-   IndexedDB de Chrome no se puede leer desde Python de forma confiable. El espejo cabe holgado sin el deshacer
-   (≈37 %); si un día no entrara, la base sigue guardándose en IndexedDB y la app avisa que el respaldo automático
-   quedó atrás (no es «NO SE GUARDÓ»).
+   IndexedDB de Chrome no se puede leer desde Python de forma confiable. Desde el 28/10 el espejo va comprimido
+   (gzip en base64 con el prefijo ESPEJO_Z: 2,7 M de caracteres → 0,19 M con 1552 fichas; el sin deshacer ya ocupaba
+   el 52 % y crecía con cada campo nuevo). Antes de escribirlo se relee descomprimido y se compara con el original; si
+   algo falla, va sin comprimir, como antes. Si un día no entrara, la base sigue guardándose en IndexedDB y la app
+   avisa que el respaldo automático quedó atrás (no es «NO SE GUARDÓ»).
    Orden de cada guardado: primero IndexedDB (base, deshacer pendiente y sello en UNA transacción: o todo o nada);
    recién cuando confirma, el espejo y su sello. Así el espejo nunca está más adelante que la fuente.
    Al abrir: se comparan el sello de IndexedDB, el del espejo y el hash del espejo. Si el espejo cambió por otra vía
@@ -2455,18 +2465,37 @@ function idbPut(o){return new Promise((res,rej)=>{const t=_idb.transaction(IDB_A
 function hashTxt(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)}return (h>>>0).toString(36)+':'+s.length}
 function nuevoSello(txt){return {t:nowISO()+'#'+Math.random().toString(36).slice(2,7),h:hashTxt(txt)}}
 function leerSelloLs(){try{return JSON.parse(localStorage.getItem(SELLO_KEY)||'null')}catch(e){return null}}
-/* El espejo: si no entra, la base igual quedó en IndexedDB → aviso propio, sin bloquear el cierre. */
-function escribirEspejo(txt,sello){
-  try{localStorage.setItem(KEY,txt);localStorage.setItem(SELLO_KEY,JSON.stringify(sello));if(_espejoFallo){_espejoFallo=null;almacenAlerta()}return true}
+/* Compresión nativa del navegador (CompressionStream), sin librerías. */
+const gzipHay=()=>typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
+async function zPasar(u8,st){const w=st.writable.getWriter();w.write(u8).catch(()=>{});w.close().catch(()=>{});
+  const r=st.readable.getReader(),partes=[];let n=0;
+  for(;;){const {done,value}=await r.read();if(done)break;partes.push(value);n+=value.length}
+  const o=new Uint8Array(n);let i=0;for(const p of partes){o.set(p,i);i+=p.length}return o}
+/* Texto del espejo tal como lo guardó la app: comprimido o no. Lanza si el comprimido está dañado. */
+async function espejoTexto(v){if(v==null||!v.startsWith(ESPEJO_Z))return v;
+  return new TextDecoder().decode(await zPasar(unb64(v.slice(ESPEJO_Z.length)),new DecompressionStream('gzip')))}
+async function espejoComprimir(txt){const v=ESPEJO_Z+b64(await zPasar(new TextEncoder().encode(txt),new CompressionStream('gzip')));
+  if(await espejoTexto(v)!==txt)throw new Error('la copia comprimida no se relee igual');return v}
+/* El espejo: si no entra, la base igual quedó en IndexedDB → aviso propio, sin bloquear el cierre. Asíncrono por la
+   compresión: si se pisan dos guardados, escribe sólo el último. Nunca rechaza. */
+let _espejoN=0;
+async function escribirEspejo(txt,sello){const n=++_espejoN;let v=txt;
+  if(gzipHay()){try{v=await espejoComprimir(txt)}catch(e){v=txt}}
+  if(n!==_espejoN)return false;
+  try{localStorage.setItem(KEY,v);localStorage.setItem(SELLO_KEY,JSON.stringify(sello));if(_espejoFallo){_espejoFallo=null;almacenAlerta()}return true}
   catch(e){_espejoFallo=e&&e.name==='QuotaExceededError'?'el almacenamiento local está lleno':String(e&&e.message||e);almacenAlerta();return false}}
+/* _idbPend cuenta hasta que el espejo quedó escrito: el cierre de la pestaña espera las dos cosas. */
 function guardarIdb(txt){const sello=nuevoSello(txt),o={base:JSON.parse(txt),sello};
   if(_prevPend!=null){o.prev=_prevPend;_prevPend=null}
   _idbPend++;
-  return idbPut(o).then(()=>{_idbPend--;if(_noGuardado.delete('la base'))almacenAlerta();escribirEspejo(txt,sello);return true},
+  return idbPut(o).then(async()=>{try{if(_noGuardado.delete('la base'))almacenAlerta();await escribirEspejo(txt,sello);return true}finally{_idbPend--}},
     e=>{_idbPend--;_noGuardado.set('la base','no se pudo escribir en IndexedDB ('+(e&&e.message||e)+')');almacenAlerta();return false})}
 /* Al abrir: decide la fuente. Nunca lanza: ante cualquier falla queda en localStorage, como antes. */
 async function almacenAbrir(){
   let txt=null;try{txt=localStorage.getItem(KEY)}catch(e){}
+  const eraZ=txt!=null&&txt.startsWith(ESPEJO_Z);
+  if(eraZ){try{txt=await espejoTexto(txt);const a=JSON.parse(txt);if(!Array.isArray(a))throw new Error('no es una lista');DB=a;_loadFallo=null}
+    catch(e){txt=null;_loadFallo='la base comprimida no se pudo leer ('+(e&&e.message||e)+')'}} /* con IndexedDB sana, manda IndexedDB */
   try{_idb=await idbAbrir()}catch(e){ALMACEN='ls';return 'sin-idb'}
   let base,selloI;try{base=await idbGet('base');selloI=await idbGet('sello')}catch(e){ALMACEN='ls';return 'sin-idb'}
   if(!Array.isArray(base)){ /* primera vez: mudanza de localStorage a IndexedDB, con verificación */
@@ -2475,18 +2504,18 @@ async function almacenAbrir(){
     try{await idbPut({base:DB,sello});const back=await idbGet('base');
       if(!Array.isArray(back)||back.length!==DB.length||JSON.stringify(back)!==t)throw new Error('lo releído no coincide')}
     catch(e){ALMACEN='ls';pushAviso('<b>La base sigue en el almacenamiento local</b>: no se pudo pasar a IndexedDB ('+esc(e&&e.message||e)+'). No se perdió nada.');return 'mudanza-fallida'}
-    ALMACEN='idb';escribirEspejo(t,sello);await moverPrev();
+    ALMACEN='idb';await escribirEspejo(t,sello);await moverPrev();
     pushAviso(`La base pasó a <b>IndexedDB</b>: ${DB.length} fichas copiadas y releídas iguales. El almacenamiento local queda como espejo para el respaldo automático y para Ingrid; el deshacer se mudó con la base y libera espacio.`);
     return 'mudada'}
   ALMACEN='idb';
   const selloL=leerSelloLs(),hL=txt!=null?hashTxt(txt):null;let r;
-  if(_loadFallo||txt==null){DB=base;_loadFallo=null;escribirEspejo(JSON.stringify(DB),selloI||nuevoSello(JSON.stringify(DB)));r='idb'}
-  else if(selloI&&hL===selloI.h){DB=base;r='iguales'}
+  if(_loadFallo||txt==null){DB=base;_loadFallo=null;await escribirEspejo(JSON.stringify(DB),selloI||nuevoSello(JSON.stringify(DB)));r='idb'}
+  else if(selloI&&hL===selloI.h){DB=base;r='iguales';if(!eraZ&&gzipHay())await escribirEspejo(txt,selloI)} /* espejo de antes del 28/10: se comprime */
   else if(selloI&&selloL&&selloL.t===selloI.t){ /* el espejo cambió sin pasar por esta app nueva: manda el espejo */
     _idbPend++;try{await idbPut({base:DB,sello:nuevoSello(txt)})}finally{_idbPend--}
-    escribirEspejo(txt,await idbGet('sello'));r='espejo';
+    await escribirEspejo(txt,await idbGet('sello'));r='espejo';
     pushAviso('La base se tomó del almacenamiento local, que cambió por otra vía (una ventana con la versión anterior de la app, o una restauración) y quedó copiada en IndexedDB.')}
-  else if(selloI&&(!selloL||selloI.t>selloL.t)){DB=base;escribirEspejo(JSON.stringify(DB),selloI);r='idb'}
+  else if(selloI&&(!selloL||selloI.t>selloL.t)){DB=base;await escribirEspejo(JSON.stringify(DB),selloI);r='idb'}
   else{_idbPend++;try{await idbPut({base:DB,sello:nuevoSello(txt)})}finally{_idbPend--};r='espejo'}
   await moverPrev();return r}
 /* El deshacer que quede en localStorage (de antes de la mudanza, o de una restauración) pasa a IndexedDB: se copia,
@@ -2496,7 +2525,9 @@ async function moverPrev(){let v=null;try{v=localStorage.getItem(PREV_KEY)}catch
 /* Otra ventana de la app guardó (el espejo cambió): ésta recarga la base para no pisar lo que la otra acaba de
    guardar. Lo que se está editando vive en el borrador y no se toca; al guardar, entra sobre la base fresca. Juan
    trabaja con dos pantallas (25/10): antes, la última ventana en guardar pisaba a la otra sin aviso. */
-function otraVentanaGuardo(nuevo){if(nuevo==null)return;let a;try{a=JSON.parse(nuevo)}catch(e){return}if(!Array.isArray(a))return;
+let _otraN=0;
+async function otraVentanaGuardo(nuevo){if(nuevo==null)return;const n=++_otraN;let a;try{a=JSON.parse(await espejoTexto(nuevo))}catch(e){return}
+  if(n!==_otraN||!Array.isArray(a))return;
   DB=a;pacCambio();_loadFallo=null;
   if(view!=='form'){try{render()}catch(e){}}
   toast('Se actualizó con lo guardado en otra ventana')}
@@ -8318,7 +8349,8 @@ function pedirFraseRestaurar(s,nombre){const meta=s.meta||{};
   $('#encSi').onclick=ir;$('#encF1').onkeydown=e=>{if(e.key==='Enter')ir()}}
 function mostrarRestaurar(claves,nombre){
   const val=(k,v)=>{if(v==null)return '—';if(k===KEY){try{return JSON.parse(v).length+' fichas'}catch(_){}}return fmtCar(v.length)+' car.'};
-  const filas=Object.keys(claves).sort().map(k=>`<tr><td class="mono">${esc(k)}</td><td class="n">${val(k,localStorage.getItem(k))}</td><td class="n">${val(k,claves[k])}</td></tr>`).join('');
+  const ahora=k=>k===KEY?DB.length+' fichas':val(k,localStorage.getItem(k)); /* el espejo puede estar comprimido */
+  const filas=Object.keys(claves).sort().map(k=>`<tr><td class="mono">${esc(k)}</td><td class="n">${ahora(k)}</td><td class="n">${val(k,claves[k])}</td></tr>`).join('');
   encModal(`<p style="font-size:13px;color:var(--ink-2);line-height:1.6">Se <b>reemplaza</b> lo actual por lo de <b>${esc(nombre)}</b>. Lo actual queda en el snapshot previo (deshacer).</p>
     <table class="alm-tab"><tr><td></td><td class="n"><b>Ahora</b></td><td class="n"><b>Archivo</b></td></tr>${filas}</table>
     <div class="hint" id="encMsg" role="status" style="margin-top:8px"></div>`,
@@ -8337,7 +8369,9 @@ function almacenCardHtml(){const u=almacenUso(),pct=u.tot/LS_QUOTA*100,
     tono=pct>=85?'var(--crit)':pct>=70?'var(--warn)':'var(--good)',prev=u.filas.find(f=>f[0]===PREV_KEY);
   return `<div class="card" id="cfgAlmacen" style="margin-top:22px">
     <h3>Uso de almacenamiento</h3>
-    <div class="hint">Todo lo de la app vive en el almacenamiento local de Chrome, con un tope de ${fmtCar(LS_QUOTA)} de caracteres para todas las páginas abiertas desde disco. Al llegar al tope, nada más se guarda.</div>
+    <div class="hint">${ALMACEN==='idb'
+      ?`La base se guarda en IndexedDB, sin este tope. El almacenamiento local de Chrome (tope de ${fmtCar(LS_QUOTA)} de caracteres para todas las páginas abiertas desde disco) guarda la configuración y una copia comprimida de la base para el respaldo de cada 2 h y para Ingrid. Si se llenara, la base se seguiría guardando y la app avisaría que el respaldo quedó atrás.`
+      :`Todo lo de la app vive en el almacenamiento local del navegador, con un tope de ${fmtCar(LS_QUOTA)} de caracteres. Al llegar al tope, nada más se guarda.`}</div>
     <div class="alm-barra" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct.toFixed(0)}"><i style="width:${Math.min(100,pct).toFixed(1)}%;background:${tono}"></i></div>
     <div style="font-size:13px"><b>${pct.toLocaleString('es-AR',{maximumFractionDigits:1})} %</b> usado · ${fmtCar(u.tot)} de ${fmtCar(LS_QUOTA)} caracteres${pct>=85?' · <b style="color:var(--crit)">casi lleno</b>':pct>=70?' · <b style="color:var(--warn)">atención</b>':''}</div>
     <table class="alm-tab">${u.filas.slice(0,8).map(([k,c])=>`<tr><td class="mono">${esc(k)}</td><td class="n">${fmtCar(c)}</td><td class="n">${(c/LS_QUOTA*100).toLocaleString('es-AR',{minimumFractionDigits:1,maximumFractionDigits:1})} %</td></tr>`).join('')}</table>
@@ -8348,7 +8382,7 @@ function almacenCardHtml(){const u=almacenUso(),pct=u.tot/LS_QUOTA*100,
 function almacenCardInit(){
   const idb=$('#almIdb');
   if(idb&&navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(e=>{
-    idb.textContent='Imágenes y videos de casos (IndexedDB) y caché: '+((e.usage||0)/1e6).toLocaleString('es-AR',{maximumFractionDigits:1})+' MB, con un tope aparte.'}).catch(()=>{});
+    idb.textContent='La base, las imágenes y videos de casos (IndexedDB) y la caché: '+((e.usage||0)/1e6).toLocaleString('es-AR',{maximumFractionDigits:1})+' MB, con un tope aparte.'}).catch(()=>{});
   const b=$('#almPrev');if(!b)return;
   b.onclick=()=>{
     if(b.dataset.armado!=='1'){b.dataset.armado='1';b.textContent='¿Seguro? Descargar y borrar el snapshot previo';return}
@@ -9482,7 +9516,7 @@ function repSync(base){
     if(borrar.length)planillaPedir(base,'repdel',{ids:borrar.join(',')}).then(r=>r.json()).then(j=>{if(!(j&&j.ok))st($('#repStatus').innerHTML+'<br>No se pudieron borrar de la planilla los pedidos completos.')})
       .catch(()=>{})})
   .catch(e=>st('Pedidos de reperfusión: no se pudo conectar ('+esc(e.message)+').'))}
-$('#btnPlanilla').onclick=openPlanillaOverlay;
+/* 29/10: la planilla se dio de baja (v28) y su botón salió de la barra; los residentes cargan en la versión web. */
 $('#planillaClose').onclick=()=>{$('#planillaOverlay').style.display='none'};
 
 function parseCSV(txt){const lines=txt.split(/\r?\n/).filter(l=>l.trim());const hd=splitCSVLine(lines[0]);
@@ -9501,8 +9535,8 @@ function updThemeLbl(){const cur=document.documentElement.getAttribute('data-the
 $('#themeBtn').onclick=()=>{const cur=document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');const nxt=cur==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',nxt);localStorage.setItem('nv_theme',nxt);updThemeLbl()};
 
 /* ---------- términos y condiciones ---------- */
-const TC_KEY='nv_tc_accepted_v3';
-const TC_VERSION='1.6 (2026-10-17)'; /* 1.1: protocolos de investigación y código de paciente · 1.2: la sección "Tabla 1" pasó a llamarse "Tabla" ·
+const TC_KEY='nv_tc_accepted_v4';
+const TC_VERSION='1.7 (2026-10-29)'; /* 1.1: protocolos de investigación y código de paciente · 1.2: la sección "Tabla 1" pasó a llamarse "Tabla" ·
   1.3: el punto 2 nombra las fechas de internación y alta, los estudios complementarios y la causa de fallecimiento.
   1.4: la planilla de ingreso para residentes (Google Forms) — a diferencia de 1.1-1.3, ACÁ SÍ cambia el alcance:
   hasta que se importan, nombre y documento pueden residir fuera del navegador local, en la cuenta de Google del
@@ -9512,7 +9546,10 @@ const TC_VERSION='1.6 (2026-10-17)'; /* 1.1: protocolos de investigación y cód
   se toca y no se vuelve a pedir la aceptación.
   1.6: la sección 3 suma los pedidos de reperfusión: por primera vez la APP manda datos de un paciente ya
   importado (iniciales, edad, sexo, fecha, documento, tiempos) a la cuenta de Google. Amplía el alcance como
-  la 1.4, así que TC_KEY pasa a v3 y la app vuelve a pedir la aceptación una vez. */
+  la 1.4, así que TC_KEY pasa a v3 y la app vuelve a pedir la aceptación una vez.
+  1.7: la sección 3 decía «sin transmisión a servidores externos» y ya no era cierto: desde el 28/10 la base
+  se sincroniza con la nube (identidad cifrada, residentes con link personal). Se describe eso, sale la
+  planilla (dada de baja el 29/10) y se ajustan 6 y 8. Amplía el alcance: TC_KEY pasa a v4. */
 function tcAcceptance(){try{return JSON.parse(localStorage.getItem(TC_KEY)||'null')}catch(e){return null}}
 function tcOpen(mode){
   $('#tcOverlay').style.display='flex';

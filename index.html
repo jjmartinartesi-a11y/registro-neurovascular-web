@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src https://script.google.com https://script.googleusercontent.com https://clinicaltrials.gov https://xynzajsqixkohvbezsvy.supabase.co">
 <title>Registro Neurovascular</title>
 <meta name="theme-color" content="#0E6E7A">
-  <script type="module" crossorigin src="./assets/index-9UVpAed7.js"></script>
+  <script type="module" crossorigin src="./assets/index-BLhQrAzo.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-E94FfCkq.css">
 <link rel="manifest" href="./manifest.webmanifest"></head>
 <body>
@@ -346,6 +346,7 @@
   .aviso.nuevas a{color:inherit;text-decoration:none}.aviso.nuevas a:hover b{text-decoration:underline}
   .ntag{display:inline-block;max-width:16em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;margin-left:8px;
     padding:1px 9px;border-radius:20px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+  .ntag.ed{background:transparent;color:var(--accent-ink);box-shadow:inset 0 0 0 1.5px var(--accent)}
   .solonuevas{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:13px;color:var(--accent-ink)}
   .aviso.warn .av-t{color:var(--warn)}
   .aviso .av-ico{width:22px;height:22px;flex:none;color:var(--accent-ink);margin-top:1px}
@@ -5405,35 +5406,44 @@ let colapsados=loadColapsados();
 function loadColapsados(){try{const r=JSON.parse(localStorage.getItem(CKEY)||'[]');return new Set(Array.isArray(r)?r:[])}catch(e){return new Set()}}
 function saveColapsados(){try{localStorage.setItem(CKEY,JSON.stringify([...colapsados]))}catch(e){}}
 
-/* Cargas nuevas de residentes (02/11, pedido de Juan: al entrar, saber qué fichas cargaron los residentes).
-   Quién creó cada ficha lo sabe sólo el servidor (eventos.creado_por): la sincronización del jefe (src/web/sync.ts)
-   deja en RES_KEY las cargadas por un residente en los últimos 30 días, {id:{quien,en}}. «Vista» = Juan la abrió en
-   este dispositivo (VIS_KEY). Ninguna de las dos lleva datos del paciente; si se pierden, las de 30 días vuelven a
-   aparecer como nuevas (el error seguro). */
+/* Fichas de residentes sin revisar (02/11, pedido de Juan: al entrar, saber qué cargaron o editaron los residentes).
+   Quién creó cada ficha y quién cambió cada campo lo sabe sólo el servidor: la sincronización del jefe (src/web/sync.ts,
+   cola.ts → actividadResidentes) deja en RES_KEY la última actividad de un residente de los últimos 30 días,
+   {id:{quien,en,tipo,nueva}}. VIS_KEY = cuándo la abrió Juan en este dispositivo, {id:fecha}: una edición posterior la
+   vuelve a marcar. Ninguna de las dos lleva datos del paciente; si se pierden, vuelven a marcarse (el error seguro).
+   Formato viejo de VIS_KEY (02/11, lista de ids): cuenta como vistas ahora. */
 const RES_KEY='registro_neurovascular_cargas_residentes',VIS_KEY='registro_neurovascular_cargas_vistas';
 let _cnv={r:null,v:null,m:new Map()},soloNuevas=false;
 function lsLeer(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
 function lsJson(t,d){try{const v=JSON.parse(t||'null');return v&&typeof v==='object'?v:d}catch(e){return d}}
-/* id → {quien,en} de las cargas de residentes todavía sin abrir que están en la base (memo por el texto guardado) */
+function cargasVistas(t){const v=lsJson(t,{});if(!Array.isArray(v))return v;const o={},h=new Date().toISOString();v.forEach(id=>o[id]=h);return o}
+/* id → {quien,en,tipo,nueva,vista} de lo que hicieron los residentes después de la última vez que Juan abrió la ficha
+   (sólo fichas que están en la base; memo por el texto guardado). Sin haberla abierto nunca y creada por un residente:
+   «nueva»; si no, «editada». */
 function cargasNuevas(){const r=lsLeer(RES_KEY),v=lsLeer(VIS_KEY);
-  if(r!==_cnv.r||v!==_cnv.v||_cnv.n!==DB.length){const c=lsJson(r,{}),vis=new Set(lsJson(v,[])),m=new Map();
-    DB.forEach(p=>{if(p&&c[p.id]&&!vis.has(p.id))m.set(p.id,c[p.id])});_cnv={r,v,n:DB.length,m}}
+  if(r!==_cnv.r||v!==_cnv.v||_cnv.n!==DB.length){const c=lsJson(r,{}),vis=cargasVistas(v),m=new Map();
+    DB.forEach(p=>{const a=p&&c[p.id];if(!a)return;const vi=vis[p.id];if(vi&&Date.parse(vi)>=Date.parse(a.en))return;
+      m.set(p.id,{...a,tipo:!vi&&a.nueva!==false?'nueva':'editada'})});
+    _cnv={r,v,n:DB.length,m}}
   return _cnv.m}
-/* Marca como vistas; guarda sólo las que siguen en la ventana de 30 días (la lista no crece sin fin) */
-function cargasMarcar(ids){const c=lsJson(lsLeer(RES_KEY),{}),vis=new Set(lsJson(lsLeer(VIS_KEY),[]).filter(id=>c[id]));
-  ids.forEach(id=>{if(c[id])vis.add(id)});
-  try{localStorage.setItem(VIS_KEY,JSON.stringify([...vis]))}catch(e){toast('No se pudo guardar qué fichas ya viste')}}
+/* Marca como vistas ahora; guarda sólo las que siguen en la ventana de 30 días (no crece sin fin) */
+function cargasMarcar(ids){const c=lsJson(lsLeer(RES_KEY),{}),vis=cargasVistas(lsLeer(VIS_KEY)),o={},h=new Date().toISOString();
+  Object.keys(vis).forEach(id=>{if(c[id])o[id]=vis[id]});ids.forEach(id=>{if(c[id])o[id]=h});
+  try{localStorage.setItem(VIS_KEY,JSON.stringify(o))}catch(e){toast('No se pudo guardar qué fichas ya viste')}}
 function cargaCuando(t){const d=new Date(t);if(isNaN(d))return '';
   const h=(Date.now()-d)/36e5;if(h<1)return 'hace '+Math.max(1,Math.round(h*60))+' min';if(h<24)return 'hace '+Math.round(h)+' h';
   return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}
-function nuevaTagHtml(p){const c=cargasNuevas().get(p.id);if(!c)return '';
-  return `<span class="ntag" title="${esc('Cargada por '+c.quien+' · '+cargaCuando(c.en)+' · deja de marcarse al abrirla')}">Nueva · ${esc(c.quien)}</span>`}
-/* Aviso del Panel y de Pacientes: qué cargaron los residentes y todavía no abriste */
+function nuevaTagHtml(p){const c=cargasNuevas().get(p.id);if(!c)return '';const nv=c.tipo==='nueva';
+  return `<span class="ntag${nv?'':' ed'}" title="${esc((nv?'Cargada por ':'Editada por ')+c.quien+' · '+cargaCuando(c.en)+' · deja de marcarse al abrirla')}">${nv?'Nueva':'Editada'} · ${esc(c.quien)}</span>`}
+function cargasTitulo(m){const a=[...m.values()],n=a.length,nv=a.filter(c=>c.tipo==='nueva').length,ed=n-nv,s=x=>x>1?'s':'';
+  return nv&&ed?`${n} fichas de residentes sin revisar: ${nv} nueva${s(nv)}, ${ed} editada${s(ed)}`
+    :nv?`${n} ficha${s(n)} nueva${s(n)} cargada${s(n)} por residentes`:`${n} ficha${s(n)} editada${s(n)} por residentes`}
+/* Aviso del Panel y de Pacientes: lo que cargaron o editaron los residentes y todavía no abriste */
 function cargasAvisoHtml(){const m=cargasNuevas();if(!m.size)return '';
   const L=DB.filter(p=>m.has(p.id)).sort((a,b)=>String(m.get(b.id).en).localeCompare(String(m.get(a.id).en))),n=L.length;
   return `<div class="aviso nuevas"><div class="av-ico">${icon('user')}</div><div class="av-body">
-    <div class="av-t">${n} ficha${n>1?'s':''} nueva${n>1?'s':''} cargada${n>1?'s':''} por residentes</div>
-    ${L.slice(0,6).map(p=>{const c=m.get(p.id);return `<p><a href="#" class="cnAbrir" data-id="${esc(p.id)}"><b>Nº ${esc(p.nOrden??'—')}</b> ${esc(p.nombre||'(sin nombre)')}</a> · ${esc(c.quien)} <span class="av-fecha">${esc(cargaCuando(c.en))}</span></p>`}).join('')}
+    <div class="av-t">${esc(cargasTitulo(m))}</div>
+    ${L.slice(0,6).map(p=>{const c=m.get(p.id);return `<p><a href="#" class="cnAbrir" data-id="${esc(p.id)}"><b>Nº ${esc(p.nOrden??'—')}</b> ${esc(p.nombre||'(sin nombre)')}</a> · ${esc(c.quien)} ${c.tipo==='nueva'?'cargó':'editó'} <span class="av-fecha">${esc(cargaCuando(c.en))}</span></p>`}).join('')}
     ${n>6?`<p>y ${n-6} más</p>`:''}</div>
     <div class="av-acc">${view==='list'&&soloNuevas?'':`<button class="btn sm" id="cnVer">Ver en Pacientes</button>`}<button class="btn sm ghost" id="cnOk">Marcar como vistas</button></div></div>`}
 function cargasAvisoBind(){
@@ -5441,7 +5451,7 @@ function cargasAvisoBind(){
   const v=$('#cnVer');if(v)v.onclick=()=>{soloNuevas=true;go('list')};
   const ok=$('#cnOk');if(ok)ok.onclick=()=>{cargasMarcar([...cargasNuevas().keys()]);soloNuevas=false;render()}}
 function navNuevasPintar(){const b=$('#navNuevas');if(!b)return;const n=cargasNuevas().size;
-  b.hidden=!n;b.textContent=n?String(n):'';b.title=n?n+' ficha'+(n>1?'s':'')+' nueva'+(n>1?'s':'')+' cargada'+(n>1?'s':'')+' por residentes, sin abrir':'';b.setAttribute('aria-label',b.title)}
+  b.hidden=!n;b.textContent=n?String(n):'';b.title=n?cargasTitulo(cargasNuevas()):'';b.setAttribute('aria-label',b.title)}
 
 function sortedList(){
   let f=filtered();
@@ -5522,7 +5532,7 @@ function vList(){
     ${multi?`<button class="btn sm ghost" id="togGrp">${grpBtnLabel(f)}</button>`:''}
     <span class="filter-note">${listNote(f)}</span>
   </div>
-  ${soloNuevas?`<div class="solonuevas">Mostrando sólo las fichas nuevas de residentes <button class="btn sm ghost" id="cnTodas">Ver todas</button></div>`:''}
+  ${soloNuevas?`<div class="solonuevas">Mostrando sólo las fichas de residentes sin revisar <button class="btn sm ghost" id="cnTodas">Ver todas</button></div>`:''}
   ${cargasAvisoHtml()}
   <div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th data-k="${c[0]}">${c[1]} ${sortKey===c[0]?`<span class="ar">${sortDir>0?'▲':'▼'}</span>`:''}</th>`).join('')}</tr></thead>
   <tbody>${listBody(f)}</tbody></table></div>`;

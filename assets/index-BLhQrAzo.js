@@ -22851,6 +22851,37 @@ function incorporar(db, sombra, pendientes, filas) {
 	}
 	return n;
 }
+var SIST = [
+	"id",
+	"pacienteId",
+	"schemaVersion",
+	"creado",
+	"modificado"
+];
+function actividadResidentes(filas, residentes, desde) {
+	const t = (s) => s ? Date.parse(s) : NaN, d = t(desde), out = {};
+	for (const f of filas) {
+		const creo = !!f.creado_por && residentes.has(f.creado_por) && t(f.creado_en) >= d;
+		let ed = null;
+		for (const [k, m] of Object.entries(f.campos_meta || {})) if (!SIST.includes(k) && m && m.por && m.en && residentes.has(m.por) && !(ed && t(ed.en) >= t(m.en))) ed = {
+			por: m.por,
+			en: m.en
+		};
+		if (!!ed && t(ed.en) >= d && (!creo || t(ed.en) > t(f.creado_en) + 12e4)) out[f.id] = {
+			quien: residentes.get(ed.por),
+			en: ed.en,
+			tipo: "editada",
+			nueva: creo
+		};
+		else if (creo) out[f.id] = {
+			quien: residentes.get(f.creado_por),
+			en: f.creado_en,
+			tipo: "nueva",
+			nueva: true
+		};
+	}
+	return out;
+}
 // src/web/jefe.ts
 var sb$2;
 var porPedir = [];
@@ -23989,21 +24020,22 @@ async function bajar() {
 	}
 }
 var CARGAS_RES = "registro_neurovascular_cargas_residentes";
+var actividadRev = -1;
 async function cargasResidentes() {
+	if (actividadRev === est.rev) return;
 	const { data: per, error: e1 } = await sb.from("perfiles").select("user_id, nombre").eq("rol", "residente");
 	if (e1) throw e1;
 	const nom = new Map(per.map((p) => [p.user_id, p.nombre]));
-	const out = {};
-	if (nom.size) {
-		const desde = (/* @__PURE__ */ new Date(Date.now() - 2592e6)).toISOString();
-		const { data, error } = await sb.from("eventos").select("id, creado_por, creado_en").in("creado_por", [...nom.keys()]).gte("creado_en", desde).is("borrado_en", null);
+	const desde = (/* @__PURE__ */ new Date(Date.now() - 2592e6)).toISOString();
+	const filas = [];
+	if (nom.size) for (let i = 0;; i += 1e3) {
+		const { data, error } = await sb.from("eventos").select("id, creado_por, creado_en, campos_meta").gte("modificado_en", desde).is("borrado_en", null).order("id").range(i, i + 999);
 		if (error) throw error;
-		for (const x of data) out[x.id] = {
-			quien: nom.get(x.creado_por) || "residente",
-			en: x.creado_en
-		};
+		filas.push(...data);
+		if (data.length < 1e3) break;
 	}
-	const txt = JSON.stringify(out);
+	actividadRev = est.rev;
+	const txt = JSON.stringify(actividadResidentes(filas, nom, desde));
 	if (localStorage.getItem(CARGAS_RES) === txt) return;
 	localStorage.setItem(CARGAS_RES, txt);
 	if (view !== "form") try {

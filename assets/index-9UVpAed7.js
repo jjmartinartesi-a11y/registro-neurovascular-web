@@ -23988,6 +23988,28 @@ async function bajar() {
 		if (data.length < 500) return;
 	}
 }
+var CARGAS_RES = "registro_neurovascular_cargas_residentes";
+async function cargasResidentes() {
+	const { data: per, error: e1 } = await sb.from("perfiles").select("user_id, nombre").eq("rol", "residente");
+	if (e1) throw e1;
+	const nom = new Map(per.map((p) => [p.user_id, p.nombre]));
+	const out = {};
+	if (nom.size) {
+		const desde = (/* @__PURE__ */ new Date(Date.now() - 2592e6)).toISOString();
+		const { data, error } = await sb.from("eventos").select("id, creado_por, creado_en").in("creado_por", [...nom.keys()]).gte("creado_en", desde).is("borrado_en", null);
+		if (error) throw error;
+		for (const x of data) out[x.id] = {
+			quien: nom.get(x.creado_por) || "residente",
+			en: x.creado_en
+		};
+	}
+	const txt = JSON.stringify(out);
+	if (localStorage.getItem(CARGAS_RES) === txt) return;
+	localStorage.setItem(CARGAS_RES, txt);
+	if (view !== "form") try {
+		render();
+	} catch {}
+}
 function esDeRed(e) {
 	const x = e;
 	return !!x && (x.name === "TypeError" || /Failed to fetch|NetworkError|Load failed|Network request failed/i.test(String(x.message)));
@@ -24013,6 +24035,7 @@ async function sincronizar() {
 			else await subirMediaLocal(sb, enServidor);
 			if (rol === "jefe") await sincronizarPedidos(enServidor);
 			await bajar();
+			if (rol === "jefe") await cargasResidentes();
 			if (rol === "residente") await refrescar();
 			ultimoError = "";
 			errorDeRed = false;

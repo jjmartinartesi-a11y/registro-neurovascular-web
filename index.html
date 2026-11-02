@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src https://script.google.com https://script.googleusercontent.com https://clinicaltrials.gov https://xynzajsqixkohvbezsvy.supabase.co">
 <title>Registro Neurovascular</title>
 <meta name="theme-color" content="#0E6E7A">
-  <script type="module" crossorigin src="./assets/index-CzQF-uKt.js"></script>
+  <script type="module" crossorigin src="./assets/index-9UVpAed7.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-E94FfCkq.css">
 <link rel="manifest" href="./manifest.webmanifest"></head>
 <body>
@@ -81,6 +81,9 @@
   .ic svg{width:100%;height:100%}
   nav .count{margin-left:auto;font-size:11px;font-family:var(--mono);color:var(--ink-3);background:var(--surface-2);padding:1px 7px;border-radius:20px}
   nav button.on .count{background:rgba(255,255,255,.5);color:var(--accent-ink)}
+  nav .count.nuevas,nav button.on .count.nuevas{background:var(--accent);color:#fff;font-weight:600;white-space:nowrap}
+  nav .count.nuevas+.count{margin-left:6px}
+  nav .count[hidden]{display:none}
   .side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:7px}
   .side-foot .row{display:flex;gap:7px}
   .theme-btn{margin-top:2px;font-size:12px;color:var(--ink-3);background:none;border:none;display:flex;align-items:center;gap:6px;padding:4px}
@@ -238,6 +241,15 @@
   .star.off:hover{opacity:1;color:var(--ink-2)}
   .star.lg{font-size:20px;margin-left:8px;vertical-align:-2px}
   .star.ro{cursor:default}
+  /* Pantallazo del paciente (31/10): globo al pasar sobre el nombre de la ficha */
+  .pacnom{cursor:help;border-bottom:1px dotted var(--border-strong);outline:none}
+  .pacnom:hover,.pacnom:focus-visible{border-bottom-color:var(--accent)}
+  #pzTip{position:fixed;z-index:1001;width:max-content;max-width:min(440px,92vw);background:var(--surface);color:var(--ink);border:1px solid var(--border-strong);border-radius:10px;padding:10px 13px;font-size:12.5px;line-height:1.4;pointer-events:none;box-shadow:0 6px 22px rgba(0,0,0,.16);display:none}
+  #pzTip .pz-cab{font-weight:640;margin-bottom:7px;color:var(--ink)}
+  #pzTip .pz-g{display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+  #pzTip .pz-k{color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.03em;padding-top:1px;white-space:nowrap}
+  #pzTip .pz-v{color:var(--ink-2)}
+  #pzTip .pz-vacio{color:var(--ink-3)}
   #starTip{position:fixed;z-index:1001;max-width:min(340px,88vw);background:var(--ink);color:var(--bg);padding:8px 11px;border-radius:8px;font-size:12.5px;line-height:1.4;white-space:pre-line;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.18);display:none}
   .chip.proto.on{background:var(--tag);border-color:var(--tag);color:var(--tag-ink);font-weight:640}
   /* Protocolo finalizado (03/10): la etiqueta se queda en la ficha pero apagada. El color atenuado
@@ -330,6 +342,11 @@
   .aviso{display:flex;gap:13px;align-items:flex-start;background:var(--accent-wash);border:1px solid var(--accent);
     border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;box-shadow:var(--shadow)}
   .aviso.warn{background:var(--warn-wash);border-color:var(--warn)}
+  .aviso .av-acc{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .aviso.nuevas a{color:inherit;text-decoration:none}.aviso.nuevas a:hover b{text-decoration:underline}
+  .ntag{display:inline-block;max-width:16em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;margin-left:8px;
+    padding:1px 9px;border-radius:20px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+  .solonuevas{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:13px;color:var(--accent-ink)}
   .aviso.warn .av-t{color:var(--warn)}
   .aviso .av-ico{width:22px;height:22px;flex:none;color:var(--accent-ink);margin-top:1px}
   .aviso .av-ico svg{width:100%;height:100%}
@@ -679,7 +696,7 @@
     </div>
     <nav id="nav">
       <button data-v="dash" class="on"><span class="ic" data-ic="grid"></span><span>Panel</span></button>
-      <button data-v="list"><span class="ic" data-ic="list"></span><span>Pacientes</span><span class="count" id="navCount">0</span></button>
+      <button data-v="list"><span class="ic" data-ic="list"></span><span>Pacientes</span><span class="count nuevas" id="navNuevas" hidden></span><span class="count" id="navCount">0</span></button>
       <button data-v="form"><span class="ic" data-ic="plus"></span><span>Nuevo / Editar</span></button>
       <button data-v="t1"><span class="ic" data-ic="table"></span><span>Tabla</span></button>
       <button data-v="agenda"><span class="ic" data-ic="cal"></span><span>Agenda</span></button>
@@ -1109,6 +1126,7 @@ function icon(n){const p={
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
   tag:'<path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.4"/>',
   cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   ext:'<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
 }[n]||'';return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
@@ -1528,8 +1546,9 @@ const WIZARD_HTML = `<title>Tamaño del infarto y anticoagulación — ELAN</tit
     --lesion:#E5382B; --lesion-stroke:#A31A10;
     --slice-fill:#FBFDFF; --slice-stroke:#46586A;
     --shadow:0 1px 2px rgba(21,34,48,.04), 0 6px 20px -8px rgba(21,34,48,.12);
-    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    /* Misma letra que la app (Juan, 01/11): la serif propia del clasificador desentonaba. */
+    --serif:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     --r:10px; --r-lg:16px;
   }
   @media (prefers-color-scheme:dark){
@@ -4464,7 +4483,7 @@ function filtered(){
 /* ---------- views ---------- */
 let view='dash';
 function go(v){view=v;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render()}
-function render(){$('#navCount').textContent=DB.length;({dash:vDash,list:vList,form:vForm,t1:vT1,cal:vCal,agenda:vAgenda,hcimp:vHcImp,cfg:vCfg}[view])();}
+function render(){$('#navCount').textContent=DB.length;navNuevasPintar();({dash:vDash,list:vList,form:vForm,t1:vT1,cal:vCal,agenda:vAgenda,hcimp:vHcImp,cfg:vCfg}[view])();}
 
 /* ===== DASHBOARD ===== */
 function vDash(){
@@ -4583,6 +4602,7 @@ function vDash(){
   <div class="lede">${n} paciente${n!==1?'s':''} ${activeFilterLabel()}</div></div>
   <div style="display:flex;gap:9px;flex-wrap:wrap">${filterBar(f)}</div></div>
   ${avisosHtml()}
+  ${cargasAvisoHtml()}
   <div class="kpis">
     ${kpi('Pacientes',n,nPac<n?nPac+' personas · '+(n-nPac)+' evento'+(n-nPac!==1?'s':'')+' repetido'+(n-nPac!==1?'s':''):'','')}
     ${(()=>{/* Internados activos (22/09): sobre la cohorte filtrada, como todo el Panel, y con el mismo
@@ -4693,6 +4713,7 @@ function vDash(){
     faltAbierta=e.target.open;
     try{localStorage.setItem(FALT_KEY,faltAbierta?'1':'0')}catch(_){}});
   if($('#avisoOk'))$('#avisoOk').onclick=()=>{clearAvisos();vDash()};
+  cargasAvisoBind();
 }
 function welcome(){return `
   <div class="head"><div><div class="eyebrow">Bienvenido</div><h2>Tu registro está vacío</h2>
@@ -5384,8 +5405,47 @@ let colapsados=loadColapsados();
 function loadColapsados(){try{const r=JSON.parse(localStorage.getItem(CKEY)||'[]');return new Set(Array.isArray(r)?r:[])}catch(e){return new Set()}}
 function saveColapsados(){try{localStorage.setItem(CKEY,JSON.stringify([...colapsados]))}catch(e){}}
 
+/* Cargas nuevas de residentes (02/11, pedido de Juan: al entrar, saber qué fichas cargaron los residentes).
+   Quién creó cada ficha lo sabe sólo el servidor (eventos.creado_por): la sincronización del jefe (src/web/sync.ts)
+   deja en RES_KEY las cargadas por un residente en los últimos 30 días, {id:{quien,en}}. «Vista» = Juan la abrió en
+   este dispositivo (VIS_KEY). Ninguna de las dos lleva datos del paciente; si se pierden, las de 30 días vuelven a
+   aparecer como nuevas (el error seguro). */
+const RES_KEY='registro_neurovascular_cargas_residentes',VIS_KEY='registro_neurovascular_cargas_vistas';
+let _cnv={r:null,v:null,m:new Map()},soloNuevas=false;
+function lsLeer(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
+function lsJson(t,d){try{const v=JSON.parse(t||'null');return v&&typeof v==='object'?v:d}catch(e){return d}}
+/* id → {quien,en} de las cargas de residentes todavía sin abrir que están en la base (memo por el texto guardado) */
+function cargasNuevas(){const r=lsLeer(RES_KEY),v=lsLeer(VIS_KEY);
+  if(r!==_cnv.r||v!==_cnv.v||_cnv.n!==DB.length){const c=lsJson(r,{}),vis=new Set(lsJson(v,[])),m=new Map();
+    DB.forEach(p=>{if(p&&c[p.id]&&!vis.has(p.id))m.set(p.id,c[p.id])});_cnv={r,v,n:DB.length,m}}
+  return _cnv.m}
+/* Marca como vistas; guarda sólo las que siguen en la ventana de 30 días (la lista no crece sin fin) */
+function cargasMarcar(ids){const c=lsJson(lsLeer(RES_KEY),{}),vis=new Set(lsJson(lsLeer(VIS_KEY),[]).filter(id=>c[id]));
+  ids.forEach(id=>{if(c[id])vis.add(id)});
+  try{localStorage.setItem(VIS_KEY,JSON.stringify([...vis]))}catch(e){toast('No se pudo guardar qué fichas ya viste')}}
+function cargaCuando(t){const d=new Date(t);if(isNaN(d))return '';
+  const h=(Date.now()-d)/36e5;if(h<1)return 'hace '+Math.max(1,Math.round(h*60))+' min';if(h<24)return 'hace '+Math.round(h)+' h';
+  return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}
+function nuevaTagHtml(p){const c=cargasNuevas().get(p.id);if(!c)return '';
+  return `<span class="ntag" title="${esc('Cargada por '+c.quien+' · '+cargaCuando(c.en)+' · deja de marcarse al abrirla')}">Nueva · ${esc(c.quien)}</span>`}
+/* Aviso del Panel y de Pacientes: qué cargaron los residentes y todavía no abriste */
+function cargasAvisoHtml(){const m=cargasNuevas();if(!m.size)return '';
+  const L=DB.filter(p=>m.has(p.id)).sort((a,b)=>String(m.get(b.id).en).localeCompare(String(m.get(a.id).en))),n=L.length;
+  return `<div class="aviso nuevas"><div class="av-ico">${icon('user')}</div><div class="av-body">
+    <div class="av-t">${n} ficha${n>1?'s':''} nueva${n>1?'s':''} cargada${n>1?'s':''} por residentes</div>
+    ${L.slice(0,6).map(p=>{const c=m.get(p.id);return `<p><a href="#" class="cnAbrir" data-id="${esc(p.id)}"><b>Nº ${esc(p.nOrden??'—')}</b> ${esc(p.nombre||'(sin nombre)')}</a> · ${esc(c.quien)} <span class="av-fecha">${esc(cargaCuando(c.en))}</span></p>`}).join('')}
+    ${n>6?`<p>y ${n-6} más</p>`:''}</div>
+    <div class="av-acc">${view==='list'&&soloNuevas?'':`<button class="btn sm" id="cnVer">Ver en Pacientes</button>`}<button class="btn sm ghost" id="cnOk">Marcar como vistas</button></div></div>`}
+function cargasAvisoBind(){
+  document.querySelectorAll('.cnAbrir').forEach(a=>a.onclick=e=>{e.preventDefault();abrirFicha(a.dataset.id)});
+  const v=$('#cnVer');if(v)v.onclick=()=>{soloNuevas=true;go('list')};
+  const ok=$('#cnOk');if(ok)ok.onclick=()=>{cargasMarcar([...cargasNuevas().keys()]);soloNuevas=false;render()}}
+function navNuevasPintar(){const b=$('#navNuevas');if(!b)return;const n=cargasNuevas().size;
+  b.hidden=!n;b.textContent=n?String(n):'';b.title=n?n+' ficha'+(n>1?'s':'')+' nueva'+(n>1?'s':'')+' cargada'+(n>1?'s':'')+' por residentes, sin abrir':'';b.setAttribute('aria-label',b.title)}
+
 function sortedList(){
-  const f=filtered();
+  let f=filtered();
+  if(soloNuevas){const m=cargasNuevas();f=f.filter(p=>m.has(p.id))}
   f.sort((a,b)=>{let x=a[sortKey],y=b[sortKey];if(x==null)x=sortDir>0?Infinity:-Infinity;if(y==null)y=sortDir>0?Infinity:-Infinity;if(typeof x==='string')return sortDir*x.localeCompare(y);return sortDir*(x-y)});
   return f;
 }
@@ -5415,14 +5475,14 @@ function grpHead(g,total,open){
   const fechas=g.rows.map(evFecha).join(' · ');
   return `<tr class="gh${open?' open':''}" data-key="${esc(g.key)}" title="${open?'Contraer':'Expandir'} los eventos de este paciente">
   <td class="ghx"><span class="chev">▶</span></td>
-  <td><b>${esc(p0.nombre||'(sin nombre)')}</b>${starHtml({destacado:g.rows.some(esDest),rows:g.rows},'',true)}${tagsHtml(p0,'',g.rows.some(intActivo))}${p0.documento?`<div class="frv-mini mono">${esc(p0.documento)}</div>`:''}</td>
+  <td><b>${esc(p0.nombre||'(sin nombre)')}</b>${starHtml({destacado:g.rows.some(esDest),rows:g.rows},'',true)}${nuevaTagHtml(g.rows.find(p=>cargasNuevas().has(p.id))||{})}${tagsHtml(p0,'',g.rows.some(intActivo))}${p0.documento?`<div class="frv-mini mono">${esc(p0.documento)}</div>`:''}</td>
   <td colspan="8"><span class="evc">${n} evento${n!==1?'s':''}</span><span class="frv-mini">${esc(fechas)}${fuera?` · ${fuera} más fuera del filtro`:''}</span></td></tr>`;
 }
 function rowHtml(p,ev){
   const frv=(p.frv||[]).length+(p.frvAtipicos||[]).length;
   const nombre=ev&&ev.child
-    ? `<span class="evn">Evento ${ev.ord} de ${ev.total}</span> <span class="frv-mini">· ${esc(evFecha(p))}</span>${starHtml(p)}${intActivoVis(p)?`<span class="ptags">${intTagHtml('',p)}</span>`:''}`
-    : `<b>${esc(p.nombre||'(sin nombre)')}</b>${starHtml(p)}${tagsHtml(p)}${ev?`<span class="evb" title="Este paciente tiene ${ev.total} eventos registrados">evento ${ev.ord}/${ev.total}</span>`:''}${p.documento?`<div class="frv-mini mono">${esc(p.documento)}</div>`:''}`;
+    ? `<span class="evn">Evento ${ev.ord} de ${ev.total}</span> <span class="frv-mini">· ${esc(evFecha(p))}</span>${starHtml(p)}${nuevaTagHtml(p)}${intActivoVis(p)?`<span class="ptags">${intTagHtml('',p)}</span>`:''}`
+    : `<b>${esc(p.nombre||'(sin nombre)')}</b>${starHtml(p)}${nuevaTagHtml(p)}${tagsHtml(p)}${ev?`<span class="evb" title="Este paciente tiene ${ev.total} eventos registrados">evento ${ev.ord}/${ev.total}</span>`:''}${p.documento?`<div class="frv-mini mono">${esc(p.documento)}</div>`:''}`;
   return `<tr${ev&&ev.child?' class="gc"':''} data-id="${p.id}"><td class="mono" style="color:var(--ink-3)">${p.nOrden??'·'}</td>
   <td>${nombre}</td>
   <td>${p.sexo||'—'}</td><td class="tnum">${p.edad??'—'}</td><td class="tnum" style="color:var(--ink-3)">${p.anio||'—'}</td>
@@ -5462,11 +5522,15 @@ function vList(){
     ${multi?`<button class="btn sm ghost" id="togGrp">${grpBtnLabel(f)}</button>`:''}
     <span class="filter-note">${listNote(f)}</span>
   </div>
+  ${soloNuevas?`<div class="solonuevas">Mostrando sólo las fichas nuevas de residentes <button class="btn sm ghost" id="cnTodas">Ver todas</button></div>`:''}
+  ${cargasAvisoHtml()}
   <div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th data-k="${c[0]}">${c[1]} ${sortKey===c[0]?`<span class="ar">${sortDir>0?'▲':'▼'}</span>`:''}</th>`).join('')}</tr></thead>
   <tbody>${listBody(f)}</tbody></table></div>`;
   $('#q').oninput=e=>{filters.q=e.target.value;listRefresh()};
   $('#listNew').onclick=()=>nuevaFicha(filters.q);
-  $('#clearF').onclick=()=>{filters=emptyFilters();render()};
+  $('#clearF').onclick=()=>{filters=emptyFilters();soloNuevas=false;render()};
+  if($('#cnTodas'))$('#cnTodas').onclick=()=>{soloNuevas=false;render()};
+  cargasAvisoBind();
   if($('#togGrp'))$('#togGrp').onclick=()=>{const gs=grpMulti(sortedList());
     const todosCerrados=gs.length&&gs.every(g=>colapsados.has(g.key));
     gs.forEach(g=>todosCerrados?colapsados.delete(g.key):colapsados.add(g.key));
@@ -5567,7 +5631,7 @@ function toggleDest(id){const p=DB.find(x=>x.id===id);if(!p)return;
 /* La ficha se completa con blank() al abrirla (Fase 1.2): una ficha vieja o importada sin alguna lista (frvAtipicos…)
    tumbaba el formulario. Es la misma normalización con que draftSucio() la compara; en la base no se escribe nada
    hasta que se guarda. */
-function abrirFicha(id){const p=DB.find(x=>x.id===id);if(!p)return;resetBusq();avisosPend=null;editId=id;draft=Object.assign(blank(),JSON.parse(JSON.stringify(p)));go('form');hcMarcarBase()}
+function abrirFicha(id){const p=DB.find(x=>x.id===id);if(!p)return;if(cargasNuevas().has(id))cargasMarcar([id]);resetBusq();avisosPend=null;editId=id;draft=Object.assign(blank(),JSON.parse(JSON.stringify(p)));go('form');hcMarcarBase()}
 
 /* ¿Hay algo que se perdería al saltar a otra ficha? Editando: cualquier cambio contra lo guardado.
    Ficha nueva: cualquier dato clínico — identificación y factores heredados no cuentan, los puso
@@ -5845,7 +5909,7 @@ function vForm(){
   /* factores traídos del evento anterior del mismo paciente: se marcan hasta que Juan los revisa */
   const herPend=!!(heredado&&heredado.pend),herFrv=herPend?heredado.frv:[],herAtip=herPend?heredado.atip:[];
   m.innerHTML=`
-  <div class="head"><div><div class="eyebrow">${isEdit?'Editar ficha':'Nueva ficha'}</div><h2>${isEdit?esc(d.nombre||'Paciente'):'Cargar paciente'}<span id="headStar">${starHtml(d,'lg show')}</span><span id="headTags">${isEdit?tagsHtml(d,'lg'):''}</span></h2>
+  <div class="head"><div><div class="eyebrow">${isEdit?'Editar ficha':'Nueva ficha'}</div><h2>${isEdit?`<span class="pacnom" tabindex="0">${esc(d.nombre||'Paciente')}</span>`:'Cargar paciente'}<span id="headStar">${starHtml(d,'lg show')}</span><span id="headTags">${isEdit?tagsHtml(d,'lg'):''}</span></h2>
   <div class="lede">${faltHtml(d)}<span style="display:block;margin-top:6px">Los campos vacíos quedan como “sin dato” y no afectan las estadísticas.</span>${
     isEdit&&(d.creado||d.modificado)?`<span style="display:block;font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:6px">${
       d.creado?'Creada el '+esc(fmtStamp(d.creado)):''}${d.creado&&d.modificado?' · ':''}${
@@ -7345,6 +7409,40 @@ function openHcReport(){
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(ok,viejo);else viejo()};
 }
 
+
+/* ===== Pantallazo del paciente (2026-10-31) =====
+   Pedido de Juan: con la ficha abierta, pasar el mouse sobre el nombre del encabezado muestra un resumen muy corto
+   de lo más relevante que ya está cargado. Mismas reglas que el reporte: sólo lo que tiene dato (un «No» de
+   reperfusión sí aparece), y desde `draft` después de `collect()`, o sea lo que está en pantalla. */
+function pantallazoHtml(d){
+  const R=[],row=(k,v)=>{if(v)R.push(`<div class="pz-k">${esc(k)}</div><div class="pz-v">${esc(v)}</div>`)};
+  const sx={F:'Mujer',M:'Varón'}[d.sexo];
+  const dias=diasDesde(d.fechaACV);
+  const cab=[[sx,d.edad!=null?d.edad+' años':''].filter(Boolean).join(', '),d.nOrden!=null?'Nº '+d.nOrden:'',
+    d.fechaACV?hcFecha(d.fechaACV)+(dias!=null&&dias>=0?' (hace '+dias+' día'+(dias!==1?'s':'')+')':''):(d.anio?String(d.anio):'')].filter(Boolean).join(' · ');
+  row('Evento',[HC_TIPO[d.tipo]||d.tipo,d.toast,ocspList(d).join(' + '),d.lado?'lado '+d.lado.toLowerCase():''].filter(Boolean).join(' · '));
+  const nih=num(d.nihss)!=null?'NIHSS '+d.nihss+(nihSev(d.nihss)?' ('+nihSev(d.nihss)+')':'')+(num(d.nihssPost)!=null?' → '+d.nihssPost+' post':''):'';
+  const mrs=[d.mrsPrevio!=null?'previo '+d.mrsPrevio:'',d.mrsAlta!=null?'alta '+d.mrsAlta:'',d.mrs90!=null?'90 d '+d.mrs90:''].filter(Boolean).join(' / ');
+  row('Severidad',[nih,mrs?'mRS '+mrs:''].filter(Boolean).join(' · '));
+  const tl=d.trombolisis===true?'Trombólisis'+(d.trombolisisAgente?' ('+d.trombolisisAgente+')':''):'',tm=d.trombectomia===true?'Trombectomía'+(d.tici?' (mTICI '+d.tici+')':''):'';
+  const rep=tl||tm?[tl,tm,d.puertaAguja!=null?'puerta-aguja '+d.puertaAguja+' min':'',d.puertaPuncion!=null?'puerta-punción '+d.puertaPuncion+' min':'',d.hicSint===true?'HIC sintomática':''].filter(Boolean).join(' · ')
+    :d.trombolisis===false&&d.trombectomia===false?'Sin trombólisis ni trombectomía':'';
+  row('Reperfusión',rep);
+  row('FRV',hcLista((d.frv||[]).concat(d.frvAtipicos||[])));
+  const tv=txVigente(d);
+  row('Antitrombótico',tv.length?(tv[0]===TX_NONE?'sin antitrombóticos':hcLista(tv))+(txCambios(d).length?' (vigente)':''):'');
+  const est=[];
+  if(d.mortalidad===true)est.push('Fallecido'+(d.fechaMuerte?' el '+hcFecha(d.fechaMuerte):''));
+  else if(intActivo(d))est.push('Internado'+(d.fechaIngreso?' desde el '+hcFecha(d.fechaIngreso):''));
+  else if(d.fechaAlta)est.push('Alta '+hcFecha(d.fechaAlta)+(d.estancia!=null?' ('+d.estancia+' d)':''));
+  if(d.mortalidad!==true){const s=segEstado(d);
+    if(s==='vencido')est.push('mRS 90: en ventana, cargar ahora');else if(s==='proximo')est.push('mRS 90: abre en '+(SEG_ABRE-dias)+' días');else if(s==='tardio')est.push('mRS 90: fuera de ventana')}
+  row('Estado',est.join(' · '));
+  const pa=pAsig(d);if(pa)row('Protocolo',(protoById(pa.id)||pa).nombre+(pa.codigo?' · '+pa.codigo:''));
+  const k=pacKey(d),otros=DB.filter(p=>p.id!==d.id&&p.id!==editId&&pacKey(p)===k).sort((a,b)=>evTime(a)<evTime(b)?-1:1);
+  if(otros.length)row(otros.length>1?'Otros eventos':'Otro evento',otros.map(p=>evFecha(p)+' '+(p.tipo||'')).join(' · '));
+  return `<div class="pz-cab">${esc(cab||'Sin datos de identificación')}</div>`+(R.length?`<div class="pz-g">${R.join('')}</div>`:'<div class="pz-vacio">Todavía no hay datos clínicos cargados.</div>');
+}
 /* ===== ELAN wizard integration ===== */
 function elanTone(t){return {early:'good',mid:'warn',late:'warn',defer:'crit'}[t]||''}
 function elanSummaryHtml(d){
@@ -9629,6 +9727,16 @@ document.addEventListener('mouseover',e=>{const t=e.target.closest&&e.target.clo
   const hide=()=>{if(tip)tip.style.display='none'};
   document.addEventListener('mouseover',e=>{const b=e.target.closest&&e.target.closest('.star[data-tip]');b?show(b):hide()});
   document.addEventListener('focusin',e=>{const b=e.target.closest&&e.target.closest('.star[data-tip]');b?show(b):hide()});
+  document.addEventListener('click',hide,true);addEventListener('scroll',hide,true)})();
+// Pantallazo del paciente (31/10): globo fijo bajo el nombre del encabezado de la ficha, armado con lo que está en pantalla
+(()=>{let tip=null;const show=b=>{if(view!=='form'||!editId)return;try{collect()}catch(_){}
+  if(!tip){tip=document.createElement('div');tip.id='pzTip';tip.setAttribute('role','tooltip');document.body.appendChild(tip)}
+  tip.innerHTML=pantallazoHtml(draft);tip.style.display='block';const r=b.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight,m=8;
+  tip.style.left=Math.max(m,Math.min(r.left,innerWidth-m-w))+'px';tip.style.top=(r.bottom+8+h>innerHeight-m&&r.top-8-h>m?r.top-8-h:r.bottom+8)+'px'};
+  const hide=()=>{if(tip)tip.style.display='none'};
+  document.addEventListener('mouseover',e=>{const b=e.target.closest&&e.target.closest('.pacnom');b?show(b):hide()});
+  document.addEventListener('focusin',e=>{const b=e.target.closest&&e.target.closest('.pacnom');b?show(b):hide()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
   document.addEventListener('click',hide,true);addEventListener('scroll',hide,true)})();
 initTheme();
 /* Arranque (Fase 1.7): la base se lee de IndexedDB, que es asíncrona; las migraciones y el primer dibujo esperan. */

@@ -22786,6 +22786,7 @@ function sembrarEn(db, sombra, filas) {
 	}
 	return { agregadas };
 }
+var fichaInexistente = (op, r) => r.estado === "rechazado" && !op.paciente && !op.borrar && (r.codigo === "P0002" || r.codigo === "23502");
 function aplicarResultado(op, r) {
 	const poner = {};
 	if (r.estado === "rechazado") {
@@ -23763,7 +23764,8 @@ var est = {
 	altasWeb: [],
 	rechazos: [],
 	cif: {},
-	envio: {}
+	envio: {},
+	soloLocal: []
 };
 var ilegibles = 0;
 var listo = false;
@@ -23828,6 +23830,12 @@ function pintar() {
 		txt += ` · ${media} archivo${media > 1 ? "s" : ""} sin subir` + (LOCAL && esperaPermiso() ? " (falta dar acceso a la carpeta casos: abrí un caso)" : "");
 		if (tono === "good") tono = "warn";
 	}
+	const solo = est.soloLocal.length;
+	if (solo) {
+		txt += ` · ${solo} ficha${solo > 1 ? "s" : ""} sólo en este dispositivo`;
+		tono = "crit";
+	}
+	el.querySelector("#rnvSolo").hidden = !solo;
 	if (ilegibles) {
 		txt += ` · ${ilegibles} campo${ilegibles > 1 ? "s" : ""} cifrado${ilegibles > 1 ? "s" : ""} que no se pudo abrir`;
 		tono = "crit";
@@ -23850,7 +23858,8 @@ function encolar() {
 	});
 }
 function encolarCampos() {
-	const d = diferencias(est.sombra, DB, () => true, (/* @__PURE__ */ new Date()).toISOString(), () => crypto.randomUUID(), rol === "residente" ? permitido : void 0);
+	const solo = new Set(est.soloLocal);
+	const d = diferencias(est.sombra, DB, (f) => !solo.has(f.id), (/* @__PURE__ */ new Date()).toISOString(), () => crypto.randomUUID(), rol === "residente" ? permitido : void 0);
 	if (d.ops.length) {
 		est.sombra = d.sombra;
 		est.cola.push(...d.ops);
@@ -23915,6 +23924,11 @@ async function subir() {
 		let tocarApp = false;
 		for (let i = 0; i < lote.length; i++) {
 			const op = lote[i], r = res[i];
+			if (fichaInexistente(op, r)) {
+				marcarSoloLocal(op.fila_id);
+				delete est.envio[op.op_id];
+				continue;
+			}
 			const { poner, rechazo } = aplicarResultado(op, r);
 			if (r.estado !== "rechazado") for (const k of Object.keys(op.campos)) {
 				if (!esCifrado(k)) continue;
@@ -23946,7 +23960,7 @@ async function subir() {
 				const s = est.sombra[op.fila_id];
 				if (s) s[k] = v;
 			}
-			if (rechazo) est.rechazos.push({
+			if (rechazo && !est.rechazos.some((x) => x.fila === op.fila_id && x.motivo === rechazo)) est.rechazos.push({
 				fila: op.fila_id,
 				motivo: rechazo,
 				cuando: (/* @__PURE__ */ new Date()).toISOString()
@@ -23957,6 +23971,61 @@ async function subir() {
 		await guardarEstado();
 		if (tocarApp) aplicarEnLaApp();
 	}
+}
+function marcarSoloLocal(id) {
+	if (!est.soloLocal.includes(id)) est.soloLocal.push(id);
+	est.cola = est.cola.filter((o) => o.fila_id !== id);
+	est.rechazos = est.rechazos.filter((x) => x.fila !== id);
+}
+async function revisarSoloLocal() {
+	const enSrv = /* @__PURE__ */ new Set();
+	for (let desde = 0;; desde += 1e3) {
+		const { data, error } = await sb.from("eventos").select("id").order("id").range(desde, desde + 999);
+		if (error) throw error;
+		for (const x of data) enSrv.add(x.id);
+		if (data.length < 1e3) break;
+	}
+	for (const f of DB) if (f && f.id && est.sombra[f.id] && !est.sombra[f.id].__borrada && !enSrv.has(f.id)) marcarSoloLocal(f.id);
+	est.soloLocal = est.soloLocal.filter((id) => DB.some((f) => f && f.id === id));
+	await guardarEstado();
+}
+function panelSoloLocal() {
+	const caja = document.createElement("div");
+	caja.id = "rnvCflBox";
+	const pintarPanel = () => {
+		const filas = est.soloLocal.map((id) => DB.find((f) => f && f.id === id)).filter((f) => !!f).map((f) => `<tr data-id="${esc(f.id)}">
+      <td>${esc(f.nOrden ?? "—")}</td><td>${esc(f.nombre || "(sin nombre)")}</td><td>${esc(f.tipo || "")}</td><td>${esc(f.fechaACV || f.fechaIngreso || "")}</td>
+      <td><button type="button" class="btn sm ghost" data-a="descartar">Descartar</button></td></tr>`).join("");
+		caja.innerHTML = `<div class="rnv-cfl"><h3>Fichas sólo en este dispositivo</h3>
+      <p class="rnv-nota">Este dispositivo las tiene, pero el servidor y la Mac no. No se suben. Descartarlas las borra sólo de acá.</p>
+      ${filas ? `<table><thead><tr><th>Nº</th><th>Nombre</th><th>Tipo</th><th>Fecha</th><th></th></tr></thead><tbody>${filas}</tbody></table>
+      <button type="button" class="btn sm ghost" id="rnvSoloTodas">Descartar todas</button>` : "<p>No queda ninguna.</p>"}
+      <button type="button" class="btn sm" id="rnvSoloCerrar">Cerrar</button></div>`;
+		caja.querySelector("#rnvSoloCerrar").addEventListener("click", () => caja.remove());
+		const descartar = async (ids) => {
+			for (const id of ids) {
+				const i = DB.findIndex((f) => f && f.id === id);
+				if (i >= 0) DB.splice(i, 1);
+				delete est.sombra[id];
+				delete est.cif[id];
+				est.cola = est.cola.filter((o) => o.fila_id !== id);
+				est.rechazos = est.rechazos.filter((x) => x.fila !== id);
+				est.soloLocal = est.soloLocal.filter((x) => x !== id);
+			}
+			await guardarEstado();
+			aplicarEnLaApp();
+			pintar();
+			pintarPanel();
+		};
+		caja.querySelectorAll("button[data-a=\"descartar\"]").forEach((b) => b.addEventListener("click", () => {
+			if (confirm("¿Descartar esta ficha de este dispositivo? El servidor y la Mac no la tienen.")) descartar([b.closest("tr").dataset.id]);
+		}));
+		caja.querySelector("#rnvSoloTodas")?.addEventListener("click", () => {
+			if (confirm(`¿Descartar las ${est.soloLocal.length} fichas de este dispositivo? El servidor y la Mac no las tienen.`)) descartar([...est.soloLocal]);
+		});
+	};
+	pintarPanel();
+	document.body.appendChild(caja);
 }
 async function abrirFila(id, datos) {
 	const d = { ...datos };
@@ -24157,7 +24226,7 @@ function pantallaEntrada(aviso = "") {
 function insignia() {
 	const el = document.createElement("div");
 	el.id = "rnvSync";
-	el.innerHTML = "<span class=\"rnv-sync-dot\"></span><span class=\"rnv-sync-txt\">Conectando…</span><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvCfl\">Conflictos</button><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvRes\">Residentes</button><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvBtnClave\">Contraseña</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSalir\">Salir</button>";
+	el.innerHTML = "<span class=\"rnv-sync-dot\"></span><span class=\"rnv-sync-txt\">Conectando…</span><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSolo\" hidden>Revisar</button><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvCfl\">Conflictos</button><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvRes\">Residentes</button><button type=\"button\" class=\"rnv-sync-btn rnv-solo-jefe\" id=\"rnvBtnClave\">Contraseña</button><button type=\"button\" class=\"rnv-sync-btn\" id=\"rnvSalir\">Salir</button>";
 	document.body.prepend(el);
 	el.querySelector("#rnvSalir").addEventListener("click", async () => {
 		if (rol === "residente" && !confirm("¿Salir? Para volver a entrar vas a necesitar tu link personal.")) return;
@@ -24166,6 +24235,7 @@ function insignia() {
 	});
 	el.querySelector("#rnvRes").addEventListener("click", () => void panelResidentes());
 	el.querySelector("#rnvCfl").addEventListener("click", () => void conflictos());
+	el.querySelector("#rnvSolo").addEventListener("click", panelSoloLocal);
 	el.querySelector("#rnvBtnClave").addEventListener("click", elegirClave);
 }
 function elegirClave() {
@@ -24349,7 +24419,8 @@ async function cambioDeModo() {
 			altasWeb: [],
 			rechazos: [],
 			cif: {},
-			envio: {}
+			envio: {},
+			soloLocal: []
 		};
 		await guardarEstado();
 		await new Promise((ok) => {
@@ -24420,7 +24491,10 @@ async function arrancar() {
 	}
 	listo = true;
 	try {
-		await navigator.locks.request("rnv-sync", () => bajar());
+		await navigator.locks.request("rnv-sync", async () => {
+			await bajar();
+			if (rol === "jefe") await revisarSoloLocal();
+		});
 	} catch (e) {
 		ultimoError = describir(e);
 		errorDeRed = esDeRed(e);

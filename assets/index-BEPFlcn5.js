@@ -22165,6 +22165,23 @@ var catalogos_default = {
 		"Bilateral",
 		"No lateralizado"
 	],
+	TERRITORIO: [
+		[
+			"Anterior",
+			"Anterior (carotídeo)",
+			"Carótida interna y sus ramas: hemisferio (ACM, ACA) y retina"
+		],
+		[
+			"Posterior",
+			"Posterior (vertebrobasilar)",
+			"Vertebrales, basilar y cerebrales posteriores: tronco, cerebelo, tálamo y occipital"
+		],
+		[
+			"Indeterminado",
+			"Indeterminado",
+			"Los síntomas no permiten atribuirlo a una circulación. Es un dato: no es lo mismo que dejarlo sin cargar"
+		]
+	],
 	PRES: [
 		[
 			"pr_crisis",
@@ -22363,7 +22380,7 @@ function rotulo(cat, nombre, k) {
 }
 function presLinea(d, cat) {
 	const p = [];
-	const terr = lista(d.ocsp);
+	const terr = lista(d.ocsp).concat(lista(d.territorio).map((t) => "territorio " + rotulo(cat, "TERRITORIO", t).toLowerCase()));
 	if (terr.length) p.push(terr.join(" + "));
 	const sind = lista(d.sindrome).map((k) => (k === "otro" || k === "lac_otro") && libre(d.sindromeOtro) ? libre(d.sindromeOtro) : rotulo(cat, "SIND", k));
 	if (sind.length) p.push(sind.join(", "));
@@ -22477,6 +22494,7 @@ var CHIPS = {
 	atip: "frvAtipicos",
 	antFam: "antFamiliares",
 	ocsp: "ocsp",
+	terr: "territorio",
 	pres: "presentacion",
 	hicLoc: "hicLocaliza",
 	txAlta: "txAlta",

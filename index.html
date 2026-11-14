@@ -4728,7 +4728,8 @@ function vDash(){
   m.innerHTML=`
   <div class="head"><div><div class="eyebrow">Panel en vivo</div><h2>Resumen de la cohorte</h2>
   <div class="lede">${n} paciente${n!==1?'s':''} ${activeFilterLabel()}</div></div>
-  <div style="display:flex;gap:9px;flex-wrap:wrap">${filterBar(f)}</div></div>
+  </div>
+  <div class="toolbar">${filterBar()}</div>
   ${avisosHtml()}
   ${cargasAvisoHtml()}
   <div class="kpis">
@@ -7840,11 +7841,12 @@ function vT1(){
   m.innerHTML=`
   <div class="head"><div><div class="eyebrow">Publicación</div><h2>Tabla · características basales</h2>
   <div class="lede">Generada sobre la cohorte filtrada (${n} pacientes ${activeFilterLabel()})</div></div>
-  <div style="display:flex;gap:9px;flex-wrap:wrap">${filterBar()}
+  <div style="display:flex;gap:9px;flex-wrap:wrap">
   ${selCmp}
   <button class="btn" id="t1copy">${icon('copy')} Copiar</button>
   <button class="btn" id="t1csv">${icon('down')} CSV</button>
   <button class="btn" id="t1xls">${icon('table')} Excel</button></div></div>
+  <div class="toolbar">${filterBar()}</div>
   ${n?`${C&&C.excl?`<div class="aviso warn"><div class="av-body"><div class="av-t">Fuera de la comparación</div>
     <p><b>${C.excl}</b> ficha${C.excl!==1?'s':''} de las ${n} no entra${C.excl!==1?'n':''} en ninguna de las dos columnas porque no tiene${C.excl!==1?'n':''} el dato que define la división (<b>${esc(cmp.lab.toLowerCase())}</b>). Los porcentajes de cada columna van sobre su propio n.</p></div></div>`:''}
   <div class="t1wrap"><table class="t1${C?' cmp':''}"><thead>${cab}</thead><tbody>${cuerpo}</tbody></table></div>

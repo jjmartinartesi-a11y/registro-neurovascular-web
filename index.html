@@ -356,13 +356,53 @@
   .aviso p{margin:0 0 4px;font-size:13px;color:var(--ink-2);line-height:1.5}
   .aviso b{color:var(--ink)}
   .aviso .av-fecha{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
-  .fpopwrap{position:relative;display:inline-block}
+  .fpopwrap{position:relative;display:block}
   /* Barra de filtros plegable. Ocupa el ancho entero del contenedor flex donde se inserta
      (el Panel y el listado la meten dentro de un flex-wrap), si no cada hijo se acomodaría suelto. */
-  .fbar{flex:1 1 100%;width:100%;display:flex;flex-direction:column;gap:9px}
+  .fbar{flex:1 1 100%;width:100%;min-width:0;display:flex;flex-direction:column;gap:10px}
   .fbar-head{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
-  .fbar-body{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
-  .fbar-lab{font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+  .fbtog{font:inherit;font-size:13px;font-weight:560;padding:8px 12px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--ink);display:inline-flex;align-items:center;gap:8px}
+  .fbtog svg{width:15px;height:15px;flex:none}
+  .fbtog:hover{border-color:var(--accent)}
+  .fbtog.on{border-color:var(--accent);color:var(--accent-ink)}
+  .fbn{min-width:18px;box-sizing:border-box;padding:1px 6px;border-radius:20px;background:var(--accent);color:#fff;font-size:11px;font-family:var(--mono);text-align:center}
+  .fbchev{width:12px;height:8px;flex:none;background:var(--chev) center/12px 8px no-repeat;transition:transform .15s}
+  .fbchev.up{transform:rotate(180deg)}
+  /* Buscador de filtros: no busca pacientes (eso es `.search`), busca en qué desplegable está una opción. */
+  .fbusca{position:relative;flex:1 1 240px;min-width:200px;max-width:400px}
+  .fbusca>svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--ink-3);pointer-events:none}
+  .fbusca input{width:100%;box-sizing:border-box;padding:8px 12px 8px 32px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--ink);font-size:13px}
+  .fbres{position:absolute;z-index:45;top:calc(100% + 5px);left:0;width:max(100%,340px);max-width:92vw;box-sizing:border-box;max-height:60vh;overflow:auto;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:10px;box-shadow:0 12px 34px rgba(0,0,0,.18);padding:5px}
+  .fbr{display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:7px;cursor:pointer}
+  .fbr.sel,.fbr:hover{background:var(--surface-2)}
+  .fbr-t{font-size:13px;color:var(--ink)}
+  .fbr-c{font-size:11px;color:var(--ink-3)}
+  .fbr.act .fbr-t{color:var(--accent-ink);font-weight:580}
+  .fbr-mas{padding:8px 10px;font-size:12px;color:var(--ink-3);line-height:1.45}
+  /* Lo que está filtrando, una etiqueta por filtro, con su × */
+  .fbar-act{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .fchip{display:inline-flex;align-items:center;gap:2px;max-width:100%;padding:3px 4px 3px 11px;border-radius:20px;background:var(--accent-wash);color:var(--accent-ink);font-size:12px;font-weight:560}
+  .fchip-t{display:inline-block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fchip-t::first-letter{text-transform:uppercase}
+  .fchip button{border:none;background:transparent;color:inherit;font-size:15px;line-height:1;width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;padding:0;opacity:.7}
+  .fchip button:hover{opacity:1;background:var(--surface)}
+  .fchip-clr{border:none;background:transparent;color:var(--ink-3);font-size:12px;padding:4px 6px;text-decoration:underline;text-underline-offset:2px}
+  .fchip-clr:hover{color:var(--crit)}
+  /* Los controles: cuatro grupos, título a la izquierda, cada control con su rótulo arriba y el mismo ancho. */
+  .fbar-body{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:3px 16px;box-shadow:var(--shadow)}
+  .fbar-body[hidden]{display:none}
+  .fgrp{display:grid;grid-template-columns:128px minmax(0,1fr);gap:8px 16px;padding:12px 0 13px;border-top:1px solid var(--border)}
+  .fgrp:first-child{border-top:none}
+  .fgrp-t{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);font-weight:640;font-family:var(--mono);line-height:1.35;padding-top:26px}
+  .fgrp-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:10px 12px}
+  .fctl{min-width:0;display:flex;flex-direction:column;gap:3px}
+  .fcap{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fctl select.filter,.fctl .fpopbtn{width:100%;box-sizing:border-box;height:34px;padding:0 32px 0 11px!important;font-size:12.5px;border:1px solid var(--border-strong);border-radius:8px;background-color:var(--surface);color:var(--ink);text-overflow:ellipsis}
+  .fctl select.filter{background-position:right 11px center!important}
+  .fctl.on select.filter,.fctl.on .fpopbtn{border-color:var(--accent);background-color:var(--accent-wash);color:var(--accent-ink);font-weight:580}
+  .fctl.on .fcap{color:var(--accent-ink);font-weight:580}
+  @media(max-width:720px){.fgrp{grid-template-columns:minmax(0,1fr)}.fgrp-t{padding-top:0}.fgrp-c{grid-template-columns:repeat(auto-fill,minmax(136px,1fr))}.fbusca{max-width:none}}
   .cohwrap{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
   .cohchip{font:inherit;font-size:11.5px;padding:5px 9px;border:1px solid var(--border);border-radius:20px;
     background:var(--surface-2);color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
@@ -416,10 +456,10 @@
   table.t1.cmp td:first-child,table.t1.cmp th:first-child{width:34%;white-space:normal}
   table.t1.cmp td,table.t1.cmp th{padding:8px 12px}
   .t1.cmp td:nth-child(2),.t1.cmp td:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
-  .fpopbtn{font:inherit;font-size:12.5px;padding:7px 11px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .fpopbtn{font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;text-align:left;background-image:var(--chev);background-repeat:no-repeat;background-position:right 11px center;background-size:12px 8px}
+  .fpv{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* Sin esto el <svg> del ícono se dibuja a su tamaño intrínseco y se come el botón. */
   .fpopbtn svg{width:14px;height:14px;flex:none}
-  .fpopbtn.on{border-color:var(--accent);color:var(--accent);font-weight:580}
   .fpop{position:absolute;z-index:40;top:calc(100% + 6px);left:0;width:min(420px,86vw);max-height:60vh;overflow:auto;
     background:var(--surface);border:1px solid var(--border-strong,var(--border));border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.18);padding:14px}
   .fpop h4{margin:0 0 4px;font-size:12px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3);font-weight:560}
@@ -1137,6 +1177,7 @@ function icon(n){const p={
   table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/>',
   up:'<path d="M12 19V6M6 11l6-6 6 6"/>',down:'<path d="M12 5v13M6 13l6 6 6-6"/>',
   moon:'<path d="M20 14A8 8 0 1 1 10 4a6 6 0 0 0 10 10Z"/>',
+  filtro:'<path d="M4 6h16M7 12h10M10 18h4"/>',
   search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
   save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
   trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
@@ -2464,7 +2505,7 @@ let DB=load();
    `filters.tx` en undefined y el render siguiente moría en `filters.tx.startsWith('fin:')` —
    la pantalla quedaba congelada hasta recargar. Agregar un filtro nuevo ahora es una sola línea.
    El clon es profundo a propósito: `frv` es un array y una copia superficial lo compartiría. */
-const FILTERS_EMPTY={q:'',int:'',dest:'',rep:'',tipo:'',toast:'',sind:'',sev:'',frv:[],frvMode:'all',frvMom:'',sexo:'',anio:'',proto:'',tx:'',disf:'',gen:'',mthfr:'',seg:'',dis:'',inf:'',etn:'',neo:'',oxi:'',t90min:'',t90max:'',t80min:'',t80max:'',fecCampo:'acv',fecDesde:'',fecHasta:'',fecDato:'',inst:''};
+const FILTERS_EMPTY={q:'',int:'',dest:'',rep:'',tipo:'',toast:'',sind:'',pres:'',sev:'',frv:[],frvMode:'all',frvMom:'',sexo:'',anio:'',proto:'',tx:'',disf:'',gen:'',mthfr:'',seg:'',dis:'',inf:'',etn:'',neo:'',oxi:'',t90min:'',t90max:'',t80min:'',t80max:'',fecCampo:'acv',fecDesde:'',fecHasta:'',fecDato:'',inst:''};
 function emptyFilters(){return JSON.parse(JSON.stringify(FILTERS_EMPTY))}
 let filters=emptyFilters();
 let fpopOpen=false;
@@ -4390,6 +4431,12 @@ function filtered(){
       else if(filters.sind.startsWith('ci:')){const x=filters.sind.slice(3),c=circulacion(p);
         if(x==='__np'?!(circConDato(p)&&!c.length):!c.includes(x))return false}
       else if(!s.includes(filters.sind))return false}
+    /* Presentación clínica (13/11): los rasgos de la sección «Presentación» (confusión, crisis, cefalea…) no tenían
+       filtro. Es una lista de casillas: «sin rasgos marcados» no dice que no los tuvo, sólo que no se cargaron. */
+    if(filters.pres){const l=presList(p);
+      if(filters.pres==='__con'){if(!l.length)return false}
+      else if(filters.pres==='__sin'){if(l.length)return false}
+      else if(!l.includes(filters.pres))return false}
     if(filters.sev){
       if(filters.sev==='__disc'){if(p.deficitDiscap!==true)return false}
       else if(filters.sev==='__nodisc'){if(p.deficitDiscap!==false)return false}
@@ -4847,11 +4894,36 @@ function frvFilterLabel(){const v=filters.frv||[],m=MOM_FILTRO_LABEL[filters.frv
 function mthfrFilterLabel(){const v=filters.mthfr;if(!v)return null;
   if(v==='__con')return 'con MTHFR estudiado';if(v==='__sin')return 'sin MTHFR estudiado';
   return 'MTHFR C677T '+v}
-function activeFilterLabel(){const p=[];if(filters.int==='__si')p.push('internados activos');else if(filters.int==='__aqui')p.push('internados activos en este Sanatorio');else if(filters.int==='__otra')p.push('internados activos en otra institución');else if(filters.int==='__no')p.push('sin internación activa');else if(filters.int==='__ih')p.push('ACV intrahospitalario');if(filters.dest==='__si')p.push('casos destacados');else if(filters.dest==='__img')p.push('casos con imágenes');else if(filters.dest==='__no')p.push('sin destacar');const rf=repFilterLabel();if(rf)p.push(rf);if(filters.tipo)p.push(filters.tipo);if(filters.toast)p.push(filters.toast);if(filters.sind)p.push(filters.sind==='__con'?'con síndrome cargado':filters.sind==='__sin'?'sin síndrome':filters.sind.startsWith('oc:')?filters.sind.slice(3):filters.sind.startsWith('te:')?'AIT · territorio '+(TERR_LAB[filters.sind.slice(3)]||filters.sind.slice(3)).toLowerCase():filters.sind.startsWith('ci:')?(filters.sind==='ci:__np'?'circulación no precisable':'circulación '+filters.sind.slice(3).toLowerCase()):(SIND_LAB[filters.sind]||filters.sind));if(filters.sev)p.push(filters.sev==='__disc'?'déficit discapacitante':filters.sev==='__nodisc'?'déficit no discapacitante':'NIHSS '+filters.sev);const ff=frvFilterLabel();if(ff)p.push(ff);if(filters.sexo)p.push(filters.sexo==='F'?'mujeres':'varones');if(filters.anio)p.push('año '+filters.anio);const pf=protoFilterLabel();if(pf)p.push(pf);const tf=txFilterLabel();if(tf)p.push(tf);if(filters.disf)p.push(DISF_FILTER_LABEL[filters.disf]||filters.disf);const gf=genFilterLabel();if(gf)p.push(gf);const mf=mthfrFilterLabel();if(mf)p.push(mf);if(filters.seg)p.push(SEG_LABEL[filters.seg]||filters.seg);if(filters.inst)p.push(filters.inst==='__sin'?'sin institución cargada':filters.inst);if(filters.dis)p.push(disFilterLabel());if(filters.inf)p.push(infFilterLabel());if(filters.etn)p.push(etnFilterLabel());if(filters.neo)p.push(neoFilterLabel());p.push(oxiFilterLabel());p.push(fechaFilterLabel());
-  /* Se descartan los nulos ACÁ y no en cada `if`: cuatro de los rótulos se empujan sin guardia
-     y uno que devuelva null dejaba un '· ' colgando sobre una cohorte completa. Un solo punto
-     de control cubre también al próximo filtro que se agregue. */
-  const q=p.filter(Boolean);return q.length?'· '+q.join(' · '):'· cohorte completa';}
+/* Lo que está filtrando, una entrada por filtro: {lab, ks}. `ks` son las claves de `filters` que ese filtro ocupa,
+   para poder quitarlo solo desde su etiqueta (13/11). De acá salen el rótulo de la cohorte y las etiquetas de la
+   barra: una sola lista, así no pueden decir cosas distintas.
+   Los nulos se descartan ACÁ y no en cada llamada: un rótulo que devuelva null (una opción retirada) dejaba un '· '
+   colgando sobre una cohorte completa. Un solo punto de control cubre también al próximo filtro que se agregue. */
+function presFilterLabel(){const v=filters.pres;if(!v)return null;
+  return v==='__con'?'con rasgos de presentación cargados':v==='__sin'?'sin rasgos de presentación cargados':(PRES_LAB[v]||v)}
+function filtrosLista(){const F=[],add=(lab,...ks)=>{if(lab)F.push({lab,ks})};
+  add({__si:'internados activos',__aqui:'internados activos en este Sanatorio',__otra:'internados activos en otra institución',__no:'sin internación activa',__ih:'ACV intrahospitalario'}[filters.int],'int');
+  add({__si:'casos destacados',__img:'casos con imágenes',__no:'sin destacar'}[filters.dest],'dest');
+  add(repFilterLabel(),'rep');add(filters.tipo,'tipo');add(filters.toast,'toast');
+  if(filters.sind)add(filters.sind==='__con'?'con síndrome cargado':filters.sind==='__sin'?'sin síndrome':filters.sind.startsWith('oc:')?filters.sind.slice(3):filters.sind.startsWith('te:')?'AIT · territorio '+(TERR_LAB[filters.sind.slice(3)]||filters.sind.slice(3)).toLowerCase():filters.sind.startsWith('ci:')?(filters.sind==='ci:__np'?'circulación no precisable':'circulación '+filters.sind.slice(3).toLowerCase()):(SIND_LAB[filters.sind]||filters.sind),'sind');
+  add(presFilterLabel(),'pres');
+  if(filters.sev)add(filters.sev==='__disc'?'déficit discapacitante':filters.sev==='__nodisc'?'déficit no discapacitante':'NIHSS '+filters.sev,'sev');
+  add(frvFilterLabel(),'frv','frvMode','frvMom');
+  if(filters.sexo)add(filters.sexo==='F'?'mujeres':'varones','sexo');
+  if(filters.anio)add('año '+filters.anio,'anio');
+  add(protoFilterLabel(),'proto');add(txFilterLabel(),'tx');
+  if(filters.disf)add(DISF_FILTER_LABEL[filters.disf]||filters.disf,'disf');
+  add(genFilterLabel(),'gen');add(mthfrFilterLabel(),'mthfr');
+  if(filters.seg)add(SEG_LABEL[filters.seg]||filters.seg,'seg');
+  if(filters.inst)add(filters.inst==='__sin'?'sin institución cargada':filters.inst,'inst');
+  if(filters.dis)add(disFilterLabel(),'dis');
+  if(filters.inf)add(infFilterLabel(),'inf');
+  if(filters.etn)add(etnFilterLabel(),'etn');
+  if(filters.neo)add(neoFilterLabel(),'neo');
+  add(oxiFilterLabel(),'oxi','t90min','t90max','t80min','t80max');
+  add(fechaFilterLabel(),'fecCampo','fecDesde','fecHasta','fecDato');
+  return F}
+function activeFilterLabel(){const q=filtrosLista().map(x=>x.lab);return q.length?'· '+q.join(' · '):'· cohorte completa';}
 function neoFilterLabel(){const v=filters.neo;if(!v)return null;
   if(v==='__any')return 'con neoplasia activa';if(v==='__none')return 'sin neoplasia';
   if(v==='__enTto')return 'en tratamiento oncológico';if(v==='__sinTto')return 'sin tratamiento oncológico';
@@ -4891,9 +4963,11 @@ function filtrosActivos(){
      filtrar sólo por neoplasia dejaba el botón en "Filtros", la barra plegada y sin "+ Guardar
      cohorte" — un control que niega estar filtrando. Un selector nuevo ahora se cuenta solo; lo que no
      es un selector simple se excluye acá y se cuenta aparte, abajo. */
-  const APARTE=['q','frv','frvMode','oxi','t90min','t90max','t80min','t80max','fecCampo','fecDesde','fecHasta','fecDato'];
+  const APARTE=['q','frv','frvMode','frvMom','oxi','t90min','t90max','t80min','t80max','fecCampo','fecDesde','fecHasta','fecDato'];
   let n=Object.keys(FILTERS_EMPTY).filter(k=>!APARTE.includes(k)&&filters[k]).length;
-  if((filters.frv||[]).length)n++;
+  /* Factores y su momento son UN filtro (un panel, una etiqueta): contados aparte, el número del botón no coincidía
+     con las etiquetas que se ven al lado (13/11). */
+  if((filters.frv||[]).length||filters.frvMom)n++;
   if(oxiActivo())n++;
   if(fechaActivo())n++;
   return n;
@@ -4906,18 +4980,69 @@ function filtrosActivos(){
 const FBAR_KEY='registro_neurovascular_fbar';
 let fbarOpen=(()=>{try{const v=localStorage.getItem(FBAR_KEY);return v==='1'?true:v==='0'?false:null}catch(e){return null}})();
 function fbarAbierta(){return fbarOpen===null?filtrosActivos()>0:fbarOpen}
+let fbusTxt='';
 function filterBar(){
-  const n=filtrosActivos();
+  const F=filtrosLista(),n=filtrosActivos();
   const abierta=fbarAbierta();
   return `<div class="fbar">
     <div class="fbar-head">
-      <button type="button" class="fpopbtn ${n?'on':''}" id="fbarTog">${icon('search')} Filtros${n?' ('+n+')':''} ${abierta?'▴':'▾'}</button>
+      <button type="button" class="fbtog ${n?'on':''}" id="fbarTog" aria-expanded="${abierta}">${icon('filtro')} Filtros${n?`<span class="fbn">${n}</span>`:''}<span class="fbchev${abierta?' up':''}"></span></button>
+      <div class="fbusca">${icon('search')}<input id="fbusq" type="text" autocomplete="off" spellcheck="false" placeholder="Buscar un filtro: confusión, FOP, trombólisis…" value="${esc(fbusTxt)}" aria-label="Buscar un filtro" role="combobox" aria-expanded="false" aria-controls="fbres"><div class="fbres" id="fbres" role="listbox" hidden></div></div>
       ${cohortesBarHtml()}
-      ${n?`<span class="fbar-lab">${esc(activeFilterLabel().replace(/^· /,''))}</span>`:''}
     </div>
-    <div class="fbar-body"${abierta?'':' style="display:none"'}>${filterControls()}</div>
+    ${F.length?`<div class="fbar-act">${F.map((x,i)=>`<span class="fchip"><span class="fchip-t">${esc(x.lab)}</span><button type="button" data-fquita="${i}" aria-label="Quitar el filtro: ${esc(x.lab)}" title="Quitar este filtro">×</button></span>`).join('')}${F.length>1?`<button type="button" class="fchip-clr" id="fbarClear">Quitar todos</button>`:''}</div>`:''}
+    <div class="fbar-body"${abierta?'':' hidden'}>${filterControls()}</div>
   </div>`;
 }
+/* Buscador de filtros (13/11). Juan quería filtrar por «Confusión» y no sabía en cuál de los desplegables estaba
+   (no estaba en ninguno: ver `filters.pres`). Se escribe lo que se busca y contesta con la opción y el filtro al que
+   pertenece; un clic la aplica. El índice se arma leyendo los controles ya dibujados, así una opción nueva en un
+   selector se puede buscar sin tocar nada acá. Los factores de riesgo viven en un panel con casillas y se suman a
+   mano; período y oximetría son rangos: el resultado abre su panel. */
+function fbusIndice(){const out=[];
+  document.querySelectorAll('.fbar-body .fctl').forEach(c=>{const cap=c.dataset.cap,sel=c.querySelector('select.filter'),b=c.querySelector('.fpopbtn');
+    if(sel)[...sel.options].forEach(o=>{if(!o.value)return;const og=o.parentNode;
+      out.push({cap,g:og&&og.tagName==='OPTGROUP'?og.label:'',t:o.textContent.replace(/^[\s—·]+|[\s—]+$/g,''),k:sel.id.slice(1).toLowerCase(),v:o.value})});
+    else if(b&&b.id==='frvPopBtn'){
+      FRV.forEach(f=>out.push({cap,g:'Clásicos',t:f,frv:f}));
+      ATIP.forEach(f=>out.push({cap,g:'Atípicos / del joven',t:f==='Disección'?'Disección (todas)':f,frv:f}));
+      out.push({cap,g:'Combinaciones',t:'FOP con ASIA',frv:'__FOP_ASIA'},{cap,g:'Combinaciones',t:'FOP sin ASIA',frv:'__FOP_noASIA'})}
+    else if(b)out.push({cap,g:'',t:'Elegir un rango…',pop:b.id})});
+  return out}
+/* Sin acentos ni mayúsculas; todas las palabras tienen que estar, en la opción o en el nombre de su filtro. Primero
+   las opciones que empiezan con lo escrito, después las que lo contienen, al final las que coinciden por el filtro. */
+function fbusBuscar(txt){const q=presNormTxt(txt).split(' ').filter(Boolean);if(!q.length)return [];
+  const frase=q.join(' ');
+  return fbusIndice().map(x=>{const t=presNormTxt(x.t),todo=presNormTxt(x.cap+' '+x.g)+' '+t;
+    if(!q.every(w=>todo.includes(w)))return null;
+    x.r=t.startsWith(frase)?0:q.every(w=>t.includes(w))?1:2;return x}).filter(Boolean).sort((a,b)=>a.r-b.r)}
+function fbusActivo(x){return x.frv?(filters.frv||[]).includes(x.frv):x.k?filters[x.k]===x.v:false}
+/* Aplicar un resultado. Uno que ya está puesto se quita: el buscador sirve para los dos sentidos. */
+function fbusAplicar(x){fbusTxt='';
+  if(x.pop){fbarOpen=true;fpopOpen=false;oxiPopOpen=x.pop==='oxiPopBtn';fecPopOpen=x.pop==='fecPopBtn';render();return}
+  if(x.frv){const a=(filters.frv||[]).slice(),i=a.indexOf(x.frv);if(i<0)a.push(x.frv);else a.splice(i,1);filters.frv=a}
+  else filters[x.k]=fbusActivo(x)?'':x.v;
+  render();const i=$('#fbusq');if(i)i.focus()}
+const FBUS_MAX=12;
+function bindFbus(){const i=$('#fbusq'),box=$('#fbres');if(!i||!box)return;let res=[],sel=0;
+  const cerrar=()=>{box.hidden=true;i.setAttribute('aria-expanded','false')};
+  const pintar=()=>{const txt=i.value.trim();fbusTxt=i.value;if(!txt)return cerrar();
+    res=fbusBuscar(txt).slice(0,FBUS_MAX+1);const mas=res.length>FBUS_MAX;if(mas)res.pop();
+    sel=Math.max(0,Math.min(sel,res.length-1));
+    box.innerHTML=res.length?res.map((x,n)=>{const act=fbusActivo(x);
+        return `<div class="fbr${n===sel?' sel':''}${act?' act':''}" role="option" aria-selected="${n===sel}" data-n="${n}"><span class="fbr-t">${esc(x.t)}</span><span class="fbr-c">${esc(x.cap)}${x.g?' › '+esc(x.g):''}${act?' · ya está puesto: clic para quitarlo':''}</span></div>`}).join('')
+        +(mas?'<div class="fbr-mas">Hay más coincidencias: seguí escribiendo para acotar.</div>':'')
+      :`<div class="fbr-mas">Ningún filtro coincide con «${esc(txt)}».${$('#q')?' Para buscar por nombre, documento o notas está el buscador de arriba.':''}</div>`;
+    box.hidden=false;i.setAttribute('aria-expanded','true');
+    /* mousedown sin foco: si el input perdiera el foco, `blur` cerraría la lista antes del clic. El clic no sube al
+       documento, que cierra los paneles abiertos y redibuja. */
+    box.querySelectorAll('.fbr').forEach(r=>{r.onmousedown=e=>e.preventDefault();r.onclick=e=>{e.stopPropagation();fbusAplicar(res[+r.dataset.n])}})};
+  i.oninput=()=>{sel=0;pintar()};i.onfocus=pintar;i.onblur=cerrar;i.onclick=e=>e.stopPropagation();
+  i.onkeydown=e=>{
+    if(e.key==='ArrowDown'){e.preventDefault();sel++;pintar()}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel--;pintar()}
+    else if(e.key==='Enter'){if(!box.hidden&&res[sel]){e.preventDefault();fbusAplicar(res[sel])}}
+    else if(e.key==='Escape'){e.stopPropagation();i.value='';fbusTxt='';cerrar()}}}
 function cohortesBarHtml(){
   const n=filtrosActivos();
   return `<span class="cohwrap">
@@ -4925,54 +5050,66 @@ function cohortesBarHtml(){
     ${n?`<button type="button" class="cohchip add" id="cohSave" title="Guardar los filtros actuales como cohorte">+ Guardar cohorte</button>`:''}
   </span>`;
 }
+/* Barra de filtros (rediseño del 13/11, pedido de Juan). Eran 22 desplegables sueltos, de anchos distintos y sin
+   rótulo: había que abrirlos de a uno para saber qué filtraba cada cual. Ahora van en cuatro grupos, cada control
+   con su rótulo arriba y el mismo ancho, y el que está filtrando se pinta. `ctl` marca «on» por la clave de
+   `filters`; los tres paneles (período, factores, oximetría) lo calculan ellos. */
 function filterControls(){
   const yrs=[...new Set(DB.map(p=>p.anio).filter(Boolean))].sort((a,b)=>b-a);
   /* Los números de cada opción cuentan sobre la cohorte que dejan los DEMÁS filtros (06/10): contados
      sobre la base entera, «Trombólisis + trombectomía (1)» con un período puesto prometía una ficha
      que el período ya había sacado, y el listado vacío parecía un filtro que no se combinaba. */
   const sin=k=>{const sv=filters[k];filters[k]='';try{return filtered()}finally{filters[k]=sv}};
-  const bInt=sin('int'),bDest=sin('dest'),bRep=sin('rep');
+  const bInt=sin('int'),bDest=sin('dest'),bRep=sin('rep'),bPres=sin('pres');
   const nInt=bInt.filter(intActivo).length;
-  return `<select class="filter" id="fInt"><option value="">Internación: todos</option>
+  const caja=(cap,on,html)=>`<div class="fctl${on?' on':''}" data-cap="${esc(cap)}"><span class="fcap">${esc(cap)}</span>${html}</div>`;
+  const ctl=(cap,k,html)=>caja(cap,!!filters[k],html);
+  const grp=(t,items)=>`<div class="fgrp"><div class="fgrp-t">${t}</div><div class="fgrp-c">${items.filter(Boolean).join('')}</div></div>`;
+  return grp('Paciente y período',[
+    ctl('Sexo','sexo',`<select class="filter" id="fSexo" aria-label="Sexo"><option value="">Todos</option><option value="F" ${filters.sexo==='F'?'selected':''}>Femenino</option><option value="M" ${filters.sexo==='M'?'selected':''}>Masculino</option></select>`),
+    ctl('Año','anio',`<select class="filter" id="fAnio" aria-label="Año"><option value="">Todos</option>${yrs.map(y=>`<option ${filters.anio==y?'selected':''}>${y}</option>`).join('')}</select>`),
+    caja('Período',fechaActivo(),fecPopHtml()),
+    (instituciones().length||filters.inst)&&ctl('Institución','inst',`<select class="filter" id="fInst" aria-label="Institución"><option value="">Todas</option>${[...new Set(instituciones().concat(filters.inst&&filters.inst!=='__sin'?[filters.inst]:[]))].map(x=>`<option value="${esc(x)}" ${filters.inst===x?'selected':''}>${esc(x)}</option>`).join('')}<option value="__sin" ${filters.inst==='__sin'?'selected':''}>— Sin institución cargada —</option></select>`),
+    (PROTOS.length)&&ctl('Protocolo','proto',`<select class="filter" id="fProto" aria-label="Protocolo"><option value="">Todos</option>
+    ${PROTOS.map(pr=>`<option value="${esc(pr.id)}" ${filters.proto===pr.id?'selected':''}>${esc(pr.nombre)}${protoFin(pr)?' (finalizado)':''}</option>`).join('')}
+    <option value="__any" ${filters.proto==='__any'?'selected':''}>— En algún protocolo —</option>
+    <option value="__none" ${filters.proto==='__none'?'selected':''}>— Sin protocolo —</option></select>`)])
+  +grp('Evento',[
+    ctl('Tipo de evento','tipo',`<select class="filter" id="fTipo" aria-label="Tipo de evento"><option value="">Todos</option>${TIPOS.map(t=>`<option ${filters.tipo===t?'selected':''}>${t}</option>`).join('')}</select>`),
+    ctl('Síndrome y territorio','sind',`<select class="filter" id="fSind" aria-label="Síndrome y territorio"><option value="">Todos</option>
+    <optgroup label="Territorio (OCSP) · infarto">${OCSP.map(o=>`<option value="oc:${o}" ${filters.sind==='oc:'+o?'selected':''}>${o}</option>`).join('')}</optgroup>
+    <optgroup label="Territorio vascular · AIT">${TERR.map(t=>`<option value="te:${t}" ${filters.sind==='te:'+t?'selected':''}>AIT · ${esc(TERR_LAB[t])}</option>`).join('')}</optgroup>
+    <optgroup label="Circulación · AIT + infarto">${TERR.filter(t=>t!==TERR_IND).map(t=>`<option value="ci:${t}" ${filters.sind==='ci:'+t?'selected':''}>Circulación ${t.toLowerCase()}</option>`).join('')}<option value="ci:__np" ${filters.sind==='ci:__np'?'selected':''}>Circulación no precisable</option></optgroup>
+    ${SIND_GRP.map(([o,t])=>`<optgroup label="${esc(t)}">${SIND.filter(x=>x[1]===o).map(([k,,l])=>`<option value="${k}" ${filters.sind===k?'selected':''}>${esc(l)}</option>`).join('')}</optgroup>`).join('')}
+    <option value="__con" ${filters.sind==='__con'?'selected':''}>— Con síndrome cargado —</option>
+    <option value="__sin" ${filters.sind==='__sin'?'selected':''}>— Sin síndrome —</option></select>`),
+    ctl('Presentación clínica','pres',`<select class="filter" id="fPres" aria-label="Presentación clínica"><option value="">Todas</option>
+    ${PRES.map(([k,l])=>`<option value="${k}" ${filters.pres===k?'selected':''}>${esc(l)} (${bPres.filter(p=>presList(p).includes(k)).length})</option>`).join('')}
+    <option value="__con" ${filters.pres==='__con'?'selected':''}>— Con algún rasgo marcado —</option>
+    <option value="__sin" ${filters.pres==='__sin'?'selected':''}>— Sin rasgos marcados —</option></select>`),
+    ctl('Severidad','sev',`<select class="filter" id="fSev" aria-label="Severidad"><option value="">Todas</option>${NIH_SEV.map(([a,b,l])=>`<option value="${l}" ${filters.sev===l?'selected':''}>NIHSS ${a===b?a:a+'–'+b} · ${l}</option>`).join('')}
+    <option value="__disc" ${filters.sev==='__disc'?'selected':''}>Déficit discapacitante: sí</option>
+    <option value="__nodisc" ${filters.sev==='__nodisc'?'selected':''}>Déficit discapacitante: no</option></select>`),
+    ctl('Casos destacados','dest',`<select class="filter" id="fDest" aria-label="Casos destacados"><option value="">Todos</option>
+    <option value="__si" ${filters.dest==='__si'?'selected':''}>Destacados (${bDest.filter(esDest).length})</option>
+    <option value="__img" ${filters.dest==='__img'?'selected':''}>Con imágenes (${bDest.filter(p=>imgList(p).length).length})</option>
+    <option value="__no" ${filters.dest==='__no'?'selected':''}>Sin destacar</option></select>`)])
+  +grp('Atención',[
+    ctl('Internación','int',`<select class="filter" id="fInt" aria-label="Internación"><option value="">Todos</option>
     <option value="__si" ${filters.int==='__si'?'selected':''}>Internados activos (${nInt})</option>
     <option value="__aqui" ${filters.int==='__aqui'?'selected':''}>· en este Sanatorio (${bInt.filter(p=>intActivo(p)&&!intOtra(p)).length})</option>
     <option value="__otra" ${filters.int==='__otra'?'selected':''}>· en otra institución (${bInt.filter(p=>intActivo(p)&&intOtra(p)).length})</option>
     <option value="__no" ${filters.int==='__no'?'selected':''}>Sin internación activa</option>
-    <option value="__ih" ${filters.int==='__ih'?'selected':''}>ACV intrahospitalario (${bInt.filter(esIH).length})</option></select>
-  <select class="filter" id="fDest"><option value="">Destacados: todos</option>
-    <option value="__si" ${filters.dest==='__si'?'selected':''}>⭐ Destacados (${bDest.filter(esDest).length})</option>
-    <option value="__img" ${filters.dest==='__img'?'selected':''}>Con imágenes (${bDest.filter(p=>imgList(p).length).length})</option>
-    <option value="__no" ${filters.dest==='__no'?'selected':''}>Sin destacar</option></select>
-  <select class="filter" id="fRep"><option value="">Reperfusión: todos</option>
+    <option value="__ih" ${filters.int==='__ih'?'selected':''}>ACV intrahospitalario (${bInt.filter(esIH).length})</option></select>`),
+    ctl('Reperfusión','rep',`<select class="filter" id="fRep" aria-label="Reperfusión"><option value="">Todas</option>
     <option value="__te" ${filters.rep==='__te'?'selected':''}>Trombectomía (${bRep.filter(p=>repOk(p,'__te')).length})</option>
     <option value="__tl" ${filters.rep==='__tl'?'selected':''}>Trombólisis IV, cualquier agente (${bRep.filter(p=>repOk(p,'__tl')).length})</option>
     ${TL_AGENTES.map(a=>`<option value="ag:${a}" ${filters.rep==='ag:'+a?'selected':''}>· con ${TL_AG_LAB[a]} (${bRep.filter(p=>repOk(p,'ag:'+a)).length})</option>`).join('')}
     <option value="__tlsd" ${filters.rep==='__tlsd'?'selected':''}>· agente sin dato (${bRep.filter(p=>repOk(p,'__tlsd')).length})</option>
     <option value="__puente" ${filters.rep==='__puente'?'selected':''}>Trombólisis + trombectomía (${bRep.filter(p=>repOk(p,'__puente')).length})</option>
     <option value="__alguna" ${filters.rep==='__alguna'?'selected':''}>Alguna reperfusión (${bRep.filter(p=>repOk(p,'__alguna')).length})</option>
-    <option value="__ninguna" ${filters.rep==='__ninguna'?'selected':''}>Sin reperfusión, confirmado (${bRep.filter(p=>repOk(p,'__ninguna')).length})</option></select>
-  <select class="filter" id="fTipo"><option value="">Todos los tipos</option>${TIPOS.map(t=>`<option ${filters.tipo===t?'selected':''}>${t}</option>`).join('')}</select>
-  <select class="filter" id="fToast"><option value="">TOAST: todos</option>${TOAST.map(t=>`<option ${filters.toast===t?'selected':''}>${t}</option>`).join('')}</select>
-  <select class="filter" id="fSind"><option value="">Síndrome: todos</option>
-    <optgroup label="Territorio (OCSP) · infarto">${OCSP.map(o=>`<option value="oc:${o}" ${filters.sind==='oc:'+o?'selected':''}>${o}</option>`).join('')}</optgroup>
-    <optgroup label="Territorio vascular · AIT">${TERR.map(t=>`<option value="te:${t}" ${filters.sind==='te:'+t?'selected':''}>AIT · ${esc(TERR_LAB[t])}</option>`).join('')}</optgroup>
-    <optgroup label="Circulación · AIT + infarto">${TERR.filter(t=>t!==TERR_IND).map(t=>`<option value="ci:${t}" ${filters.sind==='ci:'+t?'selected':''}>Circulación ${t.toLowerCase()}</option>`).join('')}<option value="ci:__np" ${filters.sind==='ci:__np'?'selected':''}>Circulación no precisable</option></optgroup>
-    ${SIND_GRP.map(([o,t])=>`<optgroup label="${esc(t)}">${SIND.filter(x=>x[1]===o).map(([k,,l])=>`<option value="${k}" ${filters.sind===k?'selected':''}>${esc(l)}</option>`).join('')}</optgroup>`).join('')}
-    <option value="__con" ${filters.sind==='__con'?'selected':''}>— Con síndrome cargado —</option>
-    <option value="__sin" ${filters.sind==='__sin'?'selected':''}>— Sin síndrome —</option></select>
-  <select class="filter" id="fSev"><option value="">Severidad: todas</option>${NIH_SEV.map(([a,b,l])=>`<option value="${l}" ${filters.sev===l?'selected':''}>NIHSS ${a===b?a:a+'–'+b} · ${l}</option>`).join('')}
-    <option value="__disc" ${filters.sev==='__disc'?'selected':''}>Déficit discapacitante: sí</option>
-    <option value="__nodisc" ${filters.sev==='__nodisc'?'selected':''}>Déficit discapacitante: no</option></select>
-  ${frvPopHtml()}
-  ${oxiPopHtml()}
-  <select class="filter" id="fMthfr"><option value="">MTHFR: todos</option>
-    ${MTHFR_C677T.map(g=>`<option value="${g}" ${filters.mthfr===g?'selected':''}>C677T ${g}${g==='TT'?' (homocigota)':''}</option>`).join('')}
-    <option value="__con" ${filters.mthfr==='__con'?'selected':''}>— Estudiado —</option>
-    <option value="__sin" ${filters.mthfr==='__sin'?'selected':''}>— Sin estudiar —</option></select>
-  <select class="filter" id="fSexo"><option value="">Sexo</option><option ${filters.sexo==='F'?'selected':''}>F</option><option ${filters.sexo==='M'?'selected':''}>M</option></select>
-  <select class="filter" id="fAnio"><option value="">Año</option>${yrs.map(y=>`<option ${filters.anio==y?'selected':''}>${y}</option>`).join('')}</select>
-  ${fecPopHtml()}
-  <select class="filter" id="fTx"><option value="">Tratamiento: todos</option>
+    <option value="__ninguna" ${filters.rep==='__ninguna'?'selected':''}>Sin reperfusión, confirmado (${bRep.filter(p=>repOk(p,'__ninguna')).length})</option></select>`),
+    ctl('Antitrombótico','tx',`<select class="filter" id="fTx" aria-label="Antitrombótico"><option value="">Todos</option>
     <optgroup label="Esquema inicial">${TX.map(t=>`<option value="alta:${esc(t)}" ${filters.tx==='alta:'+t?'selected':''}>${esc(t)}</option>`).join('')}</optgroup>
     <optgroup label="Vigente (último esquema)">${TX.map(t=>`<option value="fin:${esc(t)}" ${filters.tx==='fin:'+t?'selected':''}>${esc(txVigLab(t))}</option>`).join('')}</optgroup>
     <optgroup label="Cambios de esquema">
@@ -4987,8 +5124,52 @@ function filterControls(){
     <optgroup label="Otros">
       <option value="__con" ${filters.tx==='__con'?'selected':''}>— Con tratamiento cargado —</option>
       <option value="__sin" ${filters.tx==='__sin'?'selected':''}>— Sin dato de tratamiento —</option>
-    </optgroup></select>
-  ${(DB.some(neoAlguna)||filters.neo)?`<select class="filter" id="fNeo"><option value="">Neoplasia: todas</option>
+    </optgroup></select>`),
+    ctl('Disfagia','disf',`<select class="filter" id="fDisf" aria-label="Disfagia"><option value="">Todas</option>
+    <option value="__eval" ${filters.disf==='__eval'?'selected':''}>Evaluados</option>
+    <option value="__noeval" ${filters.disf==='__noeval'?'selected':''}>No evaluados</option>
+    <option value="__24" ${filters.disf==='__24'?'selected':''}>Cribado dentro de las 24 h</option>
+    <option value="__no24" ${filters.disf==='__no24'?'selected':''}>Cribado después de las 24 h</option>
+    <option value="__con" ${filters.disf==='__con'?'selected':''}>Con disfagia</option>
+    <option value="__sin" ${filters.disf==='__sin'?'selected':''}>Sin disfagia</option>
+    <option value="__sindato" ${filters.disf==='__sindato'?'selected':''}>— Sin dato de cribado —</option>
+  </select>`),
+    ctl('Seguimiento a 90 días','seg',`<select class="filter" id="fSeg" aria-label="Seguimiento a 90 días"><option value="">Todos</option>
+    <option value="vencido" ${filters.seg==='vencido'?'selected':''}>— Para cargar ahora (ventana 75–105 d) —</option>
+    <option value="tardio" ${filters.seg==='tardio'?'selected':''}>— Fuera de ventana (106–180 d) —</option>
+    <option value="proximo" ${filters.seg==='proximo'?'selected':''}>— Abren la ventana en ${SEG_PROX} días —</option>
+    <option value="cargado" ${filters.seg==='cargado'?'selected':''}>— Con mRS 90 d cargado —</option>
+    <option value="historico" ${filters.seg==='historico'?'selected':''}>— Histórico sin mRS 90 d —</option>
+    <option value="sinfecha" ${filters.seg==='sinfecha'?'selected':''}>— Sin fecha del evento —</option></select>`)])
+  +grp('Etiología y riesgo',[
+    ctl('Etiología (TOAST)','toast',`<select class="filter" id="fToast" aria-label="Etiología (TOAST)"><option value="">Todas</option>${TOAST.map(t=>`<option ${filters.toast===t?'selected':''}>${t}</option>`).join('')}</select>`),
+    caja('Factores de riesgo',(filters.frv||[]).length||filters.frvMom,frvPopHtml()),
+    (DB.some(disTieneDato)||DB.some(esDis)||filters.dis)&&ctl('Disección','dis',`<select class="filter" id="fDis" aria-label="Disección"><option value="">Todas</option>
+    <optgroup label="Caracterización">
+      <option value="__con" ${filters.dis==='__con'?'selected':''}>— Con caracterización cargada —</option>
+      <option value="__sin" ${filters.dis==='__sin'?'selected':''}>— Disección sin caracterizar —</option>
+    </optgroup>
+    <optgroup label="Arteria">${DIS_ART.map(a=>`<option value="${esc(a)}" ${filters.dis===a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
+    <optgroup label="Segmento">${DIS_SEG.map(a=>`<option value="seg:${esc(a)}" ${filters.dis==='seg:'+a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
+    <optgroup label="Desencadenante">${DIS_DESENC.map(a=>`<option value="des:${esc(a)}" ${filters.dis==='des:'+a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
+    <optgroup label="Tratamiento">${Object.keys(DIS_TTO_VIEJO).concat(DIS_TTO).map(a=>`<option value="tto:${esc(a)}" ${filters.dis==='tto:'+a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
+  </select>`),
+    ctl('Genética','gen',`<select class="filter" id="fGen" aria-label="Genética"><option value="">Todas</option>
+    <optgroup label="Estado">
+      <option value="__any" ${filters.gen==='__any'?'selected':''}>— Con causa genética —</option>
+      <option value="__none" ${filters.gen==='__none'?'selected':''}>— Sin causa genética —</option>
+      <option value="__conf" ${filters.gen==='__conf'?'selected':''}>— Confirmadas genéticamente —</option>
+      <option value="__sosp" ${filters.gen==='__sosp'?'selected':''}>— En sospecha, sin confirmar —</option>
+    </optgroup>
+    ${GEN_GRUPOS.map(gr=>`<optgroup label="${esc(gr.g)}">
+      <option value="fam:${esc(gr.g)}" ${filters.gen==='fam:'+gr.g?'selected':''}>Todas: ${esc(gr.g)}</option>
+      ${gr.items.map(([n])=>`<option value="${esc(n)}" ${filters.gen===n?'selected':''}>${esc(n)}</option>`).join('')}</optgroup>`).join('')}
+  </select>`),
+    ctl('MTHFR','mthfr',`<select class="filter" id="fMthfr" aria-label="MTHFR"><option value="">Todos</option>
+    ${MTHFR_C677T.map(g=>`<option value="${g}" ${filters.mthfr===g?'selected':''}>C677T ${g}${g==='TT'?' (homocigota)':''}</option>`).join('')}
+    <option value="__con" ${filters.mthfr==='__con'?'selected':''}>— Estudiado —</option>
+    <option value="__sin" ${filters.mthfr==='__sin'?'selected':''}>— Sin estudiar —</option></select>`),
+    (DB.some(neoAlguna)||filters.neo)&&ctl('Neoplasia','neo',`<select class="filter" id="fNeo" aria-label="Neoplasia"><option value="">Todas</option>
     <optgroup label="Estado del registro">
       <option value="__any" ${filters.neo==='__any'?'selected':''}>— Con neoplasia activa —</option>
       <option value="__none" ${filters.neo==='__none'?'selected':''}>— Sin neoplasia —</option>
@@ -5005,15 +5186,8 @@ function filterControls(){
     <optgroup label="Líneas de tratamiento">
       <option value="__multiL" ${filters.neo==='__multiL'?'selected':''}>— Con más de una línea —</option>
       ${NEO_LINEA.map(l=>`<option value="L:${esc(l)}" ${filters.neo==='L:'+l?'selected':''}>Alguna línea es ${esc(l)}</option>`).join('')}</optgroup>
-  </select>`:''}
-  ${(DB.some(haploTieneDato)||filters.etn)?`<select class="filter" id="fEtn"><option value="">Etnia / linaje: todos</option>
-    <optgroup label="Etnia (autopercibida)">${ETNIA.map(e=>`<option value="e:${esc(e)}" ${filters.etn==='e:'+e?'selected':''}>${esc(e)}</option>`).join('')}</optgroup>
-    <optgroup label="Linaje materno (derivado del haplogrupo)">${MT_LINAJE.map(([l])=>`<option value="l:${esc(l)}" ${filters.etn==='l:'+l?'selected':''}>${esc(l)}</option>`).join('')}</optgroup>
-    <optgroup label="Estado">
-      <option value="__conHap" ${filters.etn==='__conHap'?'selected':''}>— Con haplogrupo —</option>
-      <option value="__sinHap" ${filters.etn==='__sinHap'?'selected':''}>— Sin haplogrupo —</option>
-    </optgroup></select>`:''}
-  ${(DB.some(x=>infList(x).length)||DB.some(x=>(x.frvAtipicos||[]).includes(VAC_CHIP))||filters.inf)?`<select class="filter" id="fInf"><option value="">Infección: todas</option>
+  </select>`),
+    (DB.some(x=>infList(x).length)||DB.some(x=>(x.frvAtipicos||[]).includes(VAC_CHIP))||filters.inf)&&ctl('Infección','inf',`<select class="filter" id="fInf" aria-label="Infección"><option value="">Todas</option>
     <optgroup label="Estado">
       <option value="__any" ${filters.inf==='__any'?'selected':''}>— Con infección —</option>
       <option value="__none" ${filters.inf==='__none'?'selected':''}>— Sin infección —</option>
@@ -5023,52 +5197,18 @@ function filterControls(){
       <option value="foco:${esc(gr.g)}" ${filters.inf==='foco:'+gr.g?'selected':''}>Todas: ${esc(gr.g)}</option>
       ${gr.items.map(([n])=>`<option value="${esc(n)}" ${filters.inf===n?'selected':''}>${esc(n)}</option>`).join('')}</optgroup>`).join('')}
     <optgroup label="Tiempo hasta el evento">${INF_TIEMPO.map(t=>`<option value="t:${esc(t)}" ${filters.inf==='t:'+t?'selected':''}>${esc(t)}</option>`).join('')}</optgroup>
-  </select>`:''}
-  <select class="filter" id="fGen"><option value="">Genética: todas</option>
+  </select>`),
+    (DB.some(haploTieneDato)||filters.etn)&&ctl('Etnia / linaje','etn',`<select class="filter" id="fEtn" aria-label="Etnia / linaje"><option value="">Todos</option>
+    <optgroup label="Etnia (autopercibida)">${ETNIA.map(e=>`<option value="e:${esc(e)}" ${filters.etn==='e:'+e?'selected':''}>${esc(e)}</option>`).join('')}</optgroup>
+    <optgroup label="Linaje materno (derivado del haplogrupo)">${MT_LINAJE.map(([l])=>`<option value="l:${esc(l)}" ${filters.etn==='l:'+l?'selected':''}>${esc(l)}</option>`).join('')}</optgroup>
     <optgroup label="Estado">
-      <option value="__any" ${filters.gen==='__any'?'selected':''}>— Con causa genética —</option>
-      <option value="__none" ${filters.gen==='__none'?'selected':''}>— Sin causa genética —</option>
-      <option value="__conf" ${filters.gen==='__conf'?'selected':''}>— Confirmadas genéticamente —</option>
-      <option value="__sosp" ${filters.gen==='__sosp'?'selected':''}>— En sospecha, sin confirmar —</option>
-    </optgroup>
-    ${GEN_GRUPOS.map(gr=>`<optgroup label="${esc(gr.g)}">
-      <option value="fam:${esc(gr.g)}" ${filters.gen==='fam:'+gr.g?'selected':''}>Todas: ${esc(gr.g)}</option>
-      ${gr.items.map(([n])=>`<option value="${esc(n)}" ${filters.gen===n?'selected':''}>${esc(n)}</option>`).join('')}</optgroup>`).join('')}
-  </select>
-  <select class="filter" id="fDisf"><option value="">Disfagia: todas</option>
-    <option value="__eval" ${filters.disf==='__eval'?'selected':''}>Evaluados</option>
-    <option value="__noeval" ${filters.disf==='__noeval'?'selected':''}>No evaluados</option>
-    <option value="__24" ${filters.disf==='__24'?'selected':''}>Cribado dentro de las 24 h</option>
-    <option value="__no24" ${filters.disf==='__no24'?'selected':''}>Cribado después de las 24 h</option>
-    <option value="__con" ${filters.disf==='__con'?'selected':''}>Con disfagia</option>
-    <option value="__sin" ${filters.disf==='__sin'?'selected':''}>Sin disfagia</option>
-    <option value="__sindato" ${filters.disf==='__sindato'?'selected':''}>— Sin dato de cribado —</option>
-  </select>
-  ${PROTOS.length?`<select class="filter" id="fProto"><option value="">Protocolo: todos</option>
-    ${PROTOS.map(pr=>`<option value="${esc(pr.id)}" ${filters.proto===pr.id?'selected':''}>${esc(pr.nombre)}${protoFin(pr)?' (finalizado)':''}</option>`).join('')}
-    <option value="__any" ${filters.proto==='__any'?'selected':''}>— En algún protocolo —</option>
-    <option value="__none" ${filters.proto==='__none'?'selected':''}>— Sin protocolo —</option></select>`:''}
-  ${(instituciones().length||filters.inst)?`<select class="filter" id="fInst"><option value="">Institución: todas</option>${[...new Set(instituciones().concat(filters.inst&&filters.inst!=='__sin'?[filters.inst]:[]))].map(x=>`<option value="${esc(x)}" ${filters.inst===x?'selected':''}>${esc(x)}</option>`).join('')}<option value="__sin" ${filters.inst==='__sin'?'selected':''}>— Sin institución cargada —</option></select>`:''}
-  <select class="filter" id="fSeg"><option value="">Seguimiento 90 d: todos</option>
-    <option value="vencido" ${filters.seg==='vencido'?'selected':''}>— Para cargar ahora (ventana 75–105 d) —</option>
-    <option value="tardio" ${filters.seg==='tardio'?'selected':''}>— Fuera de ventana (106–180 d) —</option>
-    <option value="proximo" ${filters.seg==='proximo'?'selected':''}>— Abren la ventana en ${SEG_PROX} días —</option>
-    <option value="cargado" ${filters.seg==='cargado'?'selected':''}>— Con mRS 90 d cargado —</option>
-    <option value="historico" ${filters.seg==='historico'?'selected':''}>— Histórico sin mRS 90 d —</option>
-    <option value="sinfecha" ${filters.seg==='sinfecha'?'selected':''}>— Sin fecha del evento —</option></select>
-  ${(DB.some(disTieneDato)||DB.some(esDis)||filters.dis)?`<select class="filter" id="fDis"><option value="">Disección: todas</option>
-    <optgroup label="Caracterización">
-      <option value="__con" ${filters.dis==='__con'?'selected':''}>— Con caracterización cargada —</option>
-      <option value="__sin" ${filters.dis==='__sin'?'selected':''}>— Disección sin caracterizar —</option>
-    </optgroup>
-    <optgroup label="Arteria">${DIS_ART.map(a=>`<option value="${esc(a)}" ${filters.dis===a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
-    <optgroup label="Segmento">${DIS_SEG.map(a=>`<option value="seg:${esc(a)}" ${filters.dis==='seg:'+a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
-    <optgroup label="Desencadenante">${DIS_DESENC.map(a=>`<option value="des:${esc(a)}" ${filters.dis==='des:'+a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
-    <optgroup label="Tratamiento">${Object.keys(DIS_TTO_VIEJO).concat(DIS_TTO).map(a=>`<option value="tto:${esc(a)}" ${filters.dis==='tto:'+a?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>
-  </select>`:''}`;
+      <option value="__conHap" ${filters.etn==='__conHap'?'selected':''}>— Con haplogrupo —</option>
+      <option value="__sinHap" ${filters.etn==='__sinHap'?'selected':''}>— Sin haplogrupo —</option>
+    </optgroup></select>`),
+    caja('Oximetría (T90 / T80)',oxiActivo(),oxiPopHtml())]);
 }
 function bindFilterBar(){
-  ['Int','Dest','Rep','Tipo','Toast','Sind','Sev','Sexo','Anio','Proto','Tx','Disf','Gen','Mthfr','Seg','Dis','Inf','Etn','Neo','Inst'].forEach(k=>{const el=$('#f'+k);if(el)el.onchange=e=>{filters[k.toLowerCase()]=e.target.value;render()}});
+  ['Int','Dest','Rep','Tipo','Toast','Sind','Pres','Sev','Sexo','Anio','Proto','Tx','Disf','Gen','Mthfr','Seg','Dis','Inf','Etn','Neo','Inst'].forEach(k=>{const el=$('#f'+k);if(el)el.onchange=e=>{filters[k.toLowerCase()]=e.target.value;render()}});
   if($('#fbarTog'))$('#fbarTog').onclick=()=>{fbarOpen=!fbarAbierta();try{localStorage.setItem(FBAR_KEY,fbarOpen?'1':'0')}catch(e){}render()};
   /* Guardar cohorte: el nombre lo pone Juan, y una repetida se pisa tras confirmar. Se guarda una
      COPIA de los filtros — si se guardara la referencia, el próximo cambio de filtro la editaría. */
@@ -5090,14 +5230,19 @@ function bindFilterBar(){
     e.stopPropagation();const nom=x.dataset.cohdel;
     if(!confirm('¿Borrar la cohorte "'+nom+'"?'))return;
     COHORTES=COHORTES.filter(c=>c.nombre!==nom);saveCohortes();render()});
-  bindFrvPop();bindOxiPop();bindFecPop()}
+  /* Etiquetas de lo filtrado: la × quita ese filtro y nada más (vuelve cada clave suya al valor de FILTERS_EMPTY).
+     «Quitar todos» conserva lo escrito en el buscador de pacientes, que no es un filtro de la barra. */
+  document.querySelectorAll('[data-fquita]').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=filtrosLista()[+b.dataset.fquita];if(!x)return;
+    x.ks.forEach(k=>{filters[k]=JSON.parse(JSON.stringify(FILTERS_EMPTY[k]))});render()});
+  if($('#fbarClear'))$('#fbarClear').onclick=()=>{const q=filters.q;filters=emptyFilters();filters.q=q;render()};
+  bindFbus();bindFrvPop();bindOxiPop();bindFecPop()}
 /* Panel de factores de riesgo con checkboxes. Se dibuja a mano (regla 1: nada de librerías).
    Cubre los DOS catálogos: hasta ahora los factores clásicos no se podían filtrar en absoluto. */
 function frvPopHtml(){
   const sel=filters.frv||[],n=sel.length+(filters.frvMom?1:0);
   const box=(k,lab)=>`<label><input type="checkbox" data-k="${esc(k)}" ${sel.includes(k)?'checked':''}><span>${esc(lab)}</span></label>`;
   return `<span class="fpopwrap">
-    <button type="button" class="fpopbtn ${n?'on':''}" id="frvPopBtn">Factores de riesgo${n?' ('+n+')':''} ▾</button>
+    <button type="button" class="fpopbtn ${n?'on':''}" id="frvPopBtn" aria-label="Factores de riesgo"><span class="fpv">${n?esc(frvFilterLabel()||''):'Todos'}</span></button>
     ${fpopOpen?`<div class="fpop" id="frvPop">
       <div class="bar"><h4 style="margin:0">Coinciden</h4>
         <div class="toggle" data-k="__frvmode">
@@ -5164,7 +5309,7 @@ function oxiPopHtml(){
   const row=(m,sub)=>`<div class="oxrow"><span class="oxlab">${m.toUpperCase()}<small>${sub}</small></span>${inp(m+'min','mín')}<span class="oxsep">a</span>${inp(m+'max','máx')}<span class="oxsep">%</span></div>`;
   const tg=(v,lab)=>`<button type="button" data-val="${v}" class="${(filters.oxi||'')===v?'on':''}">${lab}</button>`;
   return `<span class="fpopwrap">
-    <button type="button" class="fpopbtn ${on?'on':''}" id="oxiPopBtn">T90 / T80${on?' (1)':''} ▾</button>
+    <button type="button" class="fpopbtn ${on?'on':''}" id="oxiPopBtn" aria-label="T90 / T80"><span class="fpv">${on?esc(oxiFilterLabel()||''):'Todos'}</span></button>
     ${oxiPopOpen?`<div class="fpop" id="oxiPop">
       <div class="grp" style="margin-top:0"><h4>% del tiempo de registro</h4>
         ${row('t90','SpO₂ ≤ 90 %')}
@@ -5260,7 +5405,7 @@ function fecPopHtml(){
   const inp=(k,lab)=>`<input type="date" data-fk="${k}" value="${esc(String(filters[k]||''))}" aria-label="${lab}">`;
   const sin=fecSinDato(c.k);
   return `<span class="fpopwrap">
-    <button type="button" class="fpopbtn ${on?'on':''}" id="fecPopBtn">${icon('cal')} Período${on?' (1)':''} ▾</button>
+    <button type="button" class="fpopbtn ${on?'on':''}" id="fecPopBtn" aria-label="Período">${icon('cal')}<span class="fpv">${on?esc(fechaFilterLabel()||''):'Todas las fechas'}</span></button>
     ${fecPopOpen?`<div class="fpop" id="fecPop">
       <div class="grp" style="margin-top:0"><h4>Fecha que se filtra</h4>
         <div class="toggle" data-k="__feccampo">${tgC('acv')}${tgC('ing')}${tgC('alta')}</div></div>

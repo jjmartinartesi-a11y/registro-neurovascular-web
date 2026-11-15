@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src https://script.google.com https://script.googleusercontent.com https://clinicaltrials.gov https://xynzajsqixkohvbezsvy.supabase.co">
 <title>Registro Neurovascular</title>
 <meta name="theme-color" content="#0E6E7A">
-  <script type="module" crossorigin src="./assets/index-BEPFlcn5.js"></script>
+  <script type="module" crossorigin src="./assets/index-D_iKfw-i.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-E94FfCkq.css">
 <link rel="manifest" href="./manifest.webmanifest"></head>
 <body>
@@ -1350,7 +1350,44 @@ const FRV=CAT.FRV;
    Loeys-Dietz: la tríada clásica detrás de la disección familiar) y migraña. Multi-selección. */
 const ANT_FAM=CAT.ANT_FAM;
 const ATIP=['FOP','ASIA','Disección','Causa genética','Trombofilia/SAF','Hiperhomocisteinemia','Vasculitis','Consumo de drogas','Infección','Vacunación reciente','Neoplasia activa','Migraña','Anticonceptivos/embarazo','Aneurisma intracraneal'];
-const ATIP_TIP={'Aneurisma intracraneal':'Aneurisma de una arteria intracraneal — al tildarlo se abre la sección para cargar cada uno: arteria, lado y tamaño','ASIA':'Aneurisma del Septum InterAuricular','FOP':'Foramen Oval Permeable — al tildarlo se abre el cálculo RoPE / PASCAL',
+/* Fuentes cardioembólicas ESTRUCTURALES y embolia arterio-arterial (14/11, pedido de Juan): lo que muestra
+   el ecocardiograma y explica un TOAST cardioembólico sin arritmia. Se guardan en `frvAtipicos` —como FOP y
+   ASIA, que también son hallazgos del eco—, así filtro, Panel, Tabla, momento del diagnóstico, CSV y reporte
+   los toman sin campo nuevo ni migración; `ATIP_GRUPOS` sólo decide bajo qué título se dibujan. `ATIP` sigue
+   siendo el catálogo COMPLETO del campo.
+   «LAA» es la ALTERACIÓN ESTRUCTURAL de la orejuela (Juan, 14/11), no el trombo: el trombo va en su casilla.
+   La endocarditis INFECCIOSA no tiene casilla acá: ya es una entidad de la sección Infección, y dos lugares
+   para el mismo hecho divergen. Pero CUENTA como fuente cardioembólica (Juan, 14/11): `cardioFuentes()` la
+   deriva de `infecciones`, y de ahí leen la Tabla y el filtro. La FA y la cardiopatía isquémica son clásicos.
+   El ateroma del arco aórtico NO es cardioembolia: grupo propio, embolia arterio-arterial. */
+const CARDIO_EST=['Alteración estructural de la orejuela izquierda (LAA)','Trombo intracavitario','Trombo intraventricular izquierdo','Mixoma cardíaco','Fibroelastoma papilar',
+  'Prótesis valvular mecánica','Prótesis valvular biológica','Estenosis mitral reumática','Endocarditis no infecciosa (marántica)',
+  'Miocardiopatía dilatada / FEVI reducida','Aquinesia o aneurisma ventricular izquierdo'];
+const ART_ART=['Ateroma del arco aórtico'];
+const ATIP_JOVEN=ATIP.slice();
+ATIP.push(...CARDIO_EST,...ART_ART);
+/* Grupos de casillas que siguen a «Atípicos / del joven» en la ficha (`#chips_<id>`), el panel de filtros y el
+   buscador. Un grupo nuevo se declara también en `CHIPS` de `src/web/residente.ts`. */
+const ATIP_GRUPOS=[{id:'cest',t:'Cardioembolia estructural',sub:'hallazgos del ecocardiograma · la endocarditis infecciosa se carga en Infección y se cuenta acá',items:CARDIO_EST},
+  {id:'aa',t:'Embolia arterio-arterial',sub:'',items:ART_ART}];
+const CE_EI='Endocarditis infecciosa',CE_ANY='__CE_ANY';
+/* Fuentes cardioembólicas estructurales de una ficha: las casillas del grupo + la endocarditis infecciosa de Infección. */
+function cardioFuentes(p){const a=(p&&p.frvAtipicos)||[];
+  return CARDIO_EST.filter(f=>a.includes(f)).concat(infList(p).includes(CE_EI)?[CE_EI]:[])}
+const ATIP_TIP={
+  'Alteración estructural de la orejuela izquierda (LAA)':'Trastorno estructural o funcional de la orejuela: morfología de riesgo (no «ala de pollo»), velocidades de vaciado bajas, contraste espontáneo. Un trombo se marca aparte, en Trombo intracavitario',
+  'Trombo intracavitario':'Trombo en una cavidad cardíaca: aurícula, orejuela u otra. El del ventrículo izquierdo tiene su casilla',
+  'Trombo intraventricular izquierdo':'Trombo mural en el ventrículo izquierdo (post-infarto, miocardiopatía)',
+  'Ateroma del arco aórtico':'Placa compleja del arco: ≥ 4 mm, ulcerada o con componente móvil. Embolia arterio-arterial, no cardíaca',
+  'Mixoma cardíaco':'Mixoma auricular (lo habitual) o de otra cavidad',
+  'Fibroelastoma papilar':'Tumor valvular benigno con potencial embólico',
+  'Prótesis valvular mecánica':'Mitral o aórtica; anotar posición e INR al ingreso',
+  'Prótesis valvular biológica':'Incluye TAVI',
+  'Estenosis mitral reumática':'Moderada o grave, con o sin fibrilación auricular',
+  'Endocarditis no infecciosa (marántica)':'Trombótica no bacteriana: marántica (neoplasia) o de Libman-Sacks (lupus, SAF). La endocarditis INFECCIOSA se carga en Infección y cuenta igual como fuente cardioembólica',
+  'Miocardiopatía dilatada / FEVI reducida':'Fracción de eyección ≤ 35 %, de cualquier causa',
+  'Aquinesia o aneurisma ventricular izquierdo':'Segmento aquinético o aneurisma del ventrículo izquierdo, con o sin infarto reciente',
+  'Aneurisma intracraneal':'Aneurisma de una arteria intracraneal — al tildarlo se abre la sección para cargar cada uno: arteria, lado y tamaño','ASIA':'Aneurisma del Septum InterAuricular','FOP':'Foramen Oval Permeable — al tildarlo se abre el cálculo RoPE / PASCAL',
   'Infección':'Infección asociada al evento — al tildarlo se abre la sección para decir cuál y cuándo',
   'Vacunación reciente':'Vacunación en las semanas previas al evento. NO es una infección: se separó de COVID en 2026-09-05',
   'Causa genética':'Causa monogénica o hereditaria — al tildarlo se abre el listado por mecanismo',
@@ -4451,6 +4488,8 @@ function filtered(){
         if(k==='__FOP_ASIA')return a.includes('FOP')&&a.includes('ASIA');
         if(k==='__FOP_noASIA')return a.includes('FOP')&&!a.includes('ASIA');
         if(k==='Disección')return a.includes('Disección')||p.tipo==='Disección';
+        if(k===CE_ANY)return cardioFuentes(p).length>0;
+        if(k===CE_EI)return infList(p).includes(CE_EI); /* vive en Infección; acá cuenta como fuente cardioembólica */
         return (cl.includes(k)||a.includes(k))&&momOk(p,k);
       };
       if(!(filters.frvMode==='any'?filters.frv.some(test):filters.frv.every(test)))return false;
@@ -4887,7 +4926,7 @@ function protoFilterLabel(){if(!filters.proto)return null;
   if(filters.proto==='__any')return 'en algún protocolo';
   if(filters.proto==='__none')return 'fuera de protocolo';
   const d=protoById(filters.proto);return d?'protocolo '+d.nombre:null}
-const FRV_FILTER_LABEL={'Disección':'disección (todas)','__FOP_ASIA':'FOP con ASIA','__FOP_noASIA':'FOP sin ASIA'};
+const FRV_FILTER_LABEL={'Disección':'disección (todas)','__FOP_ASIA':'FOP con ASIA','__FOP_noASIA':'FOP sin ASIA','Endocarditis infecciosa':'endocarditis infecciosa','__CE_ANY':'alguna fuente cardioembólica estructural'};
 function frvFilterLabel(){const v=filters.frv||[],m=MOM_FILTRO_LABEL[filters.frvMom];
   if(!v.length)return m?'FRV '+m:null;
   const nombres=v.map(k=>FRV_FILTER_LABEL[k]||k);
@@ -5006,7 +5045,9 @@ function fbusIndice(){const out=[];
       out.push({cap,g:og&&og.tagName==='OPTGROUP'?og.label:'',t:o.textContent.replace(/^[\s—·]+|[\s—]+$/g,''),k:sel.id.slice(1).toLowerCase(),v:o.value})});
     else if(b&&b.id==='frvPopBtn'){
       FRV.forEach(f=>out.push({cap,g:'Clásicos',t:f,frv:f}));
-      ATIP.forEach(f=>out.push({cap,g:'Atípicos / del joven',t:f==='Disección'?'Disección (todas)':f,frv:f}));
+      ATIP_JOVEN.forEach(f=>out.push({cap,g:'Atípicos / del joven',t:f==='Disección'?'Disección (todas)':f,frv:f}));
+      ATIP_GRUPOS.forEach(g=>g.items.forEach(f=>out.push({cap,g:g.t,t:f,frv:f})));
+      out.push({cap,g:'Cardioembolia estructural',t:FRV_FILTER_LABEL[CE_EI],frv:CE_EI},{cap,g:'Cardioembolia estructural',t:'Alguna fuente cardioembólica estructural',frv:CE_ANY});
       out.push({cap,g:'Combinaciones',t:'FOP con ASIA',frv:'__FOP_ASIA'},{cap,g:'Combinaciones',t:'FOP sin ASIA',frv:'__FOP_noASIA'})}
     else if(b)out.push({cap,g:'',t:'Elegir un rango…',pop:b.id})});
   return out}
@@ -5254,7 +5295,8 @@ function frvPopHtml(){
         <div class="toggle" data-k="__frvmom">${MOM_FILTRO.map(([k,l])=>`<button data-val="${k}" class="${(filters.frvMom||'')===k?'on':''}">${l}</button>`).join('')}</div></div>
       <div class="fhint" style="margin:-4px 0 8px">Nuevo = internación o seguimiento. Sin factores marcados, busca a quien tenga <b>algún</b> factor con ese momento. No aplica a los antecedentes (tabaquismo, ACV previo…).</div>
       <div class="grp"><h4>Clásicos</h4><div class="cols">${FRV.map(f=>box(f,f)).join('')}</div></div>
-      <div class="grp"><h4>Atípicos / del joven</h4><div class="cols">${ATIP.map(f=>box(f,f==='Disección'?'Disección (todas)':f)).join('')}</div></div>
+      <div class="grp"><h4>Atípicos / del joven</h4><div class="cols">${ATIP_JOVEN.map(f=>box(f,f==='Disección'?'Disección (todas)':f)).join('')}</div></div>
+      ${ATIP_GRUPOS.map(g=>`<div class="grp"><h4>${esc(g.t)}</h4><div class="cols">${g.items.map(f=>box(f,f)).join('')}${g.id==='cest'?box(CE_EI,'Endocarditis infecciosa (de Infección)')+box(CE_ANY,'Alguna de estas fuentes'):''}</div></div>`).join('')}
       <div class="grp"><h4>Combinaciones</h4><div class="cols">${box('__FOP_ASIA','FOP con ASIA')}${box('__FOP_noASIA','FOP sin ASIA')}</div></div>
       <div class="foot"><button type="button" class="btn sm ghost" id="frvPopClear">Limpiar</button>
         <button type="button" class="btn sm" id="frvPopClose">Cerrar</button></div>
@@ -6104,6 +6146,7 @@ function vForm(){
   const extraTxA=d.txAlta.filter(t=>!TX.includes(t));
   const extraFRV=(d.frv||[]).filter(f=>!FRV.includes(f));
   const extraATIP=(d.frvAtipicos||[]).filter(f=>!ATIP.includes(f));
+  const chipAtip=f=>`<span class="chip atip ${ATIP.includes(f)?'':'extra '}${herAtip.includes(f)?'her ':''}${d.frvAtipicos.includes(f)?'on':''}" data-f="${esc(f)}"${ATIP_TIP[f]?` title="${esc(ATIP_TIP[f])}"`:(ATIP.includes(f)?'':' title="Valor heredado de la migración: no está en el catálogo. Destildalo y marcá el que corresponda."')}>${esc(f)}</span>`;
   const showElan=(d.frv||[]).includes('Fibrilación auricular')||!!d.elanSize;
   const showFop=(d.frvAtipicos||[]).includes('FOP')||(d.frvAtipicos||[]).includes('ASIA');
   /* Caso de interés: lo abre la estrella, o que la ficha ya tenga motivo o imágenes (un dato guardado no se esconde). */
@@ -6245,7 +6288,9 @@ function vForm(){
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 10px;letter-spacing:.03em">CLÁSICOS</div>
       <div class="chips" id="chips_frv">${FRV.concat(extraFRV).map(f=>`<span class="chip ${FRV.includes(f)?'':'extra '}${herFrv.includes(f)?'her ':''}${d.frv.includes(f)?'on':''}" data-f="${esc(f)}"${FRV.includes(f)?'':' title="Valor heredado de la migración: no está en el catálogo. Destildalo y marcá el que corresponda."'}>${esc(f)}</span>`).join('')}</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:16px 0 10px;letter-spacing:.03em">ATÍPICOS / DEL JOVEN</div>
-      <div class="chips" id="chips_atip">${ATIP.concat(extraATIP).map(f=>`<span class="chip atip ${ATIP.includes(f)?'':'extra '}${herAtip.includes(f)?'her ':''}${d.frvAtipicos.includes(f)?'on':''}" data-f="${esc(f)}"${ATIP_TIP[f]?` title="${esc(ATIP_TIP[f])}"`:(ATIP.includes(f)?'':' title="Valor heredado de la migración: no está en el catálogo. Destildalo y marcá el que corresponda."')}>${esc(f)}</span>`).join('')}</div>
+      <div class="chips" id="chips_atip">${ATIP_JOVEN.concat(extraATIP).map(chipAtip).join('')}</div>
+      ${ATIP_GRUPOS.map(g=>`<div style="font-size:11.5px;color:var(--ink-3);margin:16px 0 10px;letter-spacing:.03em">${esc(g.t.toUpperCase())}${g.sub?` <span style="letter-spacing:0;text-transform:none">— ${esc(g.sub)}</span>`:''}</div>
+      <div class="chips" id="chips_${g.id}">${g.items.map(chipAtip).join('')}</div>`).join('')}
       <div id="momBox">${momHtml(d)}</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:16px 0 10px;letter-spacing:.03em">ANTECEDENTES FAMILIARES</div>
       <div class="chips" id="chips_antFam">${ANT_FAM.concat(extraAntFam).map(f=>`<span class="chip ${ANT_FAM.includes(f)?'':'extra '}${(d.antFamiliares||[]).includes(f)?'on':''}" data-f="${esc(f)}"${ANT_FAM.includes(f)?'':' title="Valor fuera del catálogo. Destildalo y marcá el que corresponda."'}>${esc(f)}</span>`).join('')}</div>
@@ -6799,7 +6844,7 @@ function vForm(){
     draft.disArterias=[];draft.disSegmento='';draft.disDesencadenante='';
     draft.disTto=[];draft.disRecanal='';draft.disRecanalMeses=null;draft.disSignos=[];
     vForm();toast('Caracterización de la disección borrada')};
-  ['frv','atip'].forEach(kind=>{const key=kind==='frv'?'frv':'frvAtipicos';document.querySelectorAll('#chips_'+kind+' .chip').forEach(c=>c.onclick=()=>{const f=c.dataset.f;const arr=draft[key];const i=arr.indexOf(f);const on=i<0;if(on)arr.push(f);else arr.splice(i,1);c.classList.toggle('on');if(key==='frv'&&f==='Fibrilación auricular')updElan();if(key==='frv'&&['HTA','Diabetes','Tabaquismo','ACV/AIT previo'].includes(f))updFop();if(key==='frvAtipicos'&&(f==='FOP'||f==='ASIA'))updFop();if(key==='frvAtipicos'&&f===GEN_GATE)updGen();if(key==='frvAtipicos'&&f===INF_GATE)updInf();if(key==='frvAtipicos'&&f===NEO_GATE)updNeo();if(key==='frvAtipicos'&&f===ANEU_GATE)updAneu();if(key==='frvAtipicos'&&f===VAC_CHIP)updVac();if(key==='frv'&&f==='Estenosis carotídea')updEsten();if(key==='frvAtipicos'&&f==='Disección'){updMth();updDis()}if(key==='frvAtipicos'&&f==='FOP'&&on){collect();openFopWizard();}})});
+  ['frv','atip'].concat(ATIP_GRUPOS.map(g=>g.id)).forEach(kind=>{const key=kind==='frv'?'frv':'frvAtipicos';document.querySelectorAll('#chips_'+kind+' .chip').forEach(c=>c.onclick=()=>{const f=c.dataset.f;const arr=draft[key];const i=arr.indexOf(f);const on=i<0;if(on)arr.push(f);else arr.splice(i,1);c.classList.toggle('on');if(key==='frv'&&f==='Fibrilación auricular')updElan();if(key==='frv'&&['HTA','Diabetes','Tabaquismo','ACV/AIT previo'].includes(f))updFop();if(key==='frvAtipicos'&&(f==='FOP'||f==='ASIA'))updFop();if(key==='frvAtipicos'&&f===GEN_GATE)updGen();if(key==='frvAtipicos'&&f===INF_GATE)updInf();if(key==='frvAtipicos'&&f===NEO_GATE)updNeo();if(key==='frvAtipicos'&&f===ANEU_GATE)updAneu();if(key==='frvAtipicos'&&f===VAC_CHIP)updVac();if(key==='frv'&&f==='Estenosis carotídea')updEsten();if(key==='frvAtipicos'&&f==='Disección'){updMth();updDis()}if(key==='frvAtipicos'&&f==='FOP'&&on){collect();openFopWizard();}})});
   // toggles
   /* El de los cambios de esquema tiene su propio manejador (delegado en #secTx): no escribe `draft` directo. */
   document.querySelectorAll('.toggle:not([data-k="txCambioUI"])').forEach(t=>t.querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=t.dataset.k;draft[k]=parseVal(b.dataset.val);t.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on')}));
@@ -6811,7 +6856,7 @@ function vForm(){
       if(b.dataset.val)o[f]=b.dataset.val;else delete o[f];
       draft.frvMomento=o;repintaMom()}))};
   repintaMom();
-  document.querySelectorAll('#chips_frv .chip,#chips_atip .chip').forEach(c=>c.addEventListener('click',repintaMom));
+  document.querySelectorAll(['frv','atip'].concat(ATIP_GRUPOS.map(g=>g.id)).map(k=>'#chips_'+k+' .chip').join(',')).forEach(c=>c.addEventListener('click',repintaMom));
   document.querySelectorAll('.toggle[data-k="monitoreoFA"] button,.toggle[data-k="monitoreoArritmia"] button').forEach(b=>b.addEventListener('click',repintaMom));
   /* El binding genérico de arriba ya escribió en `draft`; estos listeners corren después (se
      registran después) y sólo ajustan la visibilidad. Un dato que se oculta se BORRA: si no,
@@ -7183,7 +7228,7 @@ function controlesPaint(){const b=$('#ctlBox');if(!b)return;b.innerHTML=controle
    no existe. Ahora la explicación de los chips MARCADOS se muestra debajo del grupo: cero ruido
    cuando no hay nada elegido, y confirmación en el momento exacto de elegir — que es cuando surge
    la duda de "¿este es el que corresponde?". El `title` se conserva como afordancia secundaria. */
-function chipTipMaps(){return [...SIND_GRP.map(([o])=>['chips_sind_'+(o||'X'),SIND_TIP]),['chips_pres',PRES_TIP],['chips_atip',ATIP_TIP],['chips_ocsp',OCSP_TIP],['chips_terr',TERR_TIP],
+function chipTipMaps(){return [...SIND_GRP.map(([o])=>['chips_sind_'+(o||'X'),SIND_TIP]),['chips_pres',PRES_TIP],['chips_atip',ATIP_TIP],...ATIP_GRUPOS.map(g=>['chips_'+g.id,ATIP_TIP]),['chips_ocsp',OCSP_TIP],['chips_terr',TERR_TIP],
   ['chips_txAlta',TX_TIP],['chips_neoTto',NEO_TTO_TIP],
   ['infChips',INF_TIP],['genChips',GEN_TIP]]}
 function refreshChipTips(){
@@ -8009,8 +8054,15 @@ function buildT1(f){
   const frvSin=f.filter(p=>!(p.frv||[]).length&&!(p.frvAtipicos||[]).length).length;
   R.push({grp:'Factores de riesgo (% sobre los '+n+' de la cohorte'+(frvSin?' · '+frvSin+' sin ningún factor cargado: estos % son un piso':'')+')'});
   FRV.forEach(fr=>{const r=catIf(fr,p=>(p.frv||[]).includes(fr));if(r)R.push(r)});
-  ATIP.forEach(fr=>{const r=catIf(fr,p=>(p.frvAtipicos||[]).includes(fr));if(r)R.push(r)});
+  ATIP.filter(fr=>!CARDIO_EST.includes(fr)).forEach(fr=>{const r=catIf(fr,p=>(p.frvAtipicos||[]).includes(fr));if(r)R.push(r)});
   if(frvSin)R.push(['Sin ningún factor cargado',`${frvSin} (${pct(frvSin,n)}%)`]);
+  /* Fuentes cardioembólicas estructurales: grupo propio, con la endocarditis infecciosa que se carga en
+     Infección (Juan, 14/11). Las fuentes no son excluyentes: los % no suman el de «Alguna». Sólo si hay alguna. */
+  if(f.some(p=>cardioFuentes(p).length)){
+    R.push({grp:'Fuentes cardioembólicas estructurales (% sobre los '+n+' de la cohorte · no excluyentes · no incluye FA ni FOP)'});
+    R.push(catRow('Alguna fuente estructural',p=>cardioFuentes(p).length>0));
+    CARDIO_EST.concat([CE_EI]).forEach(fr=>{const r=catIf(fr===CE_EI?'Endocarditis infecciosa (cargada en Infección)':fr,p=>cardioFuentes(p).includes(fr));if(r)R.push(r)});
+  }
   /* Momento del diagnóstico: cada factor sobre los que LO TIENEN y con el momento cargado —el
      denominador va en el rótulo porque cambia de fila a fila—. Sólo factores con algún momento. */
   const momCon=f.filter(p=>momFactores(p).some(x=>momDe(p,x)));

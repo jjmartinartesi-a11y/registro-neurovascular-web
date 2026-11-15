@@ -22492,6 +22492,8 @@ var SISTEMA = [
 var CHIPS = {
 	frv: "frv",
 	atip: "frvAtipicos",
+	cest: "frvAtipicos",
+	aa: "frvAtipicos",
 	antFam: "antFamiliares",
 	ocsp: "ocsp",
 	terr: "territorio",

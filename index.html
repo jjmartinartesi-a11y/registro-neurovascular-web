@@ -422,6 +422,16 @@
   .modo-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;
     font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
   .modo-bar .modo-nota{text-transform:none;letter-spacing:0;color:var(--ink-3);font-size:11.5px}
+  /* Barra de secciones de la ficha: píldora flotante, siempre a la vista (mismo aspecto que el indicador de sincronización). */
+  .fnav{position:sticky;top:8px;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:2px 2px;width:fit-content;max-width:100%;box-sizing:border-box;
+    margin:0 0 16px;padding:5px 8px;border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow),0 6px 18px rgba(20,32,41,.08)}
+  .fnav:empty{display:none}
+  .fnav button{border:0;background:none;font:13px/1.3 var(--sans);color:var(--accent);cursor:pointer;padding:5px 10px;border-radius:999px;white-space:nowrap}
+  .fnav button:hover{background:var(--surface-2)}
+  .fnav button.on{background:var(--accent-wash);color:var(--accent-ink);font-weight:600}
+  .fnav button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  @media(max-width:720px){.fnav{flex-wrap:nowrap;overflow-x:auto;width:auto;border-radius:999px;scrollbar-width:none}.fnav::-webkit-scrollbar{display:none}}
+  @media print{.fnav{display:none}}
   .faltwrap{display:inline-flex;align-items:center;gap:9px;font-size:12px;color:var(--ink-3);
     background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 11px}
   .faltwrap b{color:var(--ink-2);font-weight:600;font-family:var(--mono);font-size:11.5px}
@@ -6224,7 +6234,8 @@ function vForm(){
       </div>
       <span class="modo-nota">${cargaRapida?'Protocolo, imagen, disfagia y notas están plegados — se guardan igual.':''}</span>
     </div>
-    <div class="fsec"><div class="st"><span class="num">1</span>Identificación</div>
+    <div class="fnav" id="fnav" role="navigation" aria-label="Secciones de la ficha"></div>
+    <div class="fsec" data-nav="Identificación"><div class="st"><span class="num">1</span>Identificación</div>
       <div class="fgrid">
         <div class="field wide"><label>Apellido y Nombre</label>
           <div class="acwrap"><input id="f_nombre" value="${esc(d.nombre)}" placeholder="Apellido Nombre" autocomplete="off"><div id="sugHost"></div></div>
@@ -6245,7 +6256,7 @@ function vForm(){
       </div>
       <div id="pacBox" class="pacbox"></div></div>
 
-    <div class="fsec" id="secProto"><div class="st"><span class="num">I</span>Protocolos de investigación</div>
+    <div class="fsec" data-nav="Protocolos" id="secProto"><div class="st"><span class="num">I</span>Protocolos de investigación</div>
       ${PROTOS.length?`<div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 10px;letter-spacing:.03em">UN PROTOCOLO POR PACIENTE · TOCAR LA ETIQUETA ACTIVA LA QUITA</div>
       <div class="chips" id="chips_proto">${PROTOS.map(pr=>{const a=pAsig(d);const on=!!a&&a.id===pr.id;
         const fin=protoFin(pr),tt=[pr.descripcion,fin?'Protocolo finalizado':''].filter(Boolean).join(' · ');
@@ -6255,7 +6266,7 @@ function vForm(){
         <div style="margin-top:12px"><button type="button" class="btn" id="f_protoCfg">${icon('gear')} Ir a Configuración</button></div>`}
     </div>
 
-    <div class="fsec"><div class="st"><span class="num">2</span>Clasificación</div>
+    <div class="fsec" data-nav="Clasificación"><div class="st"><span class="num">2</span>Clasificación</div>
       <div class="fgrid">
         ${campoHtml('tipo',d)}
         ${campoHtml('toast',d,{oculto:!showIsq})}
@@ -6283,7 +6294,7 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec"><div class="st"><span class="num">3</span>Factores de riesgo</div>
+    <div class="fsec" data-nav="Factores de riesgo"><div class="st"><span class="num">3</span>Factores de riesgo</div>
       ${herPend?`<div class="hint-inh"><span>Heredados del evento del ${esc(heredado.de)} — <b>ya están cargados</b>; revisá que sigan vigentes antes de guardar.</span><button type="button" class="btn sm ghost" id="f_herOk">Revisado</button></div>`:''}
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 10px;letter-spacing:.03em">CLÁSICOS</div>
       <div class="chips" id="chips_frv">${FRV.concat(extraFRV).map(f=>`<span class="chip ${FRV.includes(f)?'':'extra '}${herFrv.includes(f)?'her ':''}${d.frv.includes(f)?'on':''}" data-f="${esc(f)}"${FRV.includes(f)?'':' title="Valor heredado de la migración: no está en el catálogo. Destildalo y marcá el que corresponda."'}>${esc(f)}</span>`).join('')}</div>
@@ -6309,7 +6320,7 @@ function vForm(){
       <div class="fhint" id="oxiWarn" style="display:none;color:var(--crit);margin-top:8px"></div>
     </div>
 
-    <div class="fsec"><div class="st"><span class="num">4</span>Severidad y evolución</div>
+    <div class="fsec" data-nav="Severidad"><div class="st"><span class="num">4</span>Severidad y evolución</div>
       <div class="fgrid">
         ${campoAbre('nihss',d,{soloLectura:nihSuma(d.nihssItems)!=null})}<div class="fhint" id="nihSevHint"></div></div>
         <div class="field"><label><span class="mrstip">mRS<span class="mrspop" role="img" aria-label="Escala de Rankin modificada, 0 a 6"></span></span> previo</label><input id="f_mrsPrevio" type="number" min="0" max="6" value="${d.mrsPrevio??''}"></div>
@@ -6371,7 +6382,7 @@ function vForm(){
         </div>
       </div></div>
 
-    <div class="fsec" id="secImagen"><div class="st"><span class="num">5</span>Tratamiento e imagen</div>
+    <div class="fsec" data-nav="Tto. e imagen" id="secImagen"><div class="st"><span class="num">5</span>Tratamiento e imagen</div>
       <div class="fgrid">
         ${campoAbre('trombolisis',d)}
           <div id="tlAgBox" style="margin-top:9px${(d.trombolisis===true||d.trombolisisAgente)?'':';display:none'}"><label style="font-size:12px;color:var(--ink-3)">Agente</label>${toggleHtml('trombolisisAgente',[['rtPA','rtPA'],['TNK','TNK'],['','—']],d.trombolisisAgente||'')}</div></div>
@@ -6385,7 +6396,7 @@ function vForm(){
         ${campoHtml('imagen',d)}
       </div></div>
 
-    <div class="fsec" id="repSec"${showRep?'':' style="display:none"'}><div class="st"><span class="num">R</span>Tiempos de reperfusión y resultado</div>
+    <div class="fsec" data-nav="Reperfusión" id="repSec"${showRep?'':' style="display:none"'}><div class="st"><span class="num">R</span>Tiempos de reperfusión y resultado</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Aparece sólo cuando hay trombólisis o trombectomía. Es lo que pide un indicador de calidad y lo que hace falta para cargar a <b>Res-Q</b>; hasta hoy el registro tenía únicamente puerta-aguja.</div>
       <div class="fgrid">
         ${campoAbre('inicioPuerta',d)}
@@ -6404,7 +6415,7 @@ function vForm(){
       <div id="repPedBox">${repPedHtml(d)}</div>
     </div>
 
-    <div class="fsec" id="disSec"${showDis?'':' style="display:none"'}><div class="st"><span class="num">A</span>Disección · caracterización</div>
+    <div class="fsec" data-nav="Disección" id="disSec"${showDis?'':' style="display:none"'}><div class="st"><span class="num">A</span>Disección · caracterización</div>
       ${(disTieneDato(d)&&!esDis(d))?`<div class="hint-inh"><span>Esta ficha tiene datos de disección pero <b>no está clasificada como disección</b> — ni por tipo de evento ni por el chip. Corregí la clasificación o borrá el bloque: si no, el dato queda cargado y fuera de toda tabla.</span></div>`:''}
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Arteria y lado van juntos porque la disección <b>bilateral y la múltiple existen</b>: se pueden marcar varias.</div>
       <div class="field wide"><label>Arteria disecada</label>
@@ -6428,7 +6439,7 @@ function vForm(){
       ${disTieneDato(d)?`<div style="margin-top:14px"><button type="button" class="btn sm ghost" id="f_disClear">Borrar caracterización</button></div>`:''}
     </div>
 
-    <div class="fsec" id="hicSec"${showHic?'':' style="display:none"'}><div class="st"><span class="num">H</span>Hemorragia intracerebral</div>
+    <div class="fsec" data-nav="Hemorragia" id="hicSec"${showHic?'':' style="display:none"'}><div class="st"><span class="num">H</span>Hemorragia intracerebral</div>
       <div class="fgrid">
         ${campoHtml('hicVolumen',d)}
         ${campoHtml('hicAnticoag',d)}
@@ -6445,7 +6456,7 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="tvcSec"${showTvc?'':' style="display:none"'}><div class="st"><span class="num">V</span>Trombosis venosa cerebral</div>
+    <div class="fsec" data-nav="TVC" id="tvcSec"${showTvc?'':' style="display:none"'}><div class="st"><span class="num">V</span>Trombosis venosa cerebral</div>
       <div class="field wide"><label>Senos y venas afectados <span class="u">(uno o más · la extensión es lo que define el cuadro)</span></label>
         <div class="chips" id="chips_tvc">${TVC_SENOS.concat(extraTvc).map(t=>`<span class="chip ${TVC_SENOS.includes(t)?'':'extra '}${(d.tvcSenos||[]).includes(t)?'on':''}" data-f="${esc(t)}">${esc(t)}</span>`).join('')}</div>
       </div>
@@ -6454,7 +6465,7 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="monSec"${showMon?'':' style="display:none"'}><div class="st"><span class="num">M</span>Monitoreo cardíaco</div>
+    <div class="fsec" data-nav="Monitoreo" id="monSec"${showMon?'':' style="display:none"'}><div class="st"><span class="num">M</span>Monitoreo cardíaco</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Sin esto, “Indeterminado/ESUS” significa cosas distintas en un paciente con Holter de 24 h y en uno con loop recorder — y es la objeción estándar a toda serie de ESUS.</div>
       <div class="fgrid">
         ${campoHtml('monitoreoTipo',d)}
@@ -6465,7 +6476,7 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="mthSec"${showMth?'':' style="display:none"'}><div class="st"><span class="num">D</span>MTHFR y homocisteína</div>
+    <div class="fsec" data-nav="MTHFR" id="mthSec"${showMth?'':' style="display:none"'}><div class="st"><span class="num">D</span>MTHFR y homocisteína</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Se guarda el <b>genotipo</b>, no un sí/no: la asociación reportada es con el <b>TT homocigota</b>. En <b>disección cervical</b> es un factor de riesgo <b>bajo estudio</b> —no una etiología establecida—; en el resto de las fichas el dato viene del estudio genético y se guarda sin afirmar ningún papel causal.</div>
       <div class="fgrid">
         <div class="field"><label>MTHFR C677T</label>${toggleHtml('mthfrC677T',MTHFR_C677T.map(g=>[g,g]).concat([['','—']]),d.mthfrC677T||'',MTHFR_TIP)}</div>
@@ -6477,7 +6488,7 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="neoSec"${showNeo?'':' style="display:none"'}><div class="st"><span class="num">O</span>Neoplasia activa</div>
+    <div class="fsec" data-nav="Neoplasia" id="neoSec"${showNeo?'':' style="display:none"'}><div class="st"><span class="num">O</span>Neoplasia activa</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 4px;line-height:1.55">Agrupadas por origen. Se puede marcar más de una. Para el ACV asociado a cáncer lo que discrimina es el <b>tipo</b>, el <b>estado</b> —la metastásica es la del síndrome de Trousseau— y el <b>tratamiento en curso</b>.</div>
       <div id="neoChips">${neoChipsHtml(d,extraNeo)}</div>
       <div class="fgrid" style="margin-top:18px">
@@ -6492,13 +6503,13 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="aneuSec"${showAneu?'':' style="display:none"'}><div class="st"><span class="num">K</span>Aneurismas intracraneales</div>
+    <div class="fsec" data-nav="Aneurismas" id="aneuSec"${showAneu?'':' style="display:none"'}><div class="st"><span class="num">K</span>Aneurismas intracraneales</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Uno por fila: arteria, lado y tamaño (<b>diámetro máximo</b>, en mm). Comunicante anterior y basilar son de línea media y no llevan lado.</div>
       <div id="aneuBox">${aneuHtml(d)}</div>
       <div style="margin-top:12px"><button type="button" class="btn sm" id="aneuAdd">${icon('plus')} Agregar aneurisma</button></div>
     </div>
 
-    <div class="fsec" id="infSec"${showInf?'':' style="display:none"'}><div class="st"><span class="num">N</span>Infección asociada</div>
+    <div class="fsec" data-nav="Infección" id="infSec"${showInf?'':' style="display:none"'}><div class="st"><span class="num">N</span>Infección asociada</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 4px;line-height:1.55">Agrupadas por foco. Se puede marcar más de una. <b>Una vacuna no es una infección</b>: para eso está el chip <i>Vacunación reciente</i>.</div>
       <div id="infChips">${infChipsHtml(d,extraInf)}</div>
       <div class="fgrid" style="margin-top:18px">
@@ -6507,20 +6518,20 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="vacSec"${showVac?'':' style="display:none"'}><div class="st"><span class="num">W</span>Vacunación reciente</div>
+    <div class="fsec" data-nav="Vacunación" id="vacSec"${showVac?'':' style="display:none"'}><div class="st"><span class="num">W</span>Vacunación reciente</div>
       <div class="fgrid">
         ${campoAbre('vacunaTipo',d)}
           <div class="fhint">Registrar el hecho no afirma la causa. Se separó de <i>COVID/infección</i> el 05/09: cinco fichas eran post-vacuna y contaban como infección.</div></div>
       </div>
     </div>
 
-    <div class="fsec" id="genSec"${showGen?'':' style="display:none"'}><div class="st"><span class="num">G</span>Causa genética</div>
+    <div class="fsec" data-nav="Genética" id="genSec"${showGen?'':' style="display:none"'}><div class="st"><span class="num">G</span>Causa genética</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 4px;line-height:1.55">Causas monogénicas y hereditarias de ACV, agrupadas por mecanismo. Se puede marcar más de una.</div>
       <div id="genChips">${genChipsHtml(d,extraGen)}</div>
       <div id="genCert">${genCertHtml(d)}</div>
     </div>
 
-    <div class="fsec" id="secTx"><div class="st"><span class="num">6</span>Tratamiento antitrombótico</div>
+    <div class="fsec" data-nav="Antitrombótico" id="secTx"><div class="st"><span class="num">6</span>Tratamiento antitrombótico</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 10px;letter-spacing:.03em">ESQUEMA INICIAL · UNA O MÁS CLASES · “ALTA SIN MEDICACIÓN” ES EXCLUYENTE</div>
       <div class="chips" id="chips_txAlta">${TX.concat(extraTxA).map(t=>txChip(t,d.txAlta)).join('')}</div>
       <div class="fgrid" style="margin-top:18px">
@@ -6535,7 +6546,7 @@ function vForm(){
       <div class="fhint" id="txcVig" style="margin-top:12px">${txcVigHtml(d)}</div>
     </div>
 
-    <div class="fsec" id="secDisfagia"><div class="st"><span class="num">7</span>Cribado de disfagia</div>
+    <div class="fsec" data-nav="Disfagia" id="secDisfagia"><div class="st"><span class="num">7</span>Cribado de disfagia</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 10px;letter-spacing:.03em">EVALUACIÓN DE LA DEGLUCIÓN EN EL ACV AGUDO</div>
       <div class="fgrid">
         ${campoAbre('disfagiaEval',d)}
@@ -6545,7 +6556,7 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="secCalidad"><div class="st"><span class="num">Q</span>Calidad de atención y alta</div>
+    <div class="fsec" data-nav="Calidad" id="secCalidad"><div class="st"><span class="num">Q</span>Calidad de atención y alta</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Lo que piden los indicadores de calidad (Joint Commission STK/CSTK, ESO Angels). «—» es <b>sin dato</b>: la ficha no entra en ese indicador. «No, con motivo documentado» la saca del denominador, como en las especificaciones oficiales.</div>
       <div class="fgrid">
         ${campoHtml('llegadaTipo',d)}
@@ -6563,13 +6574,13 @@ function vForm(){
       </div>
     </div>
 
-    <div class="fsec" id="secSeg"><div class="st"><span class="num">S</span>Controles de seguimiento</div>
+    <div class="fsec" data-nav="Seguimiento" id="secSeg"><div class="st"><span class="num">S</span>Controles de seguimiento</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Controles que programás (fuera del mRS a 90 días, que tiene su ventana fija). Aparecen en la Agenda y en el aviso diario de Telegram desde 7 días antes. Un control con fecha de realización cuenta como último contacto para el análisis de supervivencia.</div>
       <div id="ctlBox">${controlesHtml(d)}</div>
       <div style="margin-top:4px"><button type="button" class="btn sm" id="ctlAdd">${icon('plus')} Agregar un control</button></div>
     </div>
 
-    <div class="fsec" id="elanSec"${showElan?'':' style="display:none"'}><div class="st"><span class="num">E</span>Clasificación ELAN y anticoagulación</div>
+    <div class="fsec" data-nav="ELAN" id="elanSec"${showElan?'':' style="display:none"'}><div class="st"><span class="num">E</span>Clasificación ELAN y anticoagulación</div>
       <div id="elanSummary">${elanSummaryHtml(d)}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         <button type="button" class="btn primary" id="f_elanBtn">${icon('plus')} ${d.elanSize?'Reabrir clasificador ELAN':'Abrir clasificador ELAN'}</button>
@@ -6578,7 +6589,7 @@ function vForm(){
       <p style="font-size:11.5px;color:var(--ink-3);margin:12px 0 0;line-height:1.5">Clasifica el tamaño del infarto (ELAN) y sugiere el día de inicio/reinicio del DOAC. Síntesis de ELAN, OPTIMAS y TIMING + AHA/ASA 2026. No sustituye el juicio clínico.</p>
     </div>
 
-    <div class="fsec" id="fopSec"${showFop?'':' style="display:none"'}><div class="st"><span class="num">P</span>FOP · RoPE y PASCAL</div>
+    <div class="fsec" data-nav="FOP" id="fopSec"${showFop?'':' style="display:none"'}><div class="st"><span class="num">P</span>FOP · RoPE y PASCAL</div>
       <div id="fopSummary">${fopSummaryHtml(d)}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         <button type="button" class="btn primary" id="f_fopBtn">${icon('plus')} ${d.pascal?'Reabrir cálculo RoPE / PASCAL':'Abrir cálculo RoPE / PASCAL'}</button>
@@ -6587,12 +6598,12 @@ function vForm(){
       <p style="font-size:11.5px;color:var(--ink-3);margin:12px 0 0;line-height:1.5">RoPE (Kent 2013) y PASCAL (Kent 2021, <i>JAMA</i>). El RoPE se calcula solo desde edad y FRV; se pregunta infarto cortical y shunt grande. No sustituye el juicio clínico.</p>
     </div>
 
-    <div class="fsec" id="secCaso"${showCaso?'':' style="display:none"'}><div class="st"><span class="num">C</span>Caso de interés</div>
+    <div class="fsec" data-nav="Caso" id="secCaso"${showCaso?'':' style="display:none"'}><div class="st"><span class="num">C</span>Caso de interés</div>
       <div class="field wide"><label>Por qué es interesante</label><textarea id="f_casoMotivo" rows="2" placeholder="Ej.: disección vertebral con pseudoaneurisma · presentación atípica · para ateneo">${esc(d.casoMotivo||'')}</textarea></div>
       <div id="casoGal"></div>
     </div>
 
-    <div class="fsec" id="secNotas"><div class="st"><span class="num">8</span>Notas</div>
+    <div class="fsec" data-nav="Notas" id="secNotas"><div class="st"><span class="num">8</span>Notas</div>
       <div class="field wide"><label>Observaciones <span class="u">(etiología original / texto libre)</span></label><textarea id="f_notas">${esc(d.notas)}</textarea></div>
     </div>
 
@@ -7076,6 +7087,7 @@ function vForm(){
     toast('Ficha eliminada · se puede restaurar desde Configuración');
     resetBusq();editId=null;draft=blank();go('list')};
   m.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')saveForm()}));
+  fnavArma();
 }
 function protoCodesHtml(d){
   const a=pAsig(d);
@@ -7221,6 +7233,51 @@ function controlesPaint(){const b=$('#ctlBox');if(!b)return;b.innerHTML=controle
   b.querySelectorAll('[data-ctl]').forEach(el=>el.oninput=()=>{const i=+el.dataset.ctl,f=el.dataset.cf;if(!draft.controles[i])return;
     draft.controles[i][f]=f==='mrs'?num(el.value):el.value});
   b.querySelectorAll('[data-ctldel]').forEach(el=>el.onclick=()=>{draft.controles.splice(+el.dataset.ctldel,1);controlesPaint()})}
+
+/* Barra de secciones de la ficha (16/11): flota arriba mientras se recorre la ficha y lleva a cada card.
+   Lista sólo las secciones que están a la vista: las condicionales aparecen y desaparecen con la ficha
+   (un observador sobre cada `.fsec` la rearma). El rótulo corto sale de `data-nav` de la sección: una
+   sección nueva sin `data-nav` usa su título. */
+let fnavObs=null,fnavFirma='',fnavHasta=0;
+function fnavSecs(){const h=$('#formHost');return h?[...h.querySelectorAll(':scope > .fsec')].filter(s=>getComputedStyle(s).display!=='none'):[]}
+function fnavTope(){const n=$('#fnav');if(!n)return 0;
+  /* En la web del celular el indicador de sincronización es una barra pegada arriba: la de secciones va debajo. */
+  const y=document.getElementById('rnvSync');let t=8;
+  if(y&&getComputedStyle(y).position==='sticky')t=y.getBoundingClientRect().height+6;
+  n.style.top=t+'px';return t+n.getBoundingClientRect().height+10}
+function fnavPinta(){const n=$('#fnav');if(!n)return;const S=fnavSecs();
+  const firma=S.map(s=>s.dataset.nav||'').join('|');
+  if(firma!==fnavFirma||!n.firstChild){fnavFirma=firma;
+    n.innerHTML=S.map((s,i)=>{const num=s.querySelector('.st .num'),t=s.querySelector('.st');
+      const lab=s.dataset.nav||(t?t.textContent.replace(num?num.textContent:'','').trim():'');
+      return `<button type="button" data-i="${i}" title="${esc(t?t.textContent.replace(num?num.textContent:'','').trim():lab)}">${esc(lab)}</button>`}).join('');
+    n.querySelectorAll('button').forEach(b=>b.onclick=()=>{const s=fnavSecs()[+b.dataset.i];if(!s)return;
+      const y=s.getBoundingClientRect().top+window.scrollY-fnavTope();
+      fnavHasta=Date.now()+900;fnavMarca(+b.dataset.i);
+      window.scrollTo({top:Math.max(0,y),behavior:'smooth'})})}
+  fnavActiva()}
+function fnavMarca(i){const n=$('#fnav');if(!n)return;
+  n.querySelectorAll('button').forEach((b,j)=>{const on=j===i;if(b.classList.contains('on')!==on){b.classList.toggle('on',on);
+    if(on)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current')}});
+  /* en una sola línea (celular) la sección activa se trae a la vista dentro de la barra */
+  const a=n.querySelector('button.on');
+  if(a&&n.scrollWidth>n.clientWidth&&(a.offsetLeft<n.scrollLeft||a.offsetLeft+a.offsetWidth>n.scrollLeft+n.clientWidth))
+    n.scrollLeft=a.offsetLeft-(n.clientWidth-a.offsetWidth)/2}
+/* Activa = la última sección cuyo borde superior ya pasó por debajo de la barra. */
+function fnavActiva(){const n=$('#fnav');if(!n||Date.now()<fnavHasta)return;const S=fnavSecs(),tope=fnavTope()+4;let k=0;
+  S.forEach((s,i)=>{if(s.getBoundingClientRect().top<=tope)k=i});
+  /* al final de la página la última sección no llega arriba: se marca igual */
+  if(S.length&&window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-2){const u=S[S.length-1];if(u.getBoundingClientRect().top<window.innerHeight)k=S.length-1}
+  fnavMarca(k)}
+function fnavArma(){const h=$('#formHost');if(!h||!$('#fnav'))return;
+  if(fnavObs)fnavObs.disconnect();fnavFirma='';
+  if(typeof MutationObserver!=='undefined'){let pend=false;
+    fnavObs=new MutationObserver(()=>{if(pend)return;pend=true;setTimeout(()=>{pend=false;fnavPinta()},0)});
+    const o={attributes:true,attributeFilter:['style','class','hidden']};
+    fnavObs.observe(h,o);h.querySelectorAll(':scope > .fsec').forEach(s=>fnavObs.observe(s,o))}
+  fnavPinta()}
+window.addEventListener('scroll',()=>{if($('#fnav'))fnavActiva()},{passive:true});
+window.addEventListener('resize',()=>{if($('#fnav'))fnavActiva()});
 /* ===== la ayuda de los chips, VISIBLE (2026-09-05) =====
    Los `title` estaban bien puestos, pero un tooltip nativo sólo aparece si el mouse se queda
    quieto un par de segundos: Juan no los vio nunca, y había SEIS mapas de ayuda escondidos así

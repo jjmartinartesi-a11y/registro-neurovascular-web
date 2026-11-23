@@ -22331,6 +22331,15 @@ var catalogos_default = {
 		"RET": "Retiniano"
 	},
 	LLEGADA: ["Directa", "Derivado de otro centro"],
+	ANTITROMB_PREVIO: [
+		"Ninguno",
+		"AAS",
+		"Clopidogrel",
+		"Otro antiagregante",
+		"Anticoagulante anti-Vit. K",
+		"Anticoagulante directo (DOAC)",
+		"Heparina / HBPM"
+	],
 	PRESC_MOT: [
 		"Sí",
 		"No, con motivo documentado",
@@ -22468,7 +22477,7 @@ function resumenWhatsApp(d, cat, quien, cargaIso) {
 		"Sexo / Edad: " + nn(d.sexo) + " · " + nn(d.edad) + (vacio$1(d.edad) ? "" : " años"),
 		"Fecha del evento: " + (f ? f[3] + "/" + f[2] + "/" + f[1] : "—"),
 		"Modo de ingreso: " + nn(d.modoIngreso),
-		"Tipo de evento: " + nn(d.tipo),
+		"Tipo de evento: " + (vacio$1(d.tipo) ? "a definir" : String(d.tipo)),
 		"🕒 Inicio de síntomas: " + inicio,
 		pl ? "Presentación: " + pl : "NIHSS: " + nn(nihTexto(d, cat))
 	];
@@ -22478,9 +22487,43 @@ function resumenWhatsApp(d, cat, quien, cargaIso) {
 	L.push("mRS previo: " + nn(d.mrsPrevio), "TA: " + nn(taTexto(d)), "Glucemia: " + (vacio$1(d.glucemia) ? "—" : d.glucemia + " mg/dL"), "ECG: " + nn(ecgTexto(d)));
 	if (d.tipo === "AIT") L.push("ABCD2: " + abcd2Texto(d, cat));
 	if (d.tipo === "Hemorrágico") L.push("Localización: " + nn(lista(d.hicLocaliza).join(", ")), "Volumen: " + (vacio$1(d.hicVolumen) ? "—" : d.hicVolumen + " mL"), "Anticoagulado: " + nn(siNo(d.hicAnticoag)));
-	L.push("FRV: " + nn(lista(d.frv).join(", ")), "FR atípicos: " + nn(lista(d.frvAtipicos).join(", ")), "Antecedentes familiares: " + nn(lista(d.antFamiliares).join(", ")), "Cargado por: " + nn(quien), "Notas: " + nn(d.notas));
+	L.push("FRV: " + nn(lista(d.frv).join(", ")), "FR atípicos: " + nn(lista(d.frvAtipicos).join(", ")), "Antecedentes familiares: " + nn(lista(d.antFamiliares).join(", ")));
+	if (!vacio$1(d.llegadaTipo)) L.push("Llegada: " + d.llegadaTipo);
+	L.push("Antitrombótico previo: " + nn(lista(d.antitromboticoPrevio).join(", ")));
+	if (libre(d.relatoIngreso)) L.push("📝 Relato: " + libre(d.relatoIngreso));
+	if (libre(d.estudiosIngreso)) L.push("Estudios: " + libre(d.estudiosIngreso));
+	if (libre(d.preguntaStaff)) L.push("❓ Pregunta: " + libre(d.preguntaStaff));
+	L.push("Cargado por: " + nn(quien), "Notas: " + nn(libre(d.notas)));
 	return L.join("\n");
 }
+function faltaDecision(d) {
+	const t = String(d.tipo || ""), f = [];
+	if (!t) return ["tipo de evento"];
+	if (t === "Isquémico" || t === "Amaurosis fugaz") {
+		if (vacio$1(d.ocsp)) f.push("OCSP");
+		if (d.trombolisis == null) f.push("trombólisis (sí/no)");
+		if (d.trombectomia == null) f.push("trombectomía (sí/no)");
+	} else if (t === "AIT") {
+		if (vacio$1(d.territorio)) f.push("territorio");
+		if (vacio$1(d.txAlta)) f.push("antitrombótico inicial");
+	} else if (t === "Hemorrágico") {
+		if (vacio$1(d.hicLocaliza)) f.push("localización de la hemorragia");
+	} else if (t === "Disección" || t === "Trombosis venosa") {
+		if (vacio$1(d.txAlta)) f.push("antitrombótico inicial");
+	}
+	return f;
+}
+new TextEncoder();
+function deB64u(s) {
+	const t = atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
+	return Uint8Array.from(t, (c) => c.charCodeAt(0));
+}
+var proyecto_default = {
+	$comment: "Proyecto de Supabase del Registro (datos reales desde el 28/10/2026). Sólo la URL y la clave PUBLICABLE, que es pública por diseño (va en la web publicada); la secreta nunca entra al repo. vapidPublica: clave PÚBLICA de Web Push (la privada, en el Llavero rnv-vapid-privada y en los secretos de avisos-push).",
+	url: "https://xynzajsqixkohvbezsvy.supabase.co",
+	publica: "sb_publishable_hflnUDn9TK376hqujaL7qw_f5yvEFwG",
+	vapidPublica: "BGAXvNwAAwSBeBVrgCtRL-y6XghUieFm5PQQqCNu6lkI790FWjOG8Q15PheHpKz4a0Ad9aA-Ws4S8_C5LPimSps"
+};
 // src/web/residente.ts
 var SISTEMA = [
 	"id",
@@ -22500,6 +22543,7 @@ var CHIPS = {
 	pres: "presentacion",
 	hicLoc: "hicLocaliza",
 	txAlta: "txAlta",
+	atPrevio: "antitromboticoPrevio",
 	tvc: "tvcSenos",
 	disTto: "disTto",
 	disSignos: "disSignos",
@@ -22510,6 +22554,7 @@ var ctx;
 var mis = /* @__PURE__ */ new Set();
 var pedidos = [];
 var ultimaAlta = "";
+var completa = false;
 var LS = () => "rnv_res_" + ctx.uid;
 function guardarLocal() {
 	try {
@@ -22591,12 +22636,13 @@ function barra() {
 	}
 	const t = (v, txt) => `<button type="button" class="${view === v ? "on" : ""}" data-v="${v}">${txt}</button>`;
 	b.innerHTML = `<div class="rnv-res-quien"><b>Registro Neurovascular</b> · residente: ${esc(ctx.nombre)}</div>
-    <div class="rnv-res-tabs">${t("form", "Nueva carga")}${t("list", "Mis cargas")}${t("dash", "Pedidos de reperfusión" + (pedidos.length ? ` (${pedidos.length})` : ""))}</div>`;
+    <div class="rnv-res-tabs">${t("form", "Consulta al staff")}${t("list", "Mis cargas")}${t("dash", "Pedidos de reperfusión" + (pedidos.length ? ` (${pedidos.length})` : ""))}</div>`;
 	b.querySelectorAll("button").forEach((x) => x.addEventListener("click", () => {
 		const v = x.dataset.v;
 		if (v === "form") {
 			editId = null;
 			draft = blank();
+			completa = false;
 		}
 		go(v);
 	}));
@@ -22614,17 +22660,22 @@ function vMisCargas() {
     ${nueva ? `<div class="rnv-res-card"><b>Carga guardada.</b> ¿Mandás el resumen al grupo de WhatsApp?
       <div><button type="button" class="btn sm primary" data-wa="${esc(ultimaAlta)}">Resumen para WhatsApp</button>
       <button type="button" class="btn sm ghost" id="rnvResNo">Ahora no</button></div></div>` : ""}
-    <div class="rnv-res-top"><h2>Mis cargas</h2><button type="button" class="btn primary" id="rnvResNueva">Nueva carga</button></div>
+    ${avisosHtml()}
+    <div class="rnv-res-top"><h2>Mis cargas</h2><button type="button" class="btn primary" id="rnvResNueva">Consulta al staff</button></div>
     ${L.length ? `<div class="rnv-res-lista">${L.map((f) => `<div class="rnv-res-item">
       <div><b>${esc(f.nombre || "(sin nombre)")}</b> <span class="mono">${esc(f.documento || "")}</span><br>
-      <span class="rnv-res-sub">${esc(f.tipo || "—")} · ${esc(f.fechaACV || "sin fecha")} · NIHSS ${esc(f.nihss ?? "—")}${ctx.pendiente(f.id) ? " · <b>sin subir</b>" : ""}</span></div>
-      <div class="rnv-res-acc"><button type="button" class="btn sm ghost" data-ed="${esc(f.id)}">Editar</button>
+      <span class="rnv-res-sub">${esc(f.tipo || "tipo a definir")} · ${esc(f.fechaACV || "sin fecha")} · NIHSS ${esc(f.nihss ?? "—")}${ctx.pendiente(f.id) ? " · <b>sin subir</b>" : ""}</span>${relojHtml(f)}</div>
+      <div class="rnv-res-acc"><button type="button" class="btn sm ${faltaDecision(f).length ? "primary" : "ghost"}" data-ed="${esc(f.id)}">${faltaDecision(f).length ? "Completar" : "Editar"}</button>
       <button type="button" class="btn sm ghost" data-wa="${esc(f.id)}">WhatsApp</button></div></div>`).join("")}</div>` : "<p class=\"rnv-res-vacio\">Todavía no cargaste ningún paciente desde este teléfono.</p>"}</div>`;
 	const m = document.getElementById("main");
 	m.querySelector("#rnvResNueva").addEventListener("click", () => {
 		editId = null;
 		draft = blank();
+		completa = false;
 		go("form");
+	});
+	m.querySelector("#rnvResAvisos")?.addEventListener("click", () => {
+		activarAvisos();
 	});
 	m.querySelector("#rnvResNo")?.addEventListener("click", () => {
 		ultimaAlta = "";
@@ -22634,7 +22685,219 @@ function vMisCargas() {
 		wa(b.dataset.wa);
 		ultimaAlta = "";
 	}));
-	m.querySelectorAll("[data-ed]").forEach((b) => b.addEventListener("click", () => abrirFicha(b.dataset.ed)));
+	m.querySelectorAll("[data-ed]").forEach((b) => b.addEventListener("click", () => completar(b.dataset.ed)));
+}
+function completar(id) {
+	completa = true;
+	abrirFicha(id);
+	const f = DB.find((x) => x && x.id === id);
+	if (f && faltaDecision(f).length) setTimeout(() => document.getElementById(String(f.tipo || "") ? "secImagen" : "formHost")?.scrollIntoView({ block: "start" }), 50);
+}
+function consultaMs(f) {
+	const c = String(f.consultaEn || "");
+	return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(c) ? new Date(c).getTime() : Date.parse(String(f.creado || ""));
+}
+function relojHtml(f) {
+	const falta = faltaDecision(f);
+	if (!falta.length) return "<br><span class=\"rnv-res-sub\">Clasificado y con tratamiento decidido</span>";
+	const t = consultaMs(f), min = Number.isFinite(t) ? Math.max(0, Math.round((Date.now() - t) / 6e4)) : NaN;
+	if (Number.isFinite(min) && min > 1440) return "<br><span class=\"rnv-res-sub\">Falta: " + esc(falta.join(", ")) + "</span>";
+	return `<br><span class="rnv-res-reloj${Number.isFinite(min) && min >= 30 ? " tarde" : ""}">${Number.isFinite(min) ? "hace " + min + " min · " : ""}falta: ${esc(falta.join(", "))}</span>`;
+}
+function avisosHtml() {
+	const soporta = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+	if (soporta && Notification.permission === "granted" && localStorage.getItem(LS() + "_push") === "1") return "";
+	if (!soporta) return `<div class="rnv-res-card alerta"><b>Avisos en este teléfono</b>${/iPhone|iPad|iPod/.test(navigator.userAgent) ? "En iPhone los avisos llegan sólo si la app está en la pantalla de inicio: Compartir → «Agregar a inicio», y abrila desde ese ícono." : "Este navegador no recibe notificaciones. Abrí el link en Chrome."}</div>`;
+	if (Notification.permission === "denied") return "<div class=\"rnv-res-card alerta\"><b>Avisos bloqueados</b>Para recibir el recordatorio de los 30 minutos, permití las notificaciones de esta página en la configuración del navegador.</div>";
+	return `<div class="rnv-res-card"><b>Recordatorio de los 30 minutos</b>Si a los 30 minutos de la consulta el caso no está clasificado y con el tratamiento decidido, te llega un aviso a este teléfono (sólo con el Nº de orden).
+    <div><button type="button" class="btn sm primary" id="rnvResAvisos">Activar avisos</button></div></div>`;
+}
+async function activarAvisos() {
+	try {
+		if (await Notification.requestPermission() !== "granted") {
+			toast("Sin permiso, no llegan los avisos");
+			vMisCargas();
+			return;
+		}
+		const reg = await navigator.serviceWorker.ready;
+		const j = (await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({
+			userVisibleOnly: true,
+			applicationServerKey: deB64u(proyecto_default.vapidPublica)
+		})).toJSON();
+		const { error } = await ctx.sb.from("push_suscripciones").upsert({
+			endpoint: j.endpoint,
+			user_id: ctx.uid,
+			p256dh: j.keys.p256dh,
+			auth: j.keys.auth,
+			modificado_en: (/* @__PURE__ */ new Date()).toISOString()
+		});
+		if (error) throw error;
+		localStorage.setItem(LS() + "_push", "1");
+		const { data } = await ctx.sb.functions.invoke("avisos-push", { body: { tipo: "prueba" } });
+		toast(data?.resultado === "enviado" ? "Avisos activados: te llegó uno de prueba" : "Avisos activados");
+	} catch (e) {
+		toast("No se pudieron activar los avisos: " + String(e.message || e).slice(0, 120));
+	}
+	vMisCargas();
+}
+function abrirDesdeAviso(url) {
+	const m = /#ficha=([^&]+)$/.exec(url);
+	if (m && DB.some((f) => f && f.id === decodeURIComponent(m[1]))) completar(decodeURIComponent(m[1]));
+}
+var FRV_CONSULTA = [
+	"HTA",
+	"Diabetes",
+	"Dislipemia",
+	"Tabaquismo",
+	"Fibrilación auricular",
+	"Cardiopatía isquémica",
+	"ACV/AIT previo"
+];
+var C = catalogos_default;
+var lst = (k) => C[k];
+function opciones(L, v, vacio = "—") {
+	return `<option value="">${esc(vacio)}</option>` + L.map((x) => `<option${x === v ? " selected" : ""}>${esc(x)}</option>`).join("");
+}
+function chips(id, L, sel) {
+	const s = Array.isArray(sel) ? sel.map(String) : [];
+	return `<div class="chips" id="${id}">${L.map((x) => `<span class="chip${s.includes(x) ? " on" : ""}" data-f="${esc(x)}" tabindex="0" role="button" aria-pressed="${s.includes(x)}">${esc(x)}</span>`).join("")}</div>`;
+}
+function vConsulta() {
+	barra();
+	const d = draft;
+	const ait = d.tipo === "AIT";
+	const modos = lst("MODO_ING").filter((x) => !lst("MODO_ING_FUERA_DE_PLANILLA").includes(x));
+	const par = (x) => Array.isArray(x) ? String(x[0]) : String(x);
+	document.getElementById("main").innerHTML = `<div class="rnv-res rnv-cons">
+    <div class="rnv-res-top"><h2>Consulta al staff</h2></div>
+    <p class="rnv-res-sub">Lo que mandarías al grupo, en un minuto. Lo que no sepas, dejalo vacío: la clasificación se completa después de la respuesta del staff.</p>
+    <fieldset><legend>Paciente</legend>
+      <label>Apellido y nombre<input id="c_nombre" autocomplete="off" value="${esc(d.nombre || "")}"></label>
+      <div class="rnv-cons-fila"><label>Documento<input id="c_documento" inputmode="numeric" value="${esc(d.documento || "")}"></label>
+        <label>Edad<input id="c_edad" type="number" min="0" max="120" inputmode="numeric" value="${esc(d.edad ?? "")}"></label>
+        <label>Sexo<select id="c_sexo">${opciones(["F", "M"], d.sexo)}</select></label></div>
+      <div class="rnv-cons-fila"><label>Llegada<select id="c_llegadaTipo">${opciones(lst("LLEGADA"), d.llegadaTipo)}</select></label>
+        <label>Modo de ingreso<select id="c_modoIngreso">${opciones(modos, d.modoIngreso)}</select></label></div>
+    </fieldset>
+    <fieldset><legend>Antecedentes</legend>${chips("c_frv", FRV_CONSULTA, d.frv)}
+      <div class="rnv-cons-sub">Antitrombótico previo</div>${chips("c_atPrevio", lst("ANTITROMB_PREVIO"), d.antitromboticoPrevio)}</fieldset>
+    <fieldset><legend>Qué pasó y cuándo</legend>
+      <label>Relato<textarea id="c_relatoIngreso" rows="4" placeholder="Síntomas, evolución, examen positivo…">${esc(d.relatoIngreso || "")}</textarea></label>
+      <div class="rnv-cons-fila"><label>Inicio<select id="c_tipoInicio">${opciones(lst("TIPO_INICIO"), d.tipoInicio)}</select></label>
+        <label>Fecha y hora<input id="c_fechaLKW" type="datetime-local" value="${esc(d.fechaLKW || "")}"></label></div>
+    </fieldset>
+    <fieldset><legend>Examen</legend>
+      <div class="rnv-cons-fila"><label>NIHSS<input id="c_nihss" type="number" min="0" max="42" inputmode="numeric" value="${esc(d.nihss ?? "")}"></label>
+        <label>TA sistólica<input id="c_taSist" type="number" inputmode="numeric" value="${esc(d.taSist ?? "")}"></label>
+        <label>TA diastólica<input id="c_taDiast" type="number" inputmode="numeric" value="${esc(d.taDiast ?? "")}"></label>
+        <label>Glucemia<input id="c_glucemia" type="number" inputmode="numeric" value="${esc(d.glucemia ?? "")}"></label></div>
+      <div class="rnv-cons-fila" id="c_abcd2"${ait ? "" : " hidden"}><label>ABCD2 · clínica<select id="c_abcd2Clin">${opciones(lst("ABCD2_CLIN").map(par), d.abcd2Clin)}</select></label>
+        <label>ABCD2 · duración<select id="c_abcd2Dur">${opciones(lst("ABCD2_DUR").map(par), d.abcd2Dur)}</select></label></div>
+    </fieldset>
+    <fieldset><legend>Estudios y sospecha</legend>
+      <label>Estudios hechos y pedidos<textarea id="c_estudiosIngreso" rows="2" placeholder="TC, RM, angio-TC, ECG…">${esc(d.estudiosIngreso || "")}</textarea></label>
+      <label>Sospecha<select id="c_tipo">${opciones(lst("TIPOS"), d.tipo, "A definir")}</select></label>
+      <label>Pregunta al staff<textarea id="c_preguntaStaff" rows="2" placeholder="¿Lo internamos? ¿Trombolizamos?">${esc(d.preguntaStaff || "")}</textarea></label>
+    </fieldset>
+    <div class="rnv-cons-acc"><button type="button" class="btn primary" id="c_mandar">Guardar y mandar al grupo</button>
+      <button type="button" class="btn ghost" id="c_completa">Completar la ficha</button></div>
+  </div>`;
+	const m = document.getElementById("main");
+	m.querySelectorAll(".chips .chip").forEach((c) => {
+		const tog = () => {
+			const k = c.parentElement.id === "c_frv" ? "frv" : "antitromboticoPrevio", t = c.dataset.f;
+			let a = Array.isArray(d[k]) ? d[k].slice() : [];
+			if (a.includes(t)) a = a.filter((x) => x !== t);
+			else a = k === "antitromboticoPrevio" && t === "Ninguno" ? [t] : a.filter((x) => !(k === "antitromboticoPrevio" && x === "Ninguno")).concat([t]);
+			d[k] = a;
+			c.parentElement.querySelectorAll(".chip").forEach((x) => {
+				const on = a.includes(x.dataset.f);
+				x.classList.toggle("on", on);
+				x.setAttribute("aria-pressed", String(on));
+			});
+		};
+		c.addEventListener("click", tog);
+		c.addEventListener("keydown", (e) => {
+			if (e.key === "Enter" || e.key === " ") {
+				e.preventDefault();
+				tog();
+			}
+		});
+	});
+	m.querySelector("#c_tipo").addEventListener("change", (e) => {
+		m.querySelector("#c_abcd2").hidden = e.target.value !== "AIT";
+	});
+	m.querySelector("#c_mandar").addEventListener("click", () => guardarConsulta(true));
+	m.querySelector("#c_completa").addEventListener("click", () => {
+		leerConsulta();
+		completa = true;
+		go("form");
+	});
+}
+function leerConsulta() {
+	const v = (id) => (document.getElementById("c_" + id)?.value ?? "").trim();
+	const n = (id) => {
+		const x = v(id);
+		return x === "" || !Number.isFinite(Number(x)) ? null : Number(x);
+	};
+	const d = draft;
+	for (const k of [
+		"nombre",
+		"documento",
+		"sexo",
+		"llegadaTipo",
+		"modoIngreso",
+		"relatoIngreso",
+		"tipoInicio",
+		"estudiosIngreso",
+		"tipo",
+		"preguntaStaff"
+	]) d[k] = v(k);
+	for (const k of [
+		"edad",
+		"nihss",
+		"taSist",
+		"taDiast",
+		"glucemia"
+	]) d[k] = n(k);
+	d.fechaLKW = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v("fechaLKW")) ? v("fechaLKW").slice(0, 16) : "";
+	if (!d.fechaACV && d.fechaLKW) d.fechaACV = String(d.fechaLKW).slice(0, 10);
+	if (d.tipo === "AIT") {
+		d.abcd2Clin = v("abcd2Clin");
+		d.abcd2Dur = v("abcd2Dur");
+		if (d.abcd2PA == null && d.taSist != null && d.taDiast != null) d.abcd2PA = Number(d.taSist) >= 140 || Number(d.taDiast) >= 90;
+	}
+}
+function horaLocal() {
+	const x = /* @__PURE__ */ new Date(), p = (k) => String(k).padStart(2, "0");
+	return x.getFullYear() + "-" + p(x.getMonth() + 1) + "-" + p(x.getDate()) + "T" + p(x.getHours()) + ":" + p(x.getMinutes());
+}
+function guardarConsulta(mandar) {
+	leerConsulta();
+	const d = draft;
+	if (!d.nombre) {
+		toast("Falta el nombre del paciente");
+		document.getElementById("c_nombre")?.focus();
+		return;
+	}
+	if (!d.consultaEn) d.consultaEn = horaLocal();
+	const ahora = nowISO();
+	d.creado = d.creado || ahora;
+	d.modificado = ahora;
+	d.id = uid();
+	const hook = window.RNV_FICHA_NUEVA;
+	if (hook) hook(d);
+	DB.push(d);
+	save();
+	toast("Consulta guardada ✓");
+	if (mandar) {
+		wa(d.id);
+		ultimaAlta = "";
+	}
+	editId = null;
+	draft = blank();
+	completa = false;
+	go("list");
 }
 function vPedidos() {
 	barra();
@@ -22672,10 +22935,18 @@ function iniciar$2(c) {
 	const w = window;
 	const vFormApp = w.vForm;
 	w.vForm = () => {
+		if (!editId && !completa) {
+			vConsulta();
+			return;
+		}
 		vFormApp();
 		barra();
 		filtrarFicha();
 	};
+	navigator.serviceWorker?.addEventListener("message", (e) => {
+		const x = e.data;
+		if (x?.rnv === "abrir" && x.url) abrirDesdeAviso(x.url);
+	});
 	w.vList = vMisCargas;
 	w.vDash = vPedidos;
 	w.vT1 = vMisCargas;
@@ -22684,6 +22955,11 @@ function iniciar$2(c) {
 	w.repAuto = () => {};
 	w.openFopWizard = () => {};
 	go("list");
+	if (/^#ficha=/.test(location.hash)) {
+		const h = location.hash;
+		history.replaceState(null, "", location.pathname);
+		abrirDesdeAviso(h);
+	}
 	toast("Entraste como residente");
 }
 // src/web/cola.ts
@@ -22879,26 +23155,18 @@ var SIST = [
 	"creado",
 	"modificado"
 ];
-function actividadResidentes(filas, residentes, desde) {
-	const t = (s) => s ? Date.parse(s) : NaN, d = t(desde), out = {};
+function pendientesValidacion(filas, residentes) {
+	const out = {};
 	for (const f of filas) {
-		const creo = !!f.creado_por && residentes.has(f.creado_por) && t(f.creado_en) >= d;
-		let ed = null;
-		for (const [k, m] of Object.entries(f.campos_meta || {})) if (!SIST.includes(k) && m && m.por && m.en && residentes.has(m.por) && !(ed && t(ed.en) >= t(m.en))) ed = {
-			por: m.por,
-			en: m.en
-		};
-		if (!!ed && t(ed.en) >= d && (!creo || t(ed.en) > t(f.creado_en) + 12e4)) out[f.id] = {
-			quien: residentes.get(ed.por),
-			en: ed.en,
-			tipo: "editada",
-			nueva: creo
-		};
-		else if (creo) out[f.id] = {
-			quien: residentes.get(f.creado_por),
-			en: f.creado_en,
-			tipo: "nueva",
-			nueva: true
+		const campos = (f.campos || []).filter((k) => !SIST.includes(k));
+		if (!campos.length) continue;
+		const nueva = !!f.creado_por && residentes.has(f.creado_por) && !f.validado_en;
+		out[f.id] = {
+			quien: residentes.get(f.quien) || "residente",
+			en: f.en,
+			tipo: nueva ? "nueva" : "editada",
+			nueva,
+			campos
 		};
 	}
 	return out;
@@ -23468,7 +23736,10 @@ var CIFRADO_VALOR = [
 	"ecgDetalle",
 	"imagen",
 	"doacDetalle",
-	"notas"
+	"notas",
+	"relatoIngreso",
+	"estudiosIngreso",
+	"preguntaStaff"
 ];
 var CIFRADO_NOTA = ["controles", "txCambios"];
 var esCifrado = (k) => CIFRADO_VALOR.includes(k) || CIFRADO_NOTA.includes(k);
@@ -24115,21 +24386,29 @@ async function cargasResidentes() {
 	const { data: per, error: e1 } = await sb.from("perfiles").select("user_id, nombre").eq("rol", "residente");
 	if (e1) throw e1;
 	const nom = new Map(per.map((p) => [p.user_id, p.nombre]));
-	const desde = (/* @__PURE__ */ new Date(Date.now() - 2592e6)).toISOString();
-	const filas = [];
-	if (nom.size) for (let i = 0;; i += 1e3) {
-		const { data, error } = await sb.from("eventos").select("id, creado_por, creado_en, campos_meta").gte("modificado_en", desde).is("borrado_en", null).order("id").range(i, i + 999);
-		if (error) throw error;
-		filas.push(...data);
-		if (data.length < 1e3) break;
+	const { data, error } = await sb.rpc("pendientes_validacion");
+	if (error) {
+		if (error.code === "PGRST202" || /pendientes_validacion/.test(error.message || "")) return;
+		throw error;
 	}
 	actividadRev = est.rev;
-	const txt = JSON.stringify(actividadResidentes(filas, nom, desde));
+	const txt = JSON.stringify(pendientesValidacion(data || [], nom));
 	if (localStorage.getItem(CARGAS_RES) === txt) return;
 	localStorage.setItem(CARGAS_RES, txt);
 	if (view !== "form") try {
 		render();
 	} catch {}
+}
+async function validar(id) {
+	const { error } = await sb.rpc("validar_evento", { p_id: id });
+	if (error) return false;
+	try {
+		const c = JSON.parse(localStorage.getItem(CARGAS_RES) || "{}");
+		delete c[id];
+		localStorage.setItem(CARGAS_RES, JSON.stringify(c));
+	} catch {}
+	actividadRev = -1;
+	return true;
 }
 function esDeRed(e) {
 	const x = e;
@@ -24469,6 +24748,7 @@ async function iniciar(opc = {}) {
 		if (rol === "residente" && f.id) nuevaCarga(f.id);
 	};
 	window.RNV_TRAS_GUARDAR = encolar;
+	window.RNV_VALIDAR = (id) => rol === "jefe" ? validar(id) : Promise.resolve(false);
 	insignia();
 	let errLink = "";
 	if (!LOCAL) {

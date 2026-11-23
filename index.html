@@ -244,7 +244,7 @@
   /* Pantallazo del paciente (31/10): globo al pasar sobre el nombre de la ficha */
   .pacnom{cursor:help;border-bottom:1px dotted var(--border-strong);outline:none}
   .pacnom:hover,.pacnom:focus-visible{border-bottom-color:var(--accent)}
-  #pzTip{position:fixed;z-index:1001;width:max-content;max-width:min(440px,92vw);background:var(--surface);color:var(--ink);border:1px solid var(--border-strong);border-radius:10px;padding:10px 13px;font-size:12.5px;line-height:1.4;pointer-events:none;box-shadow:0 6px 22px rgba(0,0,0,.16);display:none}
+  #pzTip{position:fixed;z-index:1001;width:max-content;max-width:min(540px,94vw);background:var(--surface);color:var(--ink);border:1px solid var(--border-strong);border-radius:10px;padding:10px 13px;font-size:12.5px;line-height:1.4;pointer-events:none;box-shadow:0 6px 22px rgba(0,0,0,.16);display:none}
   #pzTip .pz-cab{font-weight:640;margin-bottom:7px;color:var(--ink)}
   #pzTip .pz-g{display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
   #pzTip .pz-k{color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.03em;padding-top:1px;white-space:nowrap}
@@ -748,6 +748,50 @@
   .inst-sede.nc{background:var(--allende);color:var(--surface)}
   .inst-sede.cerro{border:1px solid var(--allende);color:var(--allende);padding:1px 3px}
   .inst-otra{color:var(--ink-3);display:inline-flex} .inst-otra svg{width:13px;height:13px}
+
+  /* Monitoreo de protocolos (22/11): vista «Protocolos», mismo dato que la card del briefing. Sólo tokens. */
+  .pm-sello{font-size:12px;color:var(--ink-3);margin:-8px 0 12px}
+  .pm-sello.viejo{color:var(--warn);font-weight:600}
+  .pm-sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .pm-chip{font-size:12px;padding:2px 11px;border-radius:20px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border)}
+  .pm-chip b{color:var(--ink);font-family:var(--mono)}
+  .pm-chip.rojo{background:var(--crit-wash);color:var(--crit);border-color:transparent}.pm-chip.rojo b{color:var(--crit)}
+  .pm-chip.azul{background:var(--accent-wash);color:var(--accent-ink);border-color:transparent}.pm-chip.azul b{color:var(--accent-ink)}
+  .pm-nov{border-left:3px solid var(--accent);background:var(--accent-wash);border-radius:var(--radius-sm);padding:9px 13px;margin-bottom:16px}
+  .pm-nov-h{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-ink);font-weight:650;margin-bottom:3px}
+  .pm-nov ul{margin:0;padding-left:18px;font-size:13px}
+  .pm-inst{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:650;margin:18px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+  .pm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:12px}
+  .pm-card{padding:13px 15px}
+  .pm-card.con-nov{border-color:var(--accent)}
+  .pm-nom{font-weight:650;font-size:13.5px;line-height:1.35}
+  .pm-spon{font-size:11.5px;color:var(--ink-3)}
+  .pm-est{display:inline-block;margin:7px 0 4px;font-size:12px;padding:1px 9px;border-radius:6px;background:var(--good-wash);color:var(--good);font-weight:600}
+  .pm-est.cambio{background:var(--accent-wash);color:var(--accent-ink)}
+  .pm-antes,.pm-otros{font-size:11.5px;color:var(--ink-3);margin-bottom:3px}
+  .pm-otros span{color:var(--ink-2)}
+  .pm-badge{font-size:10.5px;font-weight:650;padding:1px 7px;border-radius:20px;background:var(--accent);color:var(--surface);margin-left:4px;vertical-align:1px}
+  .pm-badge.nuevo{background:var(--c4)}
+  .pm-pend{list-style:none;margin:4px 0 0;padding:0}
+  .pm-pend li{font-size:12.8px;line-height:1.45;padding:5px 0;border-top:1px dashed var(--border)}
+  .pm-pend li:first-child{border-top:none}
+  .pm-crit{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--crit);margin-right:6px;vertical-align:1px}
+  .pm-tag{display:inline-block;font-size:10px;font-weight:700;padding:0 6px;border-radius:4px;margin-right:6px;background:var(--surface-2);color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em}
+  .pm-tag.foco{background:var(--warn-wash);color:var(--warn)}
+  .pm-vence{font-size:11px;color:var(--ink-3);white-space:nowrap}.pm-vence.ya{color:var(--crit);font-weight:600}
+  .pm-nuevo{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase}
+  .pm-arr{font-size:11px;color:var(--ink-3);font-style:italic}
+  .pm-ev{font-size:11px;white-space:nowrap;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:2px}
+  .pm-ev svg{width:11px;height:11px}
+  .pm-vacio{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+  .pm-mas{margin-top:6px}.pm-mas summary{font-size:11.5px;color:var(--ink-3);cursor:pointer}
+  .pm-hitos{margin:4px 0 0;padding-left:16px;font-size:12px;color:var(--ink-2)}
+  .pm-pie{font-size:11.5px;color:var(--ink-3);margin-top:16px}
+  .pm-reg{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--ink-2);margin:6px 0 2px}
+  .pm-reg.sin{color:var(--ink-3)}
+  .pm-lnk{background:none;border:none;padding:0;color:var(--accent);font-size:11.5px;text-decoration:underline;cursor:pointer}
+  .pm-cfg{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--ink-2);margin-top:8px}
+  .pm-vinc{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);max-width:100%}
 </style>
 
 <div class="app">
@@ -762,6 +806,7 @@
       <button data-v="form"><span class="ic" data-ic="plus"></span><span>Nuevo / Editar</span></button>
       <button data-v="t1"><span class="ic" data-ic="table"></span><span>Tabla</span></button>
       <button data-v="agenda"><span class="ic" data-ic="cal"></span><span>Agenda</span></button>
+      <button data-v="prot"><span class="ic" data-ic="flask"></span><span>Protocolos</span></button>
       <button data-v="cal"><span class="ic" data-ic="up"></span><span>Calidad</span></button>
       <button data-v="cfg"><span class="ic" data-ic="gear"></span><span>Configuración</span></button>
     </nav>
@@ -1197,6 +1242,7 @@ function icon(n){const p={
   cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  flask:'<path d="M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3"/><path d="M7.5 15h9"/>',
   ext:'<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
 }[n]||'';return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
 
@@ -4660,7 +4706,7 @@ function filtered(){
 /* ---------- views ---------- */
 let view='dash';
 function go(v){view=v;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render()}
-function render(){$('#navCount').textContent=DB.length;navNuevasPintar();({dash:vDash,list:vList,form:vForm,t1:vT1,cal:vCal,agenda:vAgenda,hcimp:vHcImp,cfg:vCfg}[view])();}
+function render(){$('#navCount').textContent=DB.length;navNuevasPintar();({dash:vDash,list:vList,form:vForm,t1:vT1,cal:vCal,agenda:vAgenda,hcimp:vHcImp,cfg:vCfg,prot:vProt}[view])();}
 
 /* ===== DASHBOARD ===== */
 function vDash(){
@@ -7796,34 +7842,80 @@ function openHcReport(){
 /* ===== Pantallazo del paciente (2026-10-31) =====
    Pedido de Juan: con la ficha abierta, pasar el mouse sobre el nombre del encabezado muestra un resumen muy corto
    de lo más relevante que ya está cargado. Mismas reglas que el reporte: sólo lo que tiene dato (un «No» de
-   reperfusión sí aparece), y desde `draft` después de `collect()`, o sea lo que está en pantalla. */
+   reperfusión sí aparece), y desde `draft` después de `collect()`, o sea lo que está en pantalla.
+   Ampliado el 23/11 (Juan): que alcance para saber qué le pasó al paciente — clínica (síndrome, déficits del
+   NIHSS por ítems, rasgos de la presentación, inicio), vaso (sitio de oclusión, arteria disecada, senos,
+   estenosis), imagen, estudios etiológicos y notas. */
+/* Déficits que dejan los ítems del NIHSS cargados, en palabras: «afasia grave, hemiparesia derecha». Sólo los ítems
+   con puntaje > 0; el motor se agrupa por lado (brazo + pierna = hemiparesia; 4 en los dos = hemiplejía). */
+function pzDeficits(d){
+  const it=nihItems(d),v=k=>typeof it[k]==='number'?it[k]:0,o=[];
+  if(v('1a')>=1)o.push(['','somnolencia','estupor','coma'][v('1a')]);
+  if(v('2')>=1)o.push(v('2')===2?'desviación forzada de la mirada':'paresia de la mirada');
+  if(v('3')>=1)o.push(['','hemianopsia parcial','hemianopsia completa','ceguera cortical'][v('3')]);
+  [['izquierda','5a','6a'],['derecha','5b','6b']].forEach(([l,b,p])=>{const B=v(b),P=v(p);if(!B&&!P)return;
+    o.push(B&&P?(B===4&&P===4?'hemiplejía ':'hemiparesia ')+l:(B?'paresia braquial ':'paresia crural ')+l)});
+  if(v('4')>=2)o.push('paresia facial'+(v('4')===3?' completa':''));
+  if(v('9')>=1)o.push(['','afasia leve a moderada','afasia grave','afasia global'][v('9')]);
+  if(v('10')>=1)o.push(v('10')===2?'disartria grave':'disartria');
+  if(v('8')>=1)o.push(v('8')===2?'hipoestesia grave':'hipoestesia');
+  if(v('7')>=1)o.push('ataxia de '+(v('7')===2?'dos miembros':'un miembro'));
+  if(v('11')>=1)o.push('negligencia');
+  return o}
 function pantallazoHtml(d){
   const R=[],row=(k,v)=>{if(v)R.push(`<div class="pz-k">${esc(k)}</div><div class="pz-v">${esc(v)}</div>`)};
   const sx={F:'Mujer',M:'Varón'}[d.sexo];
   const dias=diasDesde(d.fechaACV);
   const cab=[[sx,d.edad!=null?d.edad+' años':''].filter(Boolean).join(', '),d.nOrden!=null?'Nº '+d.nOrden:'',
     d.fechaACV?hcFecha(d.fechaACV)+(dias!=null&&dias>=0?' (hace '+dias+' día'+(dias!==1?'s':'')+')':''):(d.anio?String(d.anio):'')].filter(Boolean).join(' · ');
-  row('Evento',[HC_TIPO[d.tipo]||d.tipo,d.toast,ocspList(d).join(' + '),terrTxt(d)?'territorio '+terrTxt(d).toLowerCase():'',d.lado?'lado '+d.lado.toLowerCase():''].filter(Boolean).join(' · '));
+  const st=sindTxt(d);
+  row('Evento',[HC_TIPO[d.tipo]||d.tipo,d.toast,st?'':ocspList(d).join(' + '),terrTxt(d)?'territorio '+terrTxt(d).toLowerCase():'',d.lado?'lado '+d.lado.toLowerCase():''].filter(Boolean).join(' · '));
+  {const pr=presList(d).map(k=>PRES_LAB[k]||k).map(l=>/^[A-Z]{2}/.test(l)?l:l.charAt(0).toLowerCase()+l.slice(1));
+   const def=pzDeficits(d),ini=d.tipoInicio===TIPO_INICIO[0]?'inicio presenciado':d.tipoInicio===TIPO_INICIO[1]?'inicio desconocido (LKW)':(d.tipoInicio||'');
+   let c=[st,def.join(', '),pr.join(', ')].filter(Boolean).join(' · ');
+   if(c)c=c.charAt(0).toUpperCase()+c.slice(1);
+   row('Clínica',[c,ini].filter(Boolean).join(' · '))}
+  {const v=[];
+   if(d.oclusionSitio)v.push(/^Otra/.test(d.oclusionSitio)?'oclusión: '+d.oclusionSitio.toLowerCase():'oclusión '+d.oclusionSitio);
+   if((d.disArterias||[]).length||d.disSegmento)v.push('disección '+[hcLista(d.disArterias),d.disSegmento?'segmento '+d.disSegmento.toLowerCase():''].filter(Boolean).join(', '));
+   if((d.tvcSenos||[]).length)v.push('trombosis de '+hcLista(d.tvcSenos).toLowerCase());
+   if(d.estenosisPct!=null||d.estenosisLado)v.push('estenosis carotídea'+(d.estenosisPct!=null?' '+hcNum(d.estenosisPct,' %'):'')+(d.estenosisLado?' '+d.estenosisLado.toLowerCase():''));
+   if(d.disRecanal)v.push('control: '+d.disRecanal.toLowerCase());
+   let t=v.join(' · ');if(t)t=t.charAt(0).toUpperCase()+t.slice(1);
+   row('Vaso',t)}
+  {const hl=hicLocList(d),im=[String(d.imagen||'').trim(),d.aspects!=null?'ASPECTS '+d.aspects:'',d.pcAspects!=null?'pc-ASPECTS '+d.pcAspects:'',
+     hl.length||d.hicVolumen!=null?'hemorragia '+[hcLista(hl).toLowerCase(),d.hicVolumen!=null?hcNum(d.hicVolumen,' mL'):''].filter(Boolean).join(', '):'',
+     d.elanSize?'infarto '+d.elanSize.toLowerCase()+' (ELAN)':''].filter(Boolean);
+   row('Imagen',im.join(' · '))}
   const nih=num(d.nihss)!=null?'NIHSS '+d.nihss+(nihSev(d.nihss)?' ('+nihSev(d.nihss)+')':'')+(num(d.nihssPost)!=null?' → '+d.nihssPost+' post':''):'';
   const mrs=[d.mrsPrevio!=null?'previo '+d.mrsPrevio:'',d.mrsAlta!=null?'alta '+d.mrsAlta:'',d.mrs90!=null?'90 d '+d.mrs90:''].filter(Boolean).join(' / ');
-  row('Severidad',[nih,mrs?'mRS '+mrs:''].filter(Boolean).join(' · '));
+  row('Severidad',[nih,d.ichScore!=null?'ICH score '+d.ichScore:'',d.huntHess!=null?'Hunt y Hess '+d.huntHess:'',mrs?'mRS '+mrs:''].filter(Boolean).join(' · '));
   const tl=d.trombolisis===true?'Trombólisis'+(d.trombolisisAgente?' ('+d.trombolisisAgente+')':''):'',tm=d.trombectomia===true?'Trombectomía'+(d.tici?' (mTICI '+d.tici+')':''):'';
   const rep=tl||tm?[tl,tm,d.puertaAguja!=null?'puerta-aguja '+d.puertaAguja+' min':'',d.puertaPuncion!=null?'puerta-punción '+d.puertaPuncion+' min':'',d.hicSint===true?'HIC sintomática':''].filter(Boolean).join(' · ')
     :d.trombolisis===false&&d.trombectomia===false?'Sin trombólisis ni trombectomía':'';
-  row('Reperfusión',rep);
+  row('Reperfusión',[rep,(d.disTto||[]).length?hcLista(d.disTto).toLowerCase()+' (disección)':'',d.hicCirugia===true?'cirugía evacuadora':''].filter(Boolean).join(' · '));
+  {const e=[];
+   if(d.monitoreoFA===true)e.push('FA detectada'+(d.monitoreoTipo?' ('+d.monitoreoTipo+')':''));
+   else if(d.monitoreoFA===false)e.push('sin FA'+(d.monitoreoTipo?' en '+d.monitoreoTipo:''));
+   if(d.monitoreoArritmia===true)e.push('arritmia no filiada');
+   const pc=d.pascal||((d.frvAtipicos||[]).includes('FOP')?pascalCompute(d):'');if(pc)e.push('FOP: PASCAL '+(HC_PASCAL[pc]||pc));
+   const gen=genList(d);if(gen.length)e.push(gen.map(x=>x.e).join(', '));
+   let t=e.join(' · ');if(t)t=t.charAt(0).toUpperCase()+t.slice(1);
+   row('Estudios',t)}
   row('FRV',hcLista((d.frv||[]).concat(d.frvAtipicos||[])));
   const tv=txVigente(d);
   row('Antitrombótico',tv.length?(tv[0]===TX_NONE?'sin antitrombóticos':hcLista(tv))+(txCambios(d).length?' (vigente)':''):'');
   const est=[];
-  if(d.mortalidad===true)est.push('Fallecido'+(d.fechaMuerte?' el '+hcFecha(d.fechaMuerte):''));
+  if(d.mortalidad===true)est.push('Fallecido'+(d.fechaMuerte?' el '+hcFecha(d.fechaMuerte):'')+(d.causaMuerte?' — '+d.causaMuerte.toLowerCase():''));
   else if(intActivo(d))est.push('Internado'+(d.fechaIngreso?' desde el '+hcFecha(d.fechaIngreso):''));
-  else if(d.fechaAlta)est.push('Alta '+hcFecha(d.fechaAlta)+(d.estancia!=null?' ('+d.estancia+' d)':''));
+  else if(d.fechaAlta)est.push('Alta '+hcFecha(d.fechaAlta)+(d.estancia!=null?' ('+d.estancia+' d)':'')+(d.destinoAlta?' → '+d.destinoAlta.toLowerCase():''));
   if(d.mortalidad!==true){const s=segEstado(d);
     if(s==='vencido')est.push('mRS 90: en ventana, cargar ahora');else if(s==='proximo')est.push('mRS 90: abre en '+(SEG_ABRE-dias)+' días');else if(s==='tardio')est.push('mRS 90: fuera de ventana')}
   row('Estado',est.join(' · '));
   const pa=pAsig(d);if(pa)row('Protocolo',(protoById(pa.id)||pa).nombre+(pa.codigo?' · '+pa.codigo:''));
   const k=pacKey(d),otros=DB.filter(p=>p.id!==d.id&&p.id!==editId&&pacKey(p)===k).sort((a,b)=>evTime(a)<evTime(b)?-1:1);
   if(otros.length)row(otros.length>1?'Otros eventos':'Otro evento',otros.map(p=>evFecha(p)+' '+(p.tipo||'')).join(' · '));
+  {const n=String(d.notas||'').replace(/\s*\n\s*/g,' ').trim();if(n)row('Notas',n.length>220?n.slice(0,217).replace(/\s+\S*$/,'')+'…':n)}
   return `<div class="pz-cab">${esc(cab||'Sin datos de identificación')}</div>`+(R.length?`<div class="pz-g">${R.join('')}</div>`:'<div class="pz-vacio">Todavía no hay datos clínicos cargados.</div>');
 }
 /* ===== ELAN wizard integration ===== */
@@ -8631,6 +8723,7 @@ function vCfg(){
         <div class="pmeta"><div class="pname">${esc(pr.nombre)}</div>${pr.descripcion?`<div class="pdesc">${esc(pr.descripcion)}</div>`:''}
           ${lks.length?`<div class="plinks">${lks.map(l=>`<a class="btn sm" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${icon('ext')} ${esc(l.nombre||'Abrir')}</a>`).join('')}</div>`:''}
           ${regHtml(pr)}
+          ${pmCfgLinea(pr)}
           <div class="preg"><button class="btn sm ghost" data-presel-ed="${esc(pr.id)}" title="Criterios atados a campos de la ficha: al guardar una ficha avisa «posible elegible»">Criterios de preselección (${(pr.reglas||[]).length})</button></div></div>
         <span class="pstate ${fin?'':'act'}">${fin?'Finalizado'+(pr.fechaFin?' · '+esc(fmtFecha(pr.fechaFin)):''):'Activo'}</span>
         <span class="pcount">${n} paciente${n!==1?'s':''}</span>
@@ -8686,9 +8779,11 @@ function vCfg(){
     lks.forEach(l=>{if(!l.nombre)l.nombre='Abrir'});
     const est=cfgDraft.estado==='finalizado'?'finalizado':'activo',ffin=est==='finalizado'?(cfgDraft.fechaFin||''):'';
     if(cfgEdit){const pr=protoById(cfgEdit);pr.nombre=nom;pr.color=cfgDraft.color;pr.descripcion=cfgDraft.descripcion.trim();
+      if((pr.estado==='finalizado'?'finalizado':'activo')!==est)pr.estadoEn=new Date().toISOString();   // lo lee la sincronización con la planilla
       pr.estado=est;pr.fechaFin=ffin;pr.enlaces=lks;
       saveProtos();syncProtoSnapshots();toast('Etiqueta actualizada ✓')}
-    else{const pr={id:protoUid(),nombre:nom,color:cfgDraft.color,descripcion:cfgDraft.descripcion.trim(),estado:est,fechaFin:ffin,enlaces:lks};
+    else{const pr={id:protoUid(),nombre:nom,color:cfgDraft.color,descripcion:cfgDraft.descripcion.trim(),estado:est,fechaFin:ffin,enlaces:lks,estadoEn:new Date().toISOString()};
+      if(cfgDraft.monitor&&!pmProtoDeClave(cfgDraft.monitor))pr.monitor=cfgDraft.monitor;   // «Crear etiqueta» desde Protocolos
       PROTOS.push(pr);saveProtos();toast('Etiqueta creada ✓');
       cfgEdit=null;cfgDraft=cfgBlank();cfgDel=null;protoRegistroAuto(pr);return}
     cfgEdit=null;cfgDraft=cfgBlank();cfgDel=null;vCfg();};
@@ -8703,6 +8798,8 @@ function vCfg(){
     if(!/^NCT\d{8}$/.test(v)){toast('El número tiene que ser NCT + 8 dígitos');return}
     cfgReg[id]={st:'busca'};vCfg();
     ctgEstudio(v).then(c=>protoVincular(id,c,false)).catch(e=>{cfgReg[id]={st:'error',msg:e.message};vCfg()})});
+  document.querySelectorAll('[data-pm-vinc]').forEach(s=>s.onchange=()=>pmVincularManual(s.dataset.pmVinc,s.value));
+  document.querySelectorAll('[data-pm-ver]').forEach(b=>b.onclick=()=>go('prot'));
   if($('#cCancel'))$('#cCancel').onclick=()=>{cfgEdit=null;cfgDraft=cfgBlank();vCfg()};
   if($('#cfgBack'))$('#cfgBack').onclick=()=>{cfgFrom=null;go('form')};
   document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const pr=protoById(b.dataset.edit);
@@ -10161,6 +10258,7 @@ correrMigracion(function(){const desde=DB.reduce((m,p)=>Math.max(m,num(p.nOrden)
 seedProtos();
 reconcileProtos();
 seedProtoLinks();
+try{protMonCargar()}catch(e){}   // monitoreo de protocolos: vínculo y estado con Configuración (22/11)
 applyProtoCambios();
 syncProtoSnapshots();
 if(tcAcceptance()){render()}else{tcOpen('gate')}
@@ -10355,6 +10453,201 @@ function institucionesCompHtml(lista){const C=institucionesComp(lista);if(!C.len
 /* INDICADORES:INICIO — generado por tools/mapeos_sync.mjs desde schema/indicadores.json. No editar a mano. */
 const INDICADORES=[{"id":"DNT60","area":"Proceso agudo","nombre":"Puerta-aguja ≤ 60 min","fuente":[{"org":"AHA/ASA Target: Stroke","medida":"Honor Roll","version":"página revisada el 13/6/2018, consultada el 26/10/2026","url":"https://www.heart.org/en/professional/quality-improvement/target-stroke/target-stroke-honor-roll"},{"org":"ESO Angels Awards","medida":"niveles del premio","version":"consultado el 26/10/2026","url":"https://eso-stroke.org/projects/angels/how-to-qualify-for-an-award/"}],"definicion":"Isquémicos trombolizados en este hospital: proporción con puerta-aguja de 60 minutos o menos.","numerador":"Puerta-aguja ≤ 60 min.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombólisis IV y puerta-aguja cargado. Excluye el ACV intrahospitalario (no tiene puerta).","metas":[{"valor":75,"fuente":"AHA Honor Roll"},{"valor":85,"fuente":"AHA Honor Roll-Elite"},{"valor":50,"fuente":"Angels Gold (< 60 min)"},{"valor":75,"fuente":"Angels Platinum / Diamond (< 60 min)"}],"metaDefecto":2,"mes":"evento","nota":"Angels cuenta «menos de 60» y AHA «dentro de 60»: difieren sólo en un puerta-aguja de exactamente 60 min. El registro no distingue alteplasa de tenecteplasa en esta medida.","sentido":"mayor","tipo":"proporcion"},{"id":"DNT45","area":"Proceso agudo","nombre":"Puerta-aguja ≤ 45 min","fuente":[{"org":"AHA/ASA Target: Stroke","medida":"Honor Roll","version":"página revisada el 13/6/2018, consultada el 26/10/2026","url":"https://www.heart.org/en/professional/quality-improvement/target-stroke/target-stroke-honor-roll"},{"org":"ESO Angels Awards","medida":"niveles del premio","version":"consultado el 26/10/2026","url":"https://eso-stroke.org/projects/angels/how-to-qualify-for-an-award/"}],"definicion":"Igual que el anterior, con 45 minutos o menos.","numerador":"Puerta-aguja ≤ 45 min.","denominador":"Igual que puerta-aguja ≤ 60.","metas":[{"valor":75,"fuente":"AHA Honor Roll-Elite Plus"},{"valor":50,"fuente":"Angels Diamond (< 45 min)"}],"metaDefecto":1,"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"DNT30","area":"Proceso agudo","nombre":"Puerta-aguja ≤ 30 min","fuente":[{"org":"AHA/ASA Target: Stroke","medida":"Honor Roll","version":"página revisada el 13/6/2018, consultada el 26/10/2026","url":"https://www.heart.org/en/professional/quality-improvement/target-stroke/target-stroke-honor-roll"}],"definicion":"Igual que el anterior, con 30 minutos o menos.","numerador":"Puerta-aguja ≤ 30 min.","denominador":"Igual que puerta-aguja ≤ 60.","metas":[{"valor":50,"fuente":"AHA Honor Roll-Elite Plus"}],"metaDefecto":0,"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"DTD","area":"Proceso agudo","nombre":"Puerta-punción en la meta (≤ 90 min directos, ≤ 60 derivados)","fuente":[{"org":"AHA/ASA Target: Stroke","medida":"Honor Roll","version":"página revisada el 13/6/2018, consultada el 26/10/2026","url":"https://www.heart.org/en/professional/quality-improvement/target-stroke/target-stroke-honor-roll"}],"definicion":"Isquémicos con trombectomía: proporción con puerta-punción dentro de 90 minutos si llegaron directo, o de 60 si vinieron derivados.","numerador":"Puerta-punción ≤ 90 min (llegada directa) o ≤ 60 min (derivado).","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombectomía, puerta-punción y tipo de llegada cargados.","metas":[{"valor":50,"fuente":"AHA Honor Roll Advanced Therapy"}],"metaDefecto":0,"mes":"evento","nota":"Angels también puntúa puerta-ingle, pero la página de los niveles no publica los minutos: se usará cuando esté el diccionario RES-Q.","sentido":"mayor","tipo":"proporcion"},{"id":"CSTK-09","area":"Proceso agudo","nombre":"Mediana de puerta-punción","fuente":[{"org":"The Joint Commission","medida":"CSTK-09","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0343.html"}],"tipo":"mediana","definicion":"Mediana del tiempo entre la llegada y la punción arterial para la trombectomía, por separado para derivados (09a) y llegada directa (09b).","numerador":"—","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombectomía y puerta-punción cargado. Excluye NIHSS inicial < 6, estancia > 120 días y punción más de 8 h después de la llegada (rescate tardío).","metas":[],"mes":"evento","sentido":"mayor","nota":""},{"id":"STK-4","area":"Proceso agudo","nombre":"Trombólisis IV en ≤ 3 h de LKW (llegados en ≤ 2 h)","fuente":[{"org":"The Joint Commission","medida":"STK-4","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0129.html"}],"definicion":"Isquémicos que llegan dentro de las 2 h desde la última vez visto bien: proporción trombolizada dentro de las 3 h desde LKW.","numerador":"Trombólisis IV con LKW→aguja ≤ 180 min (inicio-puerta + puerta-aguja).","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con inicio-puerta ≤ 120 min. Excluye ensayos clínicos, estancia > 120 días, ACV intrahospitalario y motivo documentado para no trombolizar.","metas":[],"mes":"evento","nota":"La especificación nombra la alteplasa; el registro cuenta también la tenecteplasa. La especificación también excluye el «motivo para extender» el inicio, que el registro no tiene.","sentido":"mayor","tipo":"proporcion"},{"id":"RECAN","area":"Proceso agudo","nombre":"Tasa de recanalización","fuente":[{"org":"ESO Angels Awards","medida":"niveles del premio","version":"consultado el 26/10/2026","url":"https://eso-stroke.org/projects/angels/how-to-qualify-for-an-award/"}],"definicion":"Proporción de ACV del hospital tratados con trombólisis IV o trombectomía.","numerador":"Trombólisis IV o trombectomía.","denominador":"ACV isquémico o hemorrágico internado en el Sanatorio (≥ 18 años).","metas":[{"valor":5,"fuente":"Angels Gold"},{"valor":15,"fuente":"Angels Platinum"},{"valor":25,"fuente":"Angels Diamond"}],"metaDefecto":0,"mes":"evento","nota":"Definición operativa provisoria: Angels habla de «total stroke incidence in the hospital»; el denominador exacto está en el diccionario RES-Q, todavía no disponible.","sentido":"mayor","tipo":"proporcion"},{"id":"CSTK-01","area":"Proceso agudo","nombre":"NIHSS realizado","fuente":[{"org":"The Joint Commission","medida":"CSTK-01","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0285.html"}],"definicion":"Isquémicos con NIHSS inicial documentado (antes de la reperfusión, o dentro de las 12 h si no se reperfundieron).","numerador":"NIHSS de ingreso cargado.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años. Excluye sólo medidas de confort y estancia > 120 días.","metas":[],"mes":"evento","nota":"El registro no guarda la hora del NIHSS: se toma el NIHSS de ingreso como el inicial.","sentido":"mayor","tipo":"proporcion"},{"id":"DISF","area":"Proceso agudo","nombre":"Cribado de disfagia","fuente":[{"org":"ESO Angels Awards","medida":"niveles del premio","version":"consultado el 26/10/2026","url":"https://eso-stroke.org/projects/angels/how-to-qualify-for-an-award/"}],"definicion":"Proporción de ACV con cribado de la deglución.","numerador":"Deglución evaluada = Sí.","denominador":"ACV isquémico o hemorrágico internado en el Sanatorio, ≥ 18 años, con el dato cargado (Sí o No).","metas":[{"valor":80,"fuente":"Angels Gold"},{"valor":85,"fuente":"Angels Platinum"},{"valor":90,"fuente":"Angels Diamond"}],"metaDefecto":0,"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"STK-2","area":"Prevención secundaria","nombre":"Antitrombótico al alta","fuente":[{"org":"The Joint Commission","medida":"STK-2","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0127.html"},{"org":"ESO Angels Awards","medida":"niveles del premio","version":"consultado el 26/10/2026","url":"https://eso-stroke.org/projects/angels/how-to-qualify-for-an-award/"}],"definicion":"Isquémicos dados de alta con tratamiento antitrombótico.","numerador":"Algún antitrombótico en el esquema al alta.","denominador":"ACV isquémico internado en el Sanatorio. Excluye: menores de 18, estancia > 120 días, sólo medidas de confort, pacientes en ensayos clínicos, fallecidos en la internación, derivados a otro hospital, alta voluntaria y cuidados paliativos (hospice). También excluye el motivo documentado para no indicarlo.","metas":[{"valor":80,"fuente":"Angels Gold (antiagregantes)"},{"valor":85,"fuente":"Angels Platinum"},{"valor":90,"fuente":"Angels Diamond"}],"metaDefecto":0,"mes":"alta","nota":"Esquema al alta = el inicial más los cambios con fecha hasta el día del alta (se deriva; Juan, 26/10: puede no ser el inicial). Sin fecha de alta o con un cambio sin fecha queda «sin dato». Angels mide antiagregantes en isquémicos; STK-2, cualquier antitrombótico.","sentido":"mayor","tipo":"proporcion"},{"id":"STK-3","area":"Prevención secundaria","nombre":"Anticoagulación al alta en FA","fuente":[{"org":"The Joint Commission","medida":"STK-3","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0128.html"},{"org":"ESO Angels Awards","medida":"niveles del premio","version":"consultado el 26/10/2026","url":"https://eso-stroke.org/projects/angels/how-to-qualify-for-an-award/"}],"definicion":"Isquémicos con fibrilación o aleteo auricular dados de alta anticoagulados.","numerador":"Anticoagulante en el esquema al alta (AVK, DOAC, inhibidor del factor XIa o heparina).","denominador":"ACV isquémico con FA (factor de riesgo, monitoreo o ECG de ingreso). Excluye: menores de 18, estancia > 120 días, sólo medidas de confort, pacientes en ensayos clínicos, fallecidos en la internación, derivados a otro hospital, alta voluntaria y cuidados paliativos (hospice). También excluye el motivo documentado para no indicarlo.","metas":[{"valor":80,"fuente":"Angels Gold"},{"valor":85,"fuente":"Angels Platinum"},{"valor":90,"fuente":"Angels Diamond"}],"metaDefecto":0,"mes":"alta","nota":"Mismo esquema al alta derivado que STK-2.","sentido":"mayor","tipo":"proporcion"},{"id":"STK-5","area":"Prevención secundaria","nombre":"Antitrombótico al final del día 2","fuente":[{"org":"The Joint Commission","medida":"STK-5","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0130.html"}],"definicion":"Isquémicos con antitrombótico administrado antes de terminar el segundo día de internación.","numerador":"Antitrombótico al día 2 = Sí.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años. Excluye estancia < 2 días o > 120, sólo confort, ensayos clínicos, trombolizados y motivo documentado para no darlo.","metas":[],"mes":"alta","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"STK-6","area":"Prevención secundaria","nombre":"Estatina al alta","fuente":[{"org":"The Joint Commission","medida":"STK-6","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0131.html"}],"definicion":"Isquémicos dados de alta con estatina.","numerador":"Estatina al alta = Sí.","denominador":"ACV isquémico internado en el Sanatorio. Excluye: menores de 18, estancia > 120 días, sólo medidas de confort, pacientes en ensayos clínicos, fallecidos en la internación, derivados a otro hospital, alta voluntaria y cuidados paliativos (hospice). También excluye el motivo documentado para no indicarla.","metas":[],"mes":"alta","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"STK-1","area":"Seguridad","nombre":"Profilaxis de TEV (día 0–1)","fuente":[{"org":"The Joint Commission","medida":"STK-1","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0126.html"}],"definicion":"ACV con profilaxis de tromboembolismo venoso el día del ingreso o el siguiente, o con el motivo documentado para no darla.","numerador":"Profilaxis = Sí, o No con motivo documentado.","denominador":"ACV isquémico o hemorrágico internado en el Sanatorio, ≥ 18 años. Excluye estancia < 2 días o > 120, sólo confort y ensayos clínicos.","metas":[],"mes":"alta","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"CSTK-05","area":"Seguridad","nombre":"Hemorragia sintomática tras reperfusión","fuente":[{"org":"The Joint Commission","medida":"CSTK-05","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0292.html"}],"sentido":"menor","definicion":"Isquémicos reperfundidos que hacen una hemorragia intracraneal sintomática (deterioro ≥ 4 de NIHSS con sangrado en la imagen) dentro de las 36 h.","numerador":"Hemorragia sintomática = Sí.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombólisis o trombectomía y el dato cargado.","metas":[],"mes":"evento","nota":"Más bajo es mejor. El registro no guarda la hora de la hemorragia: se asume dentro de las 36 h.","tipo":"proporcion"},{"id":"CSTK-04","area":"Seguridad","nombre":"Reversión de la anticoagulación en HIC (INR ≥ 1,4)","fuente":[{"org":"The Joint Commission","medida":"CSTK-04","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0289.html"}],"definicion":"HIC con INR ≥ 1,4 al llegar: proporción tratada con un agente reversor.","numerador":"Reversión = Sí.","denominador":"HIC internada en el Sanatorio, ≥ 18 años, con INR al ingreso ≥ 1,4. Excluye sólo confort y ensayos clínicos.","metas":[],"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"CSTK-03","area":"Seguridad","nombre":"Severidad medida en HIC / HSA","fuente":[{"org":"The Joint Commission","medida":"CSTK-03","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0288.html"}],"definicion":"Hemorrágicos con escala de severidad documentada (ICH score en HIC, Hunt y Hess en HSA).","numerador":"ICH score o Hunt y Hess cargado.","denominador":"ACV hemorrágico internado en el Sanatorio, ≥ 18 años. Excluye sólo confort.","metas":[],"mes":"evento","nota":"El registro no guarda la hora de la escala (la especificación pide antes de la cirugía o dentro de las 6 h).","sentido":"mayor","tipo":"proporcion"},{"id":"CSTK-06","area":"Seguridad","nombre":"Nimodipina en HSA (≤ 24 h)","fuente":[{"org":"The Joint Commission","medida":"CSTK-06","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0293.html"}],"definicion":"HSA con nimodipina dentro de las 24 h de la llegada.","numerador":"Nimodipina ≤ 24 h = Sí.","denominador":"Hemorrágico con localización subaracnoidea, internado en el Sanatorio, ≥ 18 años, con el dato cargado. Excluye sólo confort y ensayos clínicos.","metas":[],"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"STK-8","area":"Continuidad","nombre":"Educación sobre ACV","fuente":[{"org":"The Joint Commission","medida":"STK-8","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0133.html"}],"definicion":"ACV dados de alta a su casa con material educativo sobre los 5 temas (emergencias, seguimiento, medicación, factores de riesgo y signos de alarma).","numerador":"Educación = Sí.","denominador":"ACV isquémico o hemorrágico dado de alta al domicilio. Excluye sólo confort y ensayos clínicos.","metas":[],"mes":"alta","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"STK-10","area":"Continuidad","nombre":"Evaluación de rehabilitación","fuente":[{"org":"The Joint Commission","medida":"STK-10","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0135.html"}],"definicion":"ACV evaluados para rehabilitación, o que la recibieron.","numerador":"Rehabilitación evaluada = Sí.","denominador":"ACV isquémico o hemorrágico internado en el Sanatorio. Excluye: menores de 18, estancia > 120 días, sólo medidas de confort, pacientes en ensayos clínicos, fallecidos en la internación, derivados a otro hospital, alta voluntaria y cuidados paliativos (hospice).","metas":[],"mes":"alta","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"CSTK-02","area":"Resultado","nombre":"mRS a 90 días obtenido (reperfundidos)","fuente":[{"org":"The Joint Commission","medida":"CSTK-02","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0287.html"}],"definicion":"Isquémicos reperfundidos con mRS obtenido entre los días 75 y 105.","numerador":"mRS a 90 días cargado, con su fecha dentro de los días 75 a 105; los cargados antes del 26/10 sin fecha se cuentan aparte (estrato).","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombólisis o trombectomía, vivo al alta y con más de 105 días desde el evento.","metas":[],"mes":"evento","nota":"Desde el Bloque E la ficha guarda la fecha y la vía del mRS 90 d. Un mRS con fecha fuera de la ventana no cuenta. Uno sin fecha (carga anterior) cuenta y se informa en su propio estrato, porque no se puede verificar.","sentido":"mayor","tipo":"proporcion"},{"id":"CSTK-10","area":"Resultado","nombre":"mRS 0–2 a 90 días (reperfundidos)","fuente":[{"org":"The Joint Commission","medida":"CSTK-10","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0388.html"}],"definicion":"Isquémicos reperfundidos con mRS ≤ 2 a los 90 días.","numerador":"mRS a 90 días ≤ 2.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombólisis o trombectomía y mRS a 90 días cargado. Se muestran aparte los subgrupos con mRS previo 0–2 o sin dato (10a/10c) y 3–5 (10b/10d).","metas":[],"mes":"evento","nota":"Sin ajuste: para comparar entre períodos, ajustar por edad, NIHSS, mRS previo y tratamiento con las plantillas de analisis/ (Bloque A).","sentido":"mayor","tipo":"proporcion"},{"id":"CSTK-08","area":"Resultado","nombre":"TICI ≥ 2b tras trombectomía","fuente":[{"org":"The Joint Commission","medida":"CSTK-08","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0295.html"}],"definicion":"Isquémicos con trombectomía que terminan con reperfusión TICI 2b o mayor.","numerador":"mTICI 2b, 2c o 3.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombectomía y mTICI cargado.","metas":[],"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"CSTK-11","area":"Resultado","nombre":"Reperfusión rápida desde la llegada (gran vaso)","fuente":[{"org":"The Joint Commission","medida":"CSTK-11","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0389.html"}],"definicion":"Trombectomía por oclusión de gran vaso con TICI ≥ 2b lograda dentro de los 120 min de la llegada (la especificación admite hasta 150).","numerador":"mTICI ≥ 2b y puerta-recanalización ≤ 150 min.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombectomía por gran vaso (ACI, T, M1, M2, basilar), NIHSS ≥ 6, mTICI y puerta-recanalización cargados.","metas":[],"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""},{"id":"CSTK-12","area":"Resultado","nombre":"Reperfusión rápida desde la punción (gran vaso)","fuente":[{"org":"The Joint Commission","medida":"CSTK-12","version":"v2027A (publicada el 7/8/2026)","url":"https://manual.jointcommission.org/releases/TJC2027A/MIF0390.html"}],"definicion":"Trombectomía por oclusión de gran vaso con TICI ≥ 2b lograda dentro de los 60 min de la punción.","numerador":"mTICI ≥ 2b y (puerta-recanalización − puerta-punción) ≤ 60 min.","denominador":"ACV isquémico internado en el Sanatorio, ≥ 18 años, con trombectomía por gran vaso, mTICI y ambos tiempos cargados.","metas":[],"mes":"evento","sentido":"mayor","tipo":"proporcion","nota":""}];
 /* INDICADORES:FIN */
+/* ---------- monitoreo de protocolos (22/11) ----------
+   Vista «Protocolos»: lo mismo que la card del briefing. El dato NO se calcula acá:
+   lo escribe `~/.openclaw/scripts/protocolos_monitor.py` (job del Gateway
+   `protocolos-monitor`, 7:35 y 12:35) en `datos-protocolos/protocolos_monitor.js`,
+   junto a esta app, como `window.RNV_PROTOCOLOS_MONITOR = {…}`. Como `file://` no
+   permite `fetch` de un archivo local, se inyecta un <script src> con `?t=` para
+   no leer de caché (la ventana `--app` queda abierta todo el día). No toca la base
+   ni localStorage. En la versión web el archivo no existe: lo dice y no hace nada más. */
+const PM_SRC='datos-protocolos/protocolos_monitor.js';
+const PM_VISIBLES=5;
+const PM_FOCO={firma:1,curso:1,budget:1,contrato:1};
+const PM_TIPO={firma:'Firma',curso:'Curso',budget:'Budget',contrato:'Contrato',regulatorio:'Regulatorio',
+  reclutamiento:'Reclutamiento',seguridad:'Seguridad',reunion:'Reunión',otro:'Otro'};
+let pmEstado='sin-cargar';   // sin-cargar · cargando · ok · falta
+let pmCargadoEn=0;           // relee al abrir la vista, pero no más de una vez cada 5 s (el onload repinta)
+
+function protMonCargar(){
+  if(pmEstado==='cargando')return;
+  pmEstado='cargando';pmCargadoEn=Date.now();
+  const viejo=document.getElementById('pmScript');if(viejo)viejo.remove();
+  const s=document.createElement('script');s.id='pmScript';s.src=PM_SRC+'?t='+Date.now();
+  s.onload=()=>{pmEstado=window.RNV_PROTOCOLOS_MONITOR?'ok':'falta';try{pmAlCargar()}catch(e){console.error(e)}if(view==='prot')vProt()};
+  s.onerror=()=>{pmEstado='falta';if(view==='prot')vProt()};
+  document.head.appendChild(s);
+}
+
+function pmFecha(iso){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||''));return m?m[3]+'/'+m[2]:''}
+function pmHoyIso(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+function pmPendiente(q,hoy){
+  let venc='';
+  if(q.vence){const ya=String(q.vence).slice(0,10)<hoy;venc=` <span class="pm-vence${ya?' ya':''}">${ya?'venció':'vence'} ${esc(pmFecha(q.vence))}</span>`}
+  const ev=(q.evidencia||[]).slice(-1)[0]||{},url=safeUrl(ev.link);
+  return `<li>${q.critico?'<span class="pm-crit" title="Crítico"></span>':''}<span class="pm-tag${PM_FOCO[q.tipo]?' foco':''}">${esc(PM_TIPO[q.tipo]||q.tipo||'')}</span>`
+    +`${esc(q.texto)}${venc}${q.novedad?' <span class="pm-nuevo">nuevo</span>':''}`
+    +(q.arrastrado?` <span class="pm-arr">· sin novedades en los correos desde ${esc(pmFecha(q.detectado))}</span>`:'')
+    +(url?` <a class="pm-ev" href="${esc(url)}" target="_blank" rel="noopener" title="${esc((ev.asunto||'')+' ('+(ev.fecha||'')+')')}">correo ${icon('ext')}</a>`:'')+'</li>';
+}
+
+function pmTarjeta(p,hoy){
+  const pend=p.pendientes||[],hitos=p.hitos||[],cerr=p.cerrados||[],otros=p.otros_centros||[];
+  const lista=pend.length
+    ?`<ul class="pm-pend">${pend.slice(0,PM_VISIBLES).map(q=>pmPendiente(q,hoy)).join('')}</ul>`
+      +(pend.length>PM_VISIBLES?`<details class="pm-mas"><summary>${pend.length-PM_VISIBLES} pendientes más</summary><ul class="pm-pend">${pend.slice(PM_VISIBLES).map(q=>pmPendiente(q,hoy)).join('')}</ul></details>`:'')
+    :`<div class="pm-vacio">Sin pendientes detectados en los correos.${p.pendiente_planilla?' Según la planilla: '+esc(p.pendiente_planilla):''}</div>`;
+  const det=(hitos.length||cerr.length)?`<details class="pm-mas"><summary>Últimos hitos (${hitos.length+cerr.length})</summary><ul class="pm-hitos">`
+    +hitos.map(h=>`<li>${esc(pmFecha(h.fecha))} — ${esc(h.texto)}${h.novedad?' <span class="pm-nuevo">nuevo</span>':''}</li>`).join('')
+    +cerr.map(c=>`<li>Hecho: ${esc(c.texto)} — ${esc(c.motivo)}</li>`).join('')+'</ul></details>':'';
+  return `<div class="card pm-card${p.novedades?' con-nov':''}"><div class="pm-nom">${esc(p.nombre)}`
+    +(p.origen==='correo'?' <span class="pm-badge nuevo" title="Detectado en los correos; no está en la planilla">nuevo</span>':'')
+    +(p.novedades?` <span class="pm-badge">${p.novedades} novedad${p.novedades>1?'es':''}</span>`:'')+`</div>`
+    +`<div class="pm-spon">${esc(p.patrocinador)}</div>`+pmTagLinea(p)
+    +`<span class="pm-est${p.estado_cambio?' cambio':''}">${esc(p.estado)}</span>`
+    +(p.estado_cambio?`<div class="pm-antes">antes: ${esc(p.estado_anterior)}</div>`:'')
+    +(otros.length?`<div class="pm-otros">También en: ${otros.map(o=>`${esc(o.institucion)} <span>(${esc(o.estado)})</span>`).join(' · ')}</div>`:'')
+    +lista+det+'</div>';
+}
+
+function pmNovedades(prots){
+  const out=[];
+  for(const p of prots){
+    let n=String(p.nombre||'').split('(')[0].trim();if((p.otros_centros||[]).length)n+=' · '+p.institucion;
+    const b='<b>'+esc(n)+'</b>: ';
+    if(p.origen==='correo'&&p.nuevo_hoy)out.push(b+'protocolo nuevo detectado ('+esc(p.institucion)+')');
+    if(p.estado_cambio)out.push(b+'cambió de estado → '+esc(p.estado));
+    (p.pendientes||[]).forEach(q=>{if(q.novedad)out.push(b+'nuevo pendiente — '+esc(q.texto))});
+    (p.hitos||[]).forEach(h=>{if(h.novedad)out.push(b+esc(h.texto))});
+    (p.cerrados||[]).forEach(c=>{if(c.novedad)out.push(b+'hecho — '+esc(c.texto))});
+  }
+  return out;
+}
+
+// Mismo orden que la card del briefing: instituciones de la planilla primero (por
+// cantidad), después las que sólo salen de correos, «Sin asignar» al final.
+function pmGrupos(prots){
+  const enPlan={};prots.forEach(p=>{enPlan[p.institucion]=(enPlan[p.institucion]||0)+(p.origen==='planilla'?1:0)});
+  const ord=[...prots].sort((a,b)=>((a.institucion==='Sin asignar')-(b.institucion==='Sin asignar'))
+    ||((enPlan[b.institucion]||0)-(enPlan[a.institucion]||0))||String(a.institucion).localeCompare(String(b.institucion),'es')
+    ||((a.origen!=='planilla')-(b.origen!=='planilla')));
+  const g=new Map();ord.forEach(p=>{const k=p.institucion||'Sin asignar';if(!g.has(k))g.set(k,[]);g.get(k).push(p)});
+  return g;
+}
+
+function vProt(){
+  const m=$('#main'),D=window.RNV_PROTOCOLOS_MONITOR,hoy=pmHoyIso();
+  if(pmEstado!=='cargando'&&Date.now()-pmCargadoEn>5000)protMonCargar();
+  const head=`<div class="head"><div><div class="eyebrow">Investigación</div><h2>Protocolos y ensayos clínicos</h2>
+    <div class="lede">Estado, pendientes y novedades de cada protocolo, por institución. Es lo mismo que la card del briefing: sale de la planilla de protocolos y de los correos de las cuentas Personal y Allende.</div></div>
+    <button type="button" class="btn sm ghost" id="pmRecargar">Releer</button></div>`;
+  if(!D){
+    const msg=pmEstado==='cargando'||pmEstado==='sin-cargar'?'Leyendo el monitoreo…'
+      :'No encuentro el monitoreo de protocolos (<code>datos-protocolos/protocolos_monitor.js</code>). Lo escribe el job <code>protocolos-monitor</code> en la Mac a las 7:35 y 12:35: en la versión web no está disponible, y en la Mac quiere decir que todavía no corrió o falló (<code>/tmp/protocolos-monitor.log</code>).';
+    m.innerHTML=head+`<div class="card pm-raiz"><div class="pm-vacio">${msg}</div></div>`;
+  }else{
+    const prots=D.protocolos||[],pend=prots.flatMap(p=>p.pendientes||[]);
+    const crit=pend.filter(q=>q.critico).length,nov=prots.reduce((s,p)=>s+(p.novedades||0),0);
+    const cuenta=(...t)=>pend.filter(q=>t.includes(q.tipo)).length;
+    const gen=String(D.generado||''),viejo=gen.slice(0,10)!==hoy;
+    const sello=`<div class="pm-sello${viejo?' viejo':''}">Monitoreo ${viejo?'del '+esc(pmFecha(gen))+' a las ':'de las '}${esc(gen.slice(11,16))}${viejo?' — no es de hoy: el job de esta mañana no corrió o falló':''}</div>`;
+    const chips=[`<span class="pm-chip"><b>${prots.length}</b> protocolos</span>`,
+      `<span class="pm-chip${crit?' rojo':''}"><b>${crit}</b> críticos</span>`,
+      `<span class="pm-chip${nov?' azul':''}"><b>${nov}</b> novedades del día</span>`];
+    [['firmas',['firma']],['cursos',['curso']],['budget / contrato',['budget','contrato']]].forEach(([r,t])=>{const n=cuenta(...t);if(n)chips.push(`<span class="pm-chip"><b>${n}</b> ${r}</span>`)});
+    const novs=pmNovedades(prots);
+    const bloqueNov=novs.length?`<div class="pm-nov"><div class="pm-nov-h">Novedades del día</div><ul>${novs.slice(0,12).map(n=>'<li>'+n+'</li>').join('')}</ul></div>`:'';
+    let cuerpo='';
+    for(const [inst,ps] of pmGrupos(prots))cuerpo+=`<div class="pm-inst">${esc(inst)} · ${ps.length}</div><div class="pm-grid">${ps.map(p=>pmTarjeta(p,hoy)).join('')}</div>`;
+    const plan=safeUrl(D.planilla);
+    const pie=`<div class="pm-pie">Base: ${plan?`<a href="${esc(plan)}" target="_blank" rel="noopener">planilla de protocolos</a>`:'planilla de protocolos'} + ${Number(D.correos)||0} correos de los últimos ${Number(D.ventana_dias)||''} días. «Nuevo» = posterior a la corrida del ${esc(pmFecha(D.corte_novedad))}. Un pendiente sólo se cierra con un correo que lo pruebe.${(D.finalizados||[]).length?' Finalizados, no se monitorean: '+D.finalizados.map(f=>esc(String(f.nombre||'').split('(')[0].trim())+' ('+esc(f.institucion)+')').join(' · ')+'.':''}</div>`;
+    m.innerHTML=head+`<div class="pm-raiz">${sello}<div class="pm-sum">${chips.join('')}</div>${bloqueNov}${cuerpo}${pie}</div>`;
+  }
+  const b=$('#pmRecargar');if(b)b.onclick=()=>protMonCargar();
+  pmEnlacesVista();
+}
+
+/* ---------- vínculo con Configuración → Protocolos de investigación (22/11) ----------
+   Pedido de Juan: relación en las dos direcciones entre las etiquetas y el monitoreo.
+   - El vínculo es un campo explícito de la etiqueta: `monitor` = la clave del protocolo en
+     la planilla (la misma para todos sus centros). `undefined` = nunca se vinculó; '' = Juan
+     lo desvinculó a propósito (no se vuelve a vincular solo).
+   - Vínculo automático: si el nombre de la etiqueta (o el acrónimo de ClinicalTrials.gov)
+     está entero, palabra por palabra, en el nombre de UN solo protocolo de la planilla.
+   - El estado: el monitor (`protocolos_monitor.py`, job `protocolos-sync`) reconcilia
+     planilla ⇄ catálogo y deja en `sync.sync_registro` lo que la app tiene que aplicar. Se
+     aplica sólo si la etiqueta no cambió después de lo que vio el monitor (`estadoEn` local
+     ≤ `visto_estadoEn`): así un cambio que el respaldo todavía no levantó no se pisa.
+   - No toca las fichas (no llama a syncProtoSnapshots): la etiqueta del catálogo manda. */
+function pmTok(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').split(/[^A-Z0-9]+/).filter(Boolean)}
+function pmContiene(nombre,clave){const a=pmTok(nombre),b=new Set(pmTok(clave));return a.length>0&&a.every(t=>b.has(t))}
+function pmClaves(D){return (D&&D.claves)||[]}
+function pmClaveDe(pr){return pr&&typeof pr.monitor==='string'?pr.monitor:''}
+function pmProtoDeClave(clave){return clave?PROTOS.find(pr=>pmClaveDe(pr)===clave)||null:null}
+function pmCandidatas(pr,D){const acr=(pr.registro&&pr.registro.acr)||'';
+  return pmClaves(D).filter(c=>pmContiene(pr.nombre,c.nombre)||(acr&&pmContiene(acr,c.nombre)))}
+
+function pmVincularAuto(D){const msgs=[];
+  for(const pr of PROTOS){
+    if(pr.monitor!==undefined)continue;                       // ya vinculada, o desvinculada a propósito
+    const c=pmCandidatas(pr,D).filter(c=>!pmProtoDeClave(c.clave));
+    if(c.length===1){pr.monitor=c[0].clave;msgs.push(`<b>${esc(pr.nombre)}</b> quedó vinculada al protocolo «${esc(c[0].nombre)}» del monitoreo.`)}
+  }
+  return msgs}
+
+function pmAplicarSync(D){const msgs=[];
+  for(const x of ((D&&D.sync&&D.sync.sync_registro)||[])){
+    const pr=protoById(x.id);if(!pr)continue;
+    const ahora=pr.estado==='finalizado'?'finalizado':'activo';
+    if(ahora===x.estado)continue;                            // ya aplicado
+    if(String(pr.estadoEn||'')>String(x.visto_estadoEn||''))continue;   // Juan la cambió después: manda eso
+    pr.estado=x.estado;
+    pr.fechaFin=x.estado==='finalizado'?(pr.fechaFin||x.fechaFin||''):'';
+    pr.estadoEn=new Date().toISOString();
+    msgs.push(`<b>${esc(pr.nombre)}</b>: ${x.estado==='finalizado'?'finalizado':'reactivado'} desde la planilla de protocolos`
+      +(x.origen==='conflicto'?' (la planilla y el Registro no coincidían: gana finalizado)':'')+'.');
+  }
+  return msgs}
+
+function pmAlCargar(){const D=window.RNV_PROTOCOLOS_MONITOR;if(!D)return;
+  const msgs=[...pmVincularAuto(D),...pmAplicarSync(D)];
+  if(!msgs.length)return;
+  if(saveProtos()===false)return;                            // lsSet ya avisó «NO SE GUARDÓ»
+  pushAviso('Protocolos de investigación (monitoreo): '+msgs.join(' '));
+  if(view==='cfg'||view==='dash')render();
+}
+
+function pmVincularManual(id,clave){const pr=protoById(id);if(!pr)return;
+  const otra=pmProtoDeClave(clave);
+  if(clave&&otra&&otra.id!==id){toast('Ese protocolo ya está vinculado a «'+otra.nombre+'»');vCfg();return}
+  pr.monitor=clave||'';saveProtos();toast(clave?'Vinculada al monitoreo ✓':'Sin vínculo con el monitoreo');vCfg()}
+
+// Línea del monitoreo en cada etiqueta de Configuración.
+function pmCfgLinea(pr){const D=window.RNV_PROTOCOLOS_MONITOR;if(!D)return '';
+  const clave=pmClaveDe(pr),ks=pmClaves(D);
+  const sel=`<select class="pm-vinc" data-pm-vinc="${esc(pr.id)}" title="Protocolo de la planilla de protocolos al que corresponde esta etiqueta">
+    <option value="">Sin vínculo con el monitoreo</option>${ks.map(c=>`<option value="${esc(c.clave)}"${c.clave===clave?' selected':''}>${esc(c.nombre)}</option>`).join('')}</select>`;
+  if(!clave||!ks.some(c=>c.clave===clave))return `<div class="pm-cfg">${sel}</div>`;
+  const us=(D.protocolos||[]).filter(p=>p.protocolo_clave===clave),pend=us.flatMap(p=>p.pendientes||[]);
+  const k=ks.find(c=>c.clave===clave),crit=pend.filter(q=>q.critico).length;
+  const txt=us.length?`Monitoreo: ${us.length} centro${us.length!==1?'s':''} (${us.map(p=>esc(p.institucion)).join(', ')}) · ${pend.length} pendiente${pend.length!==1?'s':''}${crit?` (${crit} crítico${crit!==1?'s':''})`:''}`
+    :`Monitoreo: ${k.estado==='finalizado'?'finalizado en la planilla, no se monitorea':'sin datos en la última corrida'}`;
+  return `<div class="pm-cfg"><span>${txt}</span> <button type="button" class="btn sm ghost" data-pm-ver="1">Ver en Protocolos</button> ${sel}</div>`}
+
+// Etiqueta del Registro dentro de la tarjeta del monitoreo.
+function pmTagLinea(p){const pr=pmProtoDeClave(p.protocolo_clave);
+  if(pr){const n=protoCount(pr.id);
+    return `<div class="pm-reg">${tagHtml({id:pr.id,nombre:pr.nombre,color:pr.color})} <span>${n} paciente${n!==1?'s':''} en el Registro</span> <button type="button" class="pm-lnk" data-pm-cfg="${esc(pr.id)}">Configuración</button></div>`}
+  return `<div class="pm-reg sin">Sin etiqueta en el Registro · <button type="button" class="pm-lnk" data-pm-crear="${esc(p.protocolo_clave)}" data-pm-nombre="${esc(String(p.nombre||'').split('(')[0].trim())}">Crear etiqueta</button></div>`}
+
+function pmEnlacesVista(){
+  document.querySelectorAll('[data-pm-cfg]').forEach(b=>b.onclick=()=>{const pr=protoById(b.dataset.pmCfg);if(!pr)return;
+    cfgEdit=pr.id;cfgDraft={id:pr.id,nombre:pr.nombre,color:pr.color,descripcion:pr.descripcion||'',estado:pr.estado==='finalizado'?'finalizado':'activo',fechaFin:pr.fechaFin||'',enlaces:(pr.enlaces||[]).map(l=>Object.assign({},l))};
+    cfgDel=null;go('cfg')});
+  document.querySelectorAll('[data-pm-crear]').forEach(b=>b.onclick=()=>{
+    cfgEdit=null;cfgDel=null;cfgDraft=Object.assign(cfgBlank(),{nombre:b.dataset.pmNombre,monitor:b.dataset.pmCrear});go('cfg')});
+}
 </script>
 
 </body>

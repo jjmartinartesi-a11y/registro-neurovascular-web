@@ -303,6 +303,10 @@
   .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
   .field{display:flex;flex-direction:column;gap:5px}
   .field.wide{grid-column:1/-1}
+  /* Sección 5 (23/11): filas alineadas en cuatro columnas (dos en pantallas angostas) con un subtítulo por fila. */
+  .fgrid.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:760px){.fgrid.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .fsub{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin:2px 0 10px}
   .field label{font-size:12px;font-weight:560;color:var(--ink-2)}
   .field label .req{color:var(--crit)}
   /* `.linea-esq` va acá y no aparte: está fuera de un `.field` (es una fila repetible) y sin
@@ -6433,20 +6437,27 @@ function vForm(){
       </div></div>
 
     <div class="fsec" data-nav="Tto. e imagen" id="secImagen"><div class="st"><span class="num">5</span>Tratamiento e imagen</div>
-      <div class="fgrid">
+      <!-- 23/11 (Juan): dos filas alineadas en cuatro columnas — tratamiento y, debajo, imagen — en vez de una grilla
+           que reparte los campos según el ancho y dejaba el ASPECTS suelto al lado de la fecha de la craneotomía. -->
+      <div class="fsub">Tratamiento</div>
+      <div class="fgrid g4">
         ${campoAbre('trombolisis',d)}
           <div id="tlAgBox" style="margin-top:9px${(d.trombolisis===true||d.trombolisisAgente)?'':';display:none'}"><label style="font-size:12px;color:var(--ink-3)">Agente</label>${toggleHtml('trombolisisAgente',[['rtPA','rtPA'],['TNK','TNK'],['','—']],d.trombolisisAgente||'')}</div></div>
-        ${campoAbre('trombectomia',d)}
-          <div class="fhint">“—” es <b>sin dato</b>. El % de reperfusión se mide sobre isquémicos y AIT con el dato cargado.</div></div>
-        ${campoAbre('craneotomia',d)}</div>
-        ${campoHtml('craneotomiaFecha',d,{oculto:d.craneotomia!==true})}</div>
+        ${campoHtml('trombectomia',d)}
+        ${campoHtml('craneotomia',d)}
+        ${campoHtml('craneotomiaFecha',d,{oculto:d.craneotomia!==true})}
+      </div>
+      <div class="fhint">“—” es <b>sin dato</b>. El % de reperfusión se mide sobre isquémicos y AIT con el dato cargado. La fecha de la craneotomía aparece al marcar «Sí».</div>
+      <div class="fsub" style="margin-top:20px">Imagen</div>
+      <div class="fgrid g4">
         <div class="field" id="aspectsBox"${showIsq?'':' style="display:none"'}><label><span class="asptip">ASPECTS<span class="asppop" role="img" aria-label="Esquema ASPECTS">${ASPECTS_POP}</span></span></label><input id="f_aspects" type="number" min="0" max="10" value="${d.aspects??''}"></div>
-        <div class="field" id="aspEstBox"${showAspEst?'':' style="display:none"'}><label>ASPECTS · estudio</label><select id="f_aspectsEstudio"><option value="">—</option>${ASP_EST.concat(d.aspectsEstudio&&!ASP_EST.includes(d.aspectsEstudio)?[d.aspectsEstudio]:[]).map(t=>`<option ${d.aspectsEstudio===t?'selected':''}>${esc(t)}</option>`).join('')}</select>
-          <div class="fhint">Con RM se puntúan las regiones con <b>restricción en difusión</b> (DWI-ASPECTS); con TC, las de cambio isquémico temprano.</div></div>
+        <div class="field" id="aspEstBox"${showAspEst?'':' style="display:none"'}><label>ASPECTS · estudio</label><select id="f_aspectsEstudio"><option value="">—</option>${ASP_EST.concat(d.aspectsEstudio&&!ASP_EST.includes(d.aspectsEstudio)?[d.aspectsEstudio]:[]).map(t=>`<option ${d.aspectsEstudio===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
         <div class="field" id="pcaBox"${showPca?'':' style="display:none"'}><label for="f_pcAspects"><span class="asptip">pc-ASPECTS<span class="asppop" role="group" aria-label="Esquema pc-ASPECTS">${PCA_POP}</span></span></label><input id="f_pcAspects" type="number" min="0" max="10" value="${d.pcAspects??''}"${dPcaReg.length?' readonly':''}>
           <div class="fhint" id="pcaHint"></div></div>
         ${campoHtml('imagen',d)}
-      </div></div>
+      </div>
+      <div class="fhint" id="aspEstHint"${showAspEst?'':' style="display:none"'}>ASPECTS con RM: regiones con <b>restricción en difusión</b> (DWI-ASPECTS); con TC, las de cambio isquémico temprano.</div>
+    </div>
 
     <div class="fsec" data-nav="Reperfusión" id="repSec"${showRep?'':' style="display:none"'}><div class="st"><span class="num">R</span>Tiempos de reperfusión y resultado</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.55">Aparece sólo cuando hay trombólisis o trombectomía. Es lo que pide un indicador de calidad y lo que hace falta para cargar a <b>Res-Q</b>; hasta hoy el registro tenía únicamente puerta-aguja.</div>
@@ -6944,7 +6955,7 @@ function vForm(){
     const isq=esIsq(draft)||!!draft.toast||(draft.ocsp||[]).length>0||draft.aspects!=null;
     const pca=pcaVisible(draft);
     {const sa=$('#sindAyuda');if(sa)sa.textContent=usaTerritorio(draft)?'(uno o más · en un AIT, marcarlo tilda su territorio)':'(uno o más · marcarlo tilda su OCSP)'}
-    [['toastBox',isq],['ocspBox',(isq&&!usaTerritorio(draft))||(draft.ocsp||[]).length>0],['terrBox',usaTerritorio(draft)||terrList(draft).length>0],['aspectsBox',isq],['aspEstBox',isq||pca||!!draft.aspectsEstudio],['pcaBox',pca],['sindBox',isq||presTieneDato(draft)],
+    [['toastBox',isq],['ocspBox',(isq&&!usaTerritorio(draft))||(draft.ocsp||[]).length>0],['terrBox',usaTerritorio(draft)||terrList(draft).length>0],['aspectsBox',isq],['aspEstBox',isq||pca||!!draft.aspectsEstudio],['aspEstHint',isq||pca||!!draft.aspectsEstudio],['pcaBox',pca],['sindBox',isq||presTieneDato(draft)],
      ['hicSec',esHem(draft)||hicTieneDato(draft)],
      ['tvcSec',esTVC(draft)||tvcTieneDato(draft)],
      ['monSec',esIsq(draft)||!!draft.monitoreoTipo||draft.monitoreoDias!=null||draft.monitoreoFA!=null||draft.monitoreoArritmia!=null]

@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src https://script.google.com https://script.googleusercontent.com https://clinicaltrials.gov https://xynzajsqixkohvbezsvy.supabase.co">
 <title>Registro Neurovascular</title>
 <meta name="theme-color" content="#0E6E7A">
-  <script type="module" crossorigin src="./assets/index-B0FIT63z.js"></script>
+  <script type="module" crossorigin src="./assets/index-C3dLJhtK.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-DIOhtgLz.css">
 <link rel="manifest" href="./manifest.webmanifest"></head>
 <body>
@@ -3951,7 +3951,7 @@ const $=s=>document.querySelector(s);
    guarda en ningún lado. `casoCarpeta` se fija con la primera imagen y no se recalcula: si algún
    día cambiara el nº de orden, las imágenes siguen apuntando a su carpeta. */
 const CASO_MAX=3000; /* lado mayor, en px: alcanza para proyectar y evita archivos de 20 MB */
-let casoRoot=null,casoPerm='',casoUrls=[],casoMovida=false;
+let casoRoot=null,casoPerm='',casoUrls=[],casoMovida=false,casoElegir=false;
 /* El handle guardado apunta a una ruta: si la carpeta se mueve (24/10, el proyecto salió de iCloud),
    el permiso puede seguir «concedido» y cada imagen aparecía como «Archivo no encontrado», sin botón
    para elegir la nueva. Se comprueba que la carpeta exista antes de usarla. */
@@ -3976,6 +3976,7 @@ async function casoInit(marca){const m=typeof marca==='function'?marca:()=>{};
   if(window.RNV_CASOS){casoRoot=window.RNV_CASOS.raiz();casoPerm='granted';casoMovida=false;return casoRoot}
   if(casoRoot&&casoPerm==='granted')return casoRoot;
   if(!casoFsOk())return null;
+  if(casoElegir)return null; /* Chrome ya no contestó el permiso: no esperar otros 5 s; el botón abre el selector */
   try{m('casoInit: base del navegador');const h=casoRoot||await casoKv('root');if(!h){m('casoInit: sin carpeta elegida');return null}casoRoot=h;
     /* 23/11: en la ventana de la app (file://, --app) Chrome puede no contestar nunca queryPermission sobre la carpeta
        guardada de otra sesión (diagnóstico real: la sincronización de la Mac quedaba colgada acá). Con tope de 5 s se toma
@@ -3986,21 +3987,41 @@ async function casoInit(marca){const m=typeof marca==='function'?marca:()=>{};
     casoMovida=false;return h}
   catch(e){m('casoInit: error '+(e&&e.name));return null}}
 /* Con gesto (clic): pide el permiso o, si nunca se eligió carpeta, abre el selector. */
+/* 23/11 (Juan: «no me deja dar acceso»): en la ventana --app de file:// Chrome tampoco contesta requestPermission sobre
+   el handle guardado (el diagnóstico de la Mac ya mostraba queryPermission sin respuesta) y el clic no hacía nada. Ahora
+   se espera 1,5 s y, sin respuesta, se abre el selector en la misma carpeta (`startIn`), que da el permiso nuevo. Si el
+   gesto ya venció, el botón pasa a «Elegir la carpeta» (otro clic abre el selector directo). Cada paso queda en
+   `registro_neurovascular_caso_diag` (sin datos de pacientes), que el respaldo copia. */
+function casoDiag(x){try{const k='registro_neurovascular_caso_diag';let a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(_){}
+  a.push(new Date().toISOString()+' '+x);localStorage.setItem(k,JSON.stringify(a.slice(-30)))}catch(_){}}
 async function casoPedir(elegirOtra){
+  casoDiag('pedir'+(elegirOtra?' (elegir)':'')+' raiz='+(!!casoRoot)+' movida='+casoMovida+' elegir='+casoElegir);
   try{
     /* Con la carpeta movida, el permiso vence al cerrar Chrome y la app muestra «Dar acceso» sobre el
        handle viejo: pedir permiso sobre una ruta que no existe puede fallar. En ese caso se abre el
        selector, igual que con «Elegir otra carpeta» (24/10). */
-    if(casoRoot&&!elegirOtra&&!casoMovida){
-      try{casoPerm=await casoRoot.requestPermission({mode:'readwrite'})}catch(_){casoPerm=''}
-      if(casoPerm==='granted'&&await casoExiste(casoRoot))return casoRoot;
-      if(casoPerm==='denied')return null;
-      casoMovida=true}
-    let d=await window.showDirectoryPicker({id:'nv-casos',mode:'readwrite'});
+    if(casoRoot&&!elegirOtra&&!casoMovida&&!casoElegir){
+      try{casoPerm=await Promise.race([casoRoot.requestPermission({mode:'readwrite'}),new Promise(r=>setTimeout(()=>r('sin respuesta'),1500))])}
+      catch(e){casoPerm='error '+(e&&e.name)}
+      casoDiag('requestPermission: '+casoPerm);
+      if(casoPerm==='granted'&&await casoExiste(casoRoot)){casoElegir=false;return casoRoot}
+      if(casoPerm==='denied'){toast('Chrome tiene bloqueado el acceso a la carpeta: elegila de nuevo con «Elegir otra carpeta».');return null}
+      if(casoPerm==='granted')casoMovida=true;
+      casoPerm='prompt'}
+    const op={id:'nv-casos',mode:'readwrite'};
+    if(casoRoot&&!casoMovida)op.startIn=casoRoot;
+    let d;
+    try{d=await window.showDirectoryPicker(op)}
+    catch(e){
+      casoDiag('selector: '+(e&&e.name));
+      if(e&&e.name==='AbortError')return null;
+      /* gesto vencido (SecurityError/NotAllowedError) o startIn inválido: otro clic abre el selector directo */
+      if(op.startIn&&e&&e.name==='TypeError'){delete op.startIn;d=await window.showDirectoryPicker(op)}
+      else{casoElegir=true;toast('Chrome no contestó el permiso: tocá «Elegir la carpeta» y elegí la carpeta casos.');return null}}
     /* Se pide la carpeta de la app; las imágenes van a su subcarpeta «casos». Si eligió «casos», es esa. */
     if(d.name!=='casos')d=await d.getDirectoryHandle('casos',{create:true});
-    casoRoot=d;casoPerm='granted';casoMovida=false;await casoKv('root',d);return d}
-  catch(e){if(e&&e.name!=='AbortError')toast('No se pudo acceder a la carpeta: '+(e.message||e.name));return null}}
+    casoRoot=d;casoPerm='granted';casoMovida=false;casoElegir=false;await casoKv('root',d);casoDiag('carpeta elegida');return d}
+  catch(e){casoDiag('error '+(e&&e.name));if(e&&e.name!=='AbortError')toast('No se pudo acceder a la carpeta: '+(e.message||e.name));return null}}
 function casoCarpetaDe(p){
   if(!p.casoCarpeta)p.casoCarpeta=num(p.nOrden)!=null?String(num(p.nOrden)).padStart(4,'0'):String(p.id);
   return p.casoCarpeta}
@@ -4026,8 +4047,9 @@ async function casoGalRender(){
       :casoRoot
       ?`Chrome pide permiso para abrir la carpeta de imágenes en cada sesión.${L.length?` Esta ficha tiene ${L.length} imagen${L.length!==1?'es':''}.`:''}`
       :'Falta elegir dónde se guardan las imágenes. Elegí la carpeta <b>Registro-Neurovascular</b> (en tu carpeta personal → <b>ClaudeCode</b>): adentro se crea <b>casos</b>, con una subcarpeta por ficha.'}
-    <div class="caso-bar"><button type="button" class="btn sm primary" id="casoPerm">${icon('img')} ${casoRoot&&!casoMovida?'Dar acceso a la carpeta':'Elegir carpeta'}</button>${casoRoot&&!casoMovida?'<button type="button" class="btn sm ghost" id="casoOtra">Elegir otra carpeta</button>':''}</div></div>`;
-    $('#casoPerm').onclick=async()=>{if(await casoPedir(false))casoGalRender()};
+    <div class="caso-bar"><button type="button" class="btn sm primary" id="casoPerm">${icon('img')} ${casoElegir?'Elegir la carpeta':casoRoot&&!casoMovida?'Dar acceso a la carpeta':'Elegir carpeta'}</button>${casoRoot&&!casoMovida&&!casoElegir?'<button type="button" class="btn sm ghost" id="casoOtra">Elegir otra carpeta</button>':''}</div></div>`;
+    $('#casoPerm').onclick=async ev=>{const bt=ev.currentTarget;bt.disabled=true;bt.textContent='Esperando a Chrome…';
+      if(await casoPedir(false))casoGalRender();else if(bt.isConnected){bt.disabled=false;casoGalRender()}};
     if($('#casoOtra'))$('#casoOtra').onclick=async()=>{if(await casoPedir(true))casoGalRender()};
     return}
   casoLibres();

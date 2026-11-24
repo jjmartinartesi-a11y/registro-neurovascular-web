@@ -22373,13 +22373,13 @@ var LADO_CORTO = {
 	Bilateral: "Bilateral",
 	"No lateralizado": "No lateralizado"
 };
-var vacio$1 = (v) => v === "" || v == null || Array.isArray(v) && !v.length;
-var lista = (v) => Array.isArray(v) ? v.map(String) : vacio$1(v) ? [] : [String(v)];
+var vacio$2 = (v) => v === "" || v == null || Array.isArray(v) && !v.length;
+var lista = (v) => Array.isArray(v) ? v.map(String) : vacio$2(v) ? [] : [String(v)];
 var libre = (v) => v && typeof v === "object" && v.$sobre === 1 ? "" : String(v ?? "");
 var siNo = (v) => v === true ? "Sí" : v === false ? "No" : "";
 function nihSev(n, cat) {
 	const x = Number(n);
-	if (vacio$1(n) || !Number.isFinite(x)) return "";
+	if (vacio$2(n) || !Number.isFinite(x)) return "";
 	const r = cat.NIH_SEV.find(([a, b]) => x >= a && x <= b);
 	return r ? r[2] : "";
 }
@@ -22395,23 +22395,23 @@ function presLinea(d, cat) {
 	if (sind.length) p.push(sind.join(", "));
 	if (d.lado) p.push(LADO_CORTO[String(d.lado)] || String(d.lado));
 	if (!p.length) return "";
-	if (!vacio$1(d.nihss)) p.push("NIHSS " + d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : ""));
+	if (!vacio$2(d.nihss)) p.push("NIHSS " + d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : ""));
 	return p.join(" · ");
 }
 function nihTexto(d, cat) {
-	if (vacio$1(d.nihss)) return "";
+	if (vacio$2(d.nihss)) return "";
 	const items = d.nihssItems && typeof d.nihssItems === "object" ? Object.keys(d.nihssItems).length : 0;
 	return d.nihss + (nihSev(d.nihss, cat) ? " (" + nihSev(d.nihss, cat) + ")" : "") + (items >= 15 ? " · por ítems" : "");
 }
 function aspTexto(d) {
 	const est = d.aspectsEstudio ? d.aspectsEstudio === "RM difusión (DWI)" ? " · RM-DWI" : " · TC" : "";
-	if (!vacio$1(d.aspects)) return d.aspects + est + (String(d.aspects) === "10" ? " (sin lesiones)" : "");
-	if (!vacio$1(d.pcAspects)) return "pc-ASPECTS " + d.pcAspects + est + (lista(d.pcAspectsReg).length ? " (" + lista(d.pcAspectsReg).join(", ") + ")" : "");
+	if (!vacio$2(d.aspects)) return d.aspects + est + (String(d.aspects) === "10" ? " (sin lesiones)" : "");
+	if (!vacio$2(d.pcAspects)) return "pc-ASPECTS " + d.pcAspects + est + (lista(d.pcAspectsReg).length ? " (" + lista(d.pcAspectsReg).join(", ") + ")" : "");
 	return "";
 }
 function taTexto(d) {
-	if (vacio$1(d.taSist) && vacio$1(d.taDiast)) return "";
-	return (vacio$1(d.taSist) ? "—" : d.taSist) + "/" + (vacio$1(d.taDiast) ? "—" : d.taDiast) + " mmHg";
+	if (vacio$2(d.taSist) && vacio$2(d.taDiast)) return "";
+	return (vacio$2(d.taSist) ? "—" : d.taSist) + "/" + (vacio$2(d.taDiast) ? "—" : d.taDiast) + " mmHg";
 }
 function ecgTexto(d) {
 	const e = String(d.ecg || ""), x = libre(d.ecgDetalle);
@@ -22422,7 +22422,7 @@ function abcd2Texto(d, cat) {
 	const cl = cat.ABCD2_CLIN.find((x) => x[0] === d.abcd2Clin);
 	const du = cat.ABCD2_DUR.find((x) => x[0] === d.abcd2Dur);
 	const falta = [];
-	if (vacio$1(d.edad)) falta.push("edad");
+	if (vacio$2(d.edad)) falta.push("edad");
 	if (typeof d.abcd2PA !== "boolean") falta.push("PA");
 	if (!cl) falta.push("clínica");
 	if (!du) falta.push("duración");
@@ -22452,19 +22452,19 @@ function hace(desde, hasta) {
 }
 function repFaltan(d) {
 	const f = [];
-	if (vacio$1(d.inicioPuerta) && !String(d.tipoInicio || "").startsWith("Desconocido")) f.push("inicio-puerta");
-	if (d.trombolisis === true && vacio$1(d.puertaAguja)) f.push("puerta-aguja");
+	if (vacio$2(d.inicioPuerta) && !String(d.tipoInicio || "").startsWith("Desconocido")) f.push("inicio-puerta");
+	if (d.trombolisis === true && vacio$2(d.puertaAguja)) f.push("puerta-aguja");
 	if (d.trombectomia === true) {
-		if (vacio$1(d.puertaPuncion)) f.push("puerta-punción");
-		if (vacio$1(d.puertaRecanal)) f.push("puerta-recanalización");
-		if (vacio$1(d.tici)) f.push("mTICI");
+		if (vacio$2(d.puertaPuncion)) f.push("puerta-punción");
+		if (vacio$2(d.puertaRecanal)) f.push("puerta-recanalización");
+		if (vacio$2(d.tici)) f.push("mTICI");
 	}
-	if (vacio$1(d.nihssPost)) f.push("NIHSS post-reperfusión");
+	if (vacio$2(d.nihssPost)) f.push("NIHSS post-reperfusión");
 	return f;
 }
 var repTrat = (d) => [d.trombolisis === true ? "trombólisis" : "", d.trombectomia === true ? "trombectomía" : ""].filter(Boolean).join(" + ") || "—";
 function resumenWhatsApp(d, cat, quien, cargaIso) {
-	const nn = (v) => vacio$1(v) ? "—" : String(v);
+	const nn = (v) => vacio$2(v) ? "—" : String(v);
 	const f = String(d.fechaACV || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
 	const t = lkwMs(d.fechaLKW), p = Number.isFinite(t) ? partes(t) : null;
 	const inicio = p && d.tipoInicio ? p.hh + ":" + p.mm + " h del " + p.d + "/" + p.m + "/" + p.a + " (" + (String(d.tipoInicio).startsWith("Inicio presenciado") ? "presenciado" : "LKW: última vez visto bien") + ") · hace " + hace(t, Date.parse(cargaIso) || Date.now()) : "sin dato";
@@ -22474,21 +22474,21 @@ function resumenWhatsApp(d, cat, quien, cargaIso) {
 		"🧠 *Nuevo paciente — Registro Neurovascular*",
 		"Apellido y Nombre: " + nn(d.nombre),
 		"Documento: " + nn(d.documento),
-		"Sexo / Edad: " + nn(d.sexo) + " · " + nn(d.edad) + (vacio$1(d.edad) ? "" : " años"),
+		"Sexo / Edad: " + nn(d.sexo) + " · " + nn(d.edad) + (vacio$2(d.edad) ? "" : " años"),
 		"Fecha del evento: " + (f ? f[3] + "/" + f[2] + "/" + f[1] : "—"),
 		"Modo de ingreso: " + nn(d.modoIngreso),
-		"Tipo de evento: " + (vacio$1(d.tipo) ? "a definir" : String(d.tipo)),
+		"Tipo de evento: " + (vacio$2(d.tipo) ? "a definir" : String(d.tipo)),
 		"🕒 Inicio de síntomas: " + inicio,
 		pl ? "Presentación: " + pl : "NIHSS: " + nn(nihTexto(d, cat))
 	];
 	if (siNo(d.deficitDiscap)) L.push("Déficit discapacitante: " + siNo(d.deficitDiscap));
 	if (aspTexto(d)) L.push("ASPECTS: " + aspTexto(d));
 	if (lista(d.presentacion).length) L.push("Rasgos: " + lista(d.presentacion).map((k) => rotulo(cat, "PRES", k)).join(", "));
-	L.push("mRS previo: " + nn(d.mrsPrevio), "TA: " + nn(taTexto(d)), "Glucemia: " + (vacio$1(d.glucemia) ? "—" : d.glucemia + " mg/dL"), "ECG: " + nn(ecgTexto(d)));
+	L.push("mRS previo: " + nn(d.mrsPrevio), "TA: " + nn(taTexto(d)), "Glucemia: " + (vacio$2(d.glucemia) ? "—" : d.glucemia + " mg/dL"), "ECG: " + nn(ecgTexto(d)));
 	if (d.tipo === "AIT") L.push("ABCD2: " + abcd2Texto(d, cat));
-	if (d.tipo === "Hemorrágico") L.push("Localización: " + nn(lista(d.hicLocaliza).join(", ")), "Volumen: " + (vacio$1(d.hicVolumen) ? "—" : d.hicVolumen + " mL"), "Anticoagulado: " + nn(siNo(d.hicAnticoag)));
+	if (d.tipo === "Hemorrágico") L.push("Localización: " + nn(lista(d.hicLocaliza).join(", ")), "Volumen: " + (vacio$2(d.hicVolumen) ? "—" : d.hicVolumen + " mL"), "Anticoagulado: " + nn(siNo(d.hicAnticoag)));
 	L.push("FRV: " + nn(lista(d.frv).join(", ")), "FR atípicos: " + nn(lista(d.frvAtipicos).join(", ")), "Antecedentes familiares: " + nn(lista(d.antFamiliares).join(", ")));
-	if (!vacio$1(d.llegadaTipo)) L.push("Llegada: " + d.llegadaTipo);
+	if (!vacio$2(d.llegadaTipo)) L.push("Llegada: " + d.llegadaTipo);
 	L.push("Antitrombótico previo: " + nn(lista(d.antitromboticoPrevio).join(", ")));
 	if (libre(d.relatoIngreso)) L.push("📝 Relato: " + libre(d.relatoIngreso));
 	if (libre(d.estudiosIngreso)) L.push("Estudios: " + libre(d.estudiosIngreso));
@@ -22500,16 +22500,16 @@ function faltaDecision(d) {
 	const t = String(d.tipo || ""), f = [];
 	if (!t) return ["tipo de evento"];
 	if (t === "Isquémico" || t === "Amaurosis fugaz") {
-		if (vacio$1(d.ocsp)) f.push("OCSP");
+		if (vacio$2(d.ocsp)) f.push("OCSP");
 		if (d.trombolisis == null) f.push("trombólisis (sí/no)");
 		if (d.trombectomia == null) f.push("trombectomía (sí/no)");
 	} else if (t === "AIT") {
-		if (vacio$1(d.territorio)) f.push("territorio");
-		if (vacio$1(d.txAlta)) f.push("antitrombótico inicial");
+		if (vacio$2(d.territorio)) f.push("territorio");
+		if (vacio$2(d.txAlta)) f.push("antitrombótico inicial");
 	} else if (t === "Hemorrágico") {
-		if (vacio$1(d.hicLocaliza)) f.push("localización de la hemorragia");
+		if (vacio$2(d.hicLocaliza)) f.push("localización de la hemorragia");
 	} else if (t === "Disección" || t === "Trombosis venosa") {
-		if (vacio$1(d.txAlta)) f.push("antitrombótico inicial");
+		if (vacio$2(d.txAlta)) f.push("antitrombótico inicial");
 	}
 	return f;
 }
@@ -22974,6 +22974,7 @@ function canon(v) {
 }
 var iniciales = (n) => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 3).map((w) => w.charAt(0).toUpperCase() + ".").join(" ");
 var igual = (a, b) => canon(a ?? null) === canon(b ?? null);
+var vacio$1 = (v) => v === null || v === void 0 || v === "" || Array.isArray(v) && !v.length || typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length;
 var copia = (x) => JSON.parse(JSON.stringify(x));
 function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
 	const ok = (k, f) => !permitido || permitido(k, f);
@@ -23012,6 +23013,7 @@ function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
 		const campos = {};
 		for (const k of /* @__PURE__ */ new Set([...Object.keys(f), ...Object.keys(prev)])) {
 			if (k === "__borrada" || !ok(k, f)) continue;
+			if (permitido && !(k in prev) && vacio$1(f[k])) continue;
 			if (!igual(f[k], prev[k])) campos[k] = {
 				nuevo: copia(f[k] ?? null),
 				base: copia(prev[k] ?? null)
@@ -23135,7 +23137,7 @@ function incorporar(db, sombra, pendientes, filas) {
 		for (const k of /* @__PURE__ */ new Set([...Object.keys(fila.datos), ...Object.keys(s || {})])) {
 			if (k === "__borrada" || pend.has(fila.id + "\0" + k)) continue;
 			const srv = fila.datos[k] ?? null;
-			if (!igual(local[k], s ? s[k] : local[k])) continue;
+			if (s && !igual(local[k], s[k]) && !(!(k in s) && vacio$1(local[k]))) continue;
 			if (!igual(local[k], srv)) {
 				local[k] = copia(srv);
 				cambio = true;
@@ -24782,6 +24784,18 @@ async function quienSoy() {
 	let campos = [];
 	const { data: cr, error: ec } = await sb.from("campos_residente").select("campo, grupo");
 	if (!ec && cr) {
+		const firma = cr.map((x) => x.campo + ":" + x.grupo).sort().join(","), kf = "rnv_campos_residente_firma";
+		let antes = null;
+		try {
+			antes = localStorage.getItem(kf);
+		} catch {}
+		if (antes !== firma) {
+			est.rev = 0;
+			await guardarEstado();
+			try {
+				localStorage.setItem(kf, firma);
+			} catch {}
+		}
 		campos = cr;
 		try {
 			localStorage.setItem(kc, JSON.stringify(cr));

@@ -7,8 +7,8 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src https://script.google.com https://script.googleusercontent.com https://clinicaltrials.gov https://xynzajsqixkohvbezsvy.supabase.co">
 <title>Registro Neurovascular</title>
 <meta name="theme-color" content="#0E6E7A">
-  <script type="module" crossorigin src="./assets/index-DH9FdJGX.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-qwQl-CKW.css">
+  <script type="module" crossorigin src="./assets/index-B0FIT63z.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DIOhtgLz.css">
 <link rel="manifest" href="./manifest.webmanifest"></head>
 <body>
 <title>Registro Neurovascular</title>
@@ -3971,15 +3971,20 @@ async function casoKv(k,v){const db=await casoIdb();return new Promise((res,rej)
   const st=db.transaction('kv',v===undefined?'readonly':'readwrite').objectStore('kv');
   const q=v===undefined?st.get(k):st.put(v,k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
 /* Sin gesto: sólo consulta. Devuelve el handle si ya hay permiso de escritura. */
-async function casoInit(){
+/* `marca` (opcional, 23/11): en qué paso va, para el diagnóstico de la sincronización de la Mac (sin nombres). */
+async function casoInit(marca){const m=typeof marca==='function'?marca:()=>{};
   if(window.RNV_CASOS){casoRoot=window.RNV_CASOS.raiz();casoPerm='granted';casoMovida=false;return casoRoot}
   if(casoRoot&&casoPerm==='granted')return casoRoot;
   if(!casoFsOk())return null;
-  try{const h=casoRoot||await casoKv('root');if(!h)return null;casoRoot=h;
-    casoPerm=await h.queryPermission({mode:'readwrite'});if(casoPerm!=='granted')return null;
-    if(!await casoExiste(h)){casoMovida=true;casoPerm='';return null}
+  try{m('casoInit: base del navegador');const h=casoRoot||await casoKv('root');if(!h){m('casoInit: sin carpeta elegida');return null}casoRoot=h;
+    /* 23/11: en la ventana de la app (file://, --app) Chrome puede no contestar nunca queryPermission sobre la carpeta
+       guardada de otra sesión (diagnóstico real: la sincronización de la Mac quedaba colgada acá). Con tope de 5 s se toma
+       como «sin permiso»: la galería ofrece «Dar acceso», que pide el permiso con el clic de Juan. */
+    m('casoInit: permiso');casoPerm=await Promise.race([h.queryPermission({mode:'readwrite'}),new Promise(r=>setTimeout(()=>r('sin respuesta'),5000))]);
+    if(casoPerm!=='granted'){m('casoInit: permiso '+casoPerm);if(casoPerm==='sin respuesta')casoPerm='prompt';return null}
+    m('casoInit: recorrer carpeta');if(!await casoExiste(h)){casoMovida=true;casoPerm='';m('casoInit: carpeta movida');return null}
     casoMovida=false;return h}
-  catch(e){return null}}
+  catch(e){m('casoInit: error '+(e&&e.name));return null}}
 /* Con gesto (clic): pide el permiso o, si nunca se eligió carpeta, abre el selector. */
 async function casoPedir(elegirOtra){
   try{

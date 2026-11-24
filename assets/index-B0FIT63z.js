@@ -23171,561 +23171,6 @@ function pendientesValidacion(filas, residentes) {
 	}
 	return out;
 }
-// src/web/jefe.ts
-var sb$2;
-var porPedir = [];
-function guardarPorPedir() {
-	try {
-		localStorage.setItem("rnv_por_pedir", JSON.stringify(porPedir));
-	} catch {}
-}
-var WEB_PUBLICADA = "https://jjmartinartesi-a11y.github.io/registro-neurovascular-web/";
-var linkDe = (clave, href = location.href) => (/^https?:/.test(href) ? href.split("#")[0] : WEB_PUBLICADA) + "#r=" + clave;
-async function llamar(cuerpo) {
-	const { data, error } = await sb$2.functions.invoke("residentes", { body: cuerpo });
-	if (error) {
-		let msg = error.message;
-		try {
-			const j = await error.context?.json();
-			if (j?.error) msg = j.error;
-		} catch {}
-		throw new Error(msg);
-	}
-	return data;
-}
-function mostrarLink(nombre, clave) {
-	const l = linkDe(clave);
-	const texto = `Hola ${nombre}: este es tu link personal para cargar en el Registro Neurovascular. Abrilo una vez en tu celular y agregalo a la pantalla de inicio. No lo compartas: entra como vos.\n${l}`;
-	return `<div class="rnv-link"><p><b>Link de ${esc(nombre)}</b> — se muestra una sola vez. Mandáselo sólo a esa persona.</p>
-    <input class="mono" readonly value="${esc(l)}" id="rnvLinkTxt">
-    <div><button type="button" class="btn sm" id="rnvLinkCopiar">Copiar</button>
-    <a class="btn sm primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(texto)}">Mandar por WhatsApp</a></div></div>`;
-}
-async function panelResidentes() {
-	const caja = document.createElement("div");
-	caja.id = "rnvCflBox";
-	document.body.appendChild(caja);
-	let extra = "";
-	const pintar = async () => {
-		let filas = "", err = "";
-		try {
-			filas = (await llamar({ accion: "listar" })).residentes.map((x) => `<tr data-id="${esc(x.user_id)}" data-n="${esc(x.nombre)}"><td>${esc(x.nombre)}</td>
-        <td>${x.activo ? x.clave ? x.clave.usada_en ? "entró el " + esc(x.clave.usada_en.slice(0, 10)) : "link sin usar" : "sin link" : "dado de baja"}</td>
-        <td><button type="button" class="btn sm ghost" data-a="renombrar">Cambiar nombre</button> ${x.activo ? "<button type=\"button\" class=\"btn sm ghost\" data-a=\"link\">Link nuevo</button> <button type=\"button\" class=\"btn sm ghost\" data-a=\"baja\">Dar de baja</button>" : "<button type=\"button\" class=\"btn sm ghost\" data-a=\"reactivar\">Reactivar</button>"}</td></tr>`).join("");
-		} catch (e) {
-			err = e.message;
-		}
-		caja.innerHTML = `<div class="rnv-cfl"><h3>Residentes</h3>
-      <p class="rnv-nota">Cada residente entra con su link personal, sin contraseña ni códigos. Ve sólo lo que cargó y los
-      pedidos de reperfusión abiertos. Dar de baja corta su acceso; sus cargas quedan. Un residente que vuelve se reactiva
-      con un link nuevo.</p>
-      ${err ? `<p class="rnv-err">${esc(err)}</p>` : filas ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>${filas}</tbody></table>` : "<p>Todavía no hay residentes.</p>"}
-      ${extra}
-      <form id="rnvResAlta" class="rnv-res-alta"><input id="rnvResNombre" placeholder="Nombre del residente" minlength="3" required>
-      <button class="btn sm primary" type="submit">Dar de alta</button></form>
-      <button type="button" class="btn sm" id="rnvCflCerrar">Cerrar</button></div>`;
-		caja.querySelector("#rnvCflCerrar").addEventListener("click", () => caja.remove());
-		caja.querySelector("#rnvLinkCopiar")?.addEventListener("click", async () => {
-			const v = document.getElementById("rnvLinkTxt").value;
-			try {
-				await navigator.clipboard.writeText(v);
-				toast("Link copiado");
-			} catch {
-				document.getElementById("rnvLinkTxt").select();
-			}
-		});
-		caja.querySelector("#rnvResAlta").addEventListener("submit", async (ev) => {
-			ev.preventDefault();
-			const nombre = document.getElementById("rnvResNombre").value.trim();
-			try {
-				const r = await llamar({
-					accion: "alta",
-					nombre
-				});
-				extra = mostrarLink(nombre, String(r.clave));
-			} catch (e) {
-				extra = `<p class="rnv-err">${esc(e.message)}</p>`;
-			}
-			pintar();
-		});
-		caja.querySelectorAll("button[data-a]").forEach((b) => b.addEventListener("click", async () => {
-			const tr = b.closest("tr"), id = tr.dataset.id, nombre = tr.dataset.n;
-			const a = b.dataset.a;
-			if (a === "baja" && !confirm(`¿Dar de baja a ${nombre}? Su link deja de servir y su sesión se cierra.`)) return;
-			if (a === "link" && !confirm(`¿Link nuevo para ${nombre}? El anterior deja de servir.`)) return;
-			let nuevo = "";
-			if (a === "renombrar") {
-				nuevo = (prompt("Nombre del residente", nombre) || "").trim();
-				if (nuevo.length < 3 || nuevo === nombre) return;
-			}
-			try {
-				const r = await llamar({
-					accion: a,
-					user_id: id,
-					...nuevo ? { nombre: nuevo } : {}
-				});
-				extra = a === "link" || a === "reactivar" ? mostrarLink(nombre, String(r.clave)) : a === "renombrar" ? `<p>Ahora se llama ${esc(nuevo)}.</p>` : `<p>${esc(nombre)} quedó dado de baja.</p>`;
-			} catch (e) {
-				extra = `<p class="rnv-err">${esc(e.message)}</p>`;
-			}
-			pintar();
-		}));
-	};
-	await pintar();
-}
-function marca(id, rp) {
-	const q = DB.find((x) => x && x.id === id);
-	if (q) {
-		q.repPedido = rp;
-		save();
-	}
-	if (draft && editId === id) draft.repPedido = rp;
-}
-function pedir(p) {
-	if (!porPedir.includes(p.id)) porPedir.push(p.id);
-	guardarPorPedir();
-	marca(p.id, {
-		estado: "pendiente",
-		pedido: nowISO(),
-		tl: p.trombolisis === true,
-		te: p.trombectomia === true
-	});
-	toast("Pedido a residentes: completar reperfusión de Nº " + (p.nOrden ?? "—") + " — sale con la sincronización");
-	return Promise.resolve(true);
-}
-async function sincronizarPedidos(enServidor) {
-	for (const id of [...porPedir]) {
-		if (!enServidor(id)) continue;
-		const { data: ya } = await sb$2.from("pedidos_reperfusion").select("id").eq("evento_id", id).in("estado", ["abierto", "parcial"]).is("borrado_en", null);
-		const q = DB.find((x) => x && x.id === id);
-		if (!ya?.length) {
-			const { error } = await sb$2.from("pedidos_reperfusion").insert({
-				evento_id: id,
-				iniciales: iniciales(q?.nombre) || null
-			});
-			if (error) throw error;
-		}
-		porPedir.splice(porPedir.indexOf(id), 1);
-		guardarPorPedir();
-		const p = DB.find((x) => x && x.id === id);
-		if (p) repCardWeb(p);
-	}
-	const { data } = await sb$2.from("pedidos_reperfusion").select("evento_id, estado, modificado_en").is("borrado_en", null).order("creado_en");
-	for (const r of data || []) {
-		const p = DB.find((x) => x && x.id === r.evento_id);
-		const est = r.estado === "abierto" ? "pendiente" : r.estado;
-		if (p?.repPedido && p.repPedido.estado !== est && p.repPedido.estado !== "error") marca(p.id, {
-			...p.repPedido,
-			estado: est,
-			resp: r.modificado_en
-		});
-	}
-}
-function repCardWeb(p) {
-	const old = document.getElementById("repCard");
-	if (old) old.remove();
-	const c = document.createElement("div");
-	c.id = "repCard";
-	c.className = "rnv-res-card rnv-flota";
-	c.innerHTML = `<b>Pedido de reperfusión creado</b><div>Nº ${esc(String(p.nOrden ?? "—"))} ya les aparece a los residentes en «Pedidos de reperfusión». ¿Les avisás al grupo?</div>
-    <div><button type="button" class="btn sm primary" id="repCardWa">Avisar por WhatsApp</button> <button type="button" class="btn sm ghost" id="repCardNo">Ahora no</button></div>`;
-	document.body.appendChild(c);
-	c.querySelector("#repCardWa").addEventListener("click", () => {
-		repAvisarWa(p);
-		c.remove();
-	});
-	c.querySelector("#repCardNo").addEventListener("click", () => c.remove());
-}
-function iniciar$1(cliente) {
-	sb$2 = cliente;
-	const w0 = window;
-	const vCfgApp = w0.vCfg;
-	w0.vCfg = () => {
-		vCfgApp();
-		const head = document.querySelector("#main .head");
-		if (!head || document.getElementById("rnvCfgRes")) return;
-		const c = document.createElement("div");
-		c.className = "card";
-		c.id = "rnvCfgRes";
-		c.style.cssText = "max-width:760px;margin-bottom:18px";
-		c.innerHTML = "<h3>Residentes</h3><div class=\"hint\">Quiénes cargan desde el celular: alta (con su link personal), cambio de nombre, link nuevo, baja y reactivación.</div><button type=\"button\" class=\"btn\" id=\"rnvCfgResBtn\">Administrar residentes</button>";
-		head.after(c);
-		c.querySelector("#rnvCfgResBtn").addEventListener("click", () => void panelResidentes());
-	};
-	if (view === "cfg") w0.vCfg && w0.vCfg();
-	try {
-		porPedir = JSON.parse(localStorage.getItem("rnv_por_pedir") || "[]");
-	} catch {
-		porPedir = [];
-	}
-	const w = window;
-	w.repPedir = pedir;
-	w.repWaTexto = (p) => {
-		const f = repFaltanApp(p).map((k) => REP_LAB_APP[k] || k);
-		const tr = [p.trombolisis === true ? "trombólisis" : "", p.trombectomia === true ? "trombectomía" : ""].filter(Boolean).join(" + ");
-		return "*** Unidad de Stroke - CUENTA 350.000 ***\n⏱️ *Pedido de reperfusión*\nCompletar los tiempos del Nº " + (p.nOrden ?? "—") + (tr ? " (" + tr + ")" : "") + (f.length ? "\nFalta: " + f.join(", ") : "") + "\nEntrá con tu link personal → «Pedidos de reperfusión».";
-	};
-	w.repEstadoTxt = (rp) => !rp ? "" : rp.estado === "error" ? "no se pudo pedir (" + (rp.msg || "error") + ")" : rp.estado === "completo" ? "completado por los residentes" : rp.estado === "parcial" ? "carga parcial de los residentes" : "pendiente para los residentes";
-}
-var MIME = {
-	jpg: "image/jpeg",
-	png: "image/png",
-	webp: "image/webp",
-	mp4: "video/mp4",
-	webm: "video/webm"
-};
-var extDe = (archivo) => (String(archivo).match(/\.([a-z0-9]+)$/i)?.[1] || "").toLowerCase();
-var rutaDe = (evento_id, media_id, ext) => `eventos/${evento_id}/${media_id}.${ext}`;
-function nuevoPendiente(evento_id, archivo, bytes, sha256, media_id, ahora) {
-	const ext = extDe(archivo);
-	const mime = MIME[ext];
-	if (!mime) throw new Error(`tipo de archivo no permitido (.${ext}): sólo JPEG, PNG, WebP, MP4 o WebM`);
-	if (bytes > 52428800) throw new Error(`pesa ${(bytes / 1048576).toFixed(1).replace(".", ",")} MB: el máximo es 50 MB`);
-	if (!/^[A-Za-z0-9_-]+$/.test(evento_id)) throw new Error("la ficha tiene un id que no sirve como ruta");
-	return {
-		media_id,
-		evento_id,
-		archivo,
-		ruta: rutaDe(evento_id, media_id, ext),
-		mime,
-		tipo: mime.startsWith("video/") ? "video" : "imagen",
-		bytes,
-		sha256,
-		creado: ahora
-	};
-}
-var items$1 = (f) => f && Array.isArray(f.imagenes) ? f.imagenes : [];
-function anotar(db, borrador, pendientes) {
-	const ultimo = /* @__PURE__ */ new Map();
-	for (const p of pendientes) {
-		if (p.anotado) continue;
-		const k = p.evento_id + "\0" + p.archivo;
-		const u = ultimo.get(k);
-		if (!u || u.creado <= p.creado) ultimo.set(k, p);
-	}
-	const reemplazados = /* @__PURE__ */ new Set(), anotados = /* @__PURE__ */ new Set();
-	let cambio = false;
-	for (const f of [...db, borrador]) {
-		if (!f || !f.id) continue;
-		for (const it of items$1(f)) {
-			const p = it && it.archivo ? ultimo.get(f.id + "\0" + it.archivo) : void 0;
-			if (!p) continue;
-			anotados.add(p.media_id);
-			if (it.media_id === p.media_id) continue;
-			if (it.media_id) reemplazados.add(it.media_id);
-			it.media_id = p.media_id;
-			cambio = true;
-		}
-	}
-	for (const p of pendientes) if (!p.anotado && !anotados.has(p.media_id) && ultimo.get(p.evento_id + "\0" + p.archivo) !== p) reemplazados.add(p.media_id);
-	for (const id of anotados) reemplazados.delete(id);
-	return {
-		cambio,
-		reemplazados: [...reemplazados],
-		anotados: [...anotados]
-	};
-}
-function itemDe(f, archivo) {
-	return items$1(f).find((it) => it && it.archivo === archivo);
-}
-// src/web/casos.ts
-var FIRMA_S = 600;
-var sb$1;
-var pend = [];
-var bajas = [];
-var bajados = /* @__PURE__ */ new Map();
-var fallas = /* @__PURE__ */ new Map();
-function idb$2() {
-	return new Promise((ok, mal) => {
-		const r = indexedDB.open("rnv_media", 1);
-		r.onupgradeneeded = () => {
-			r.result.createObjectStore("subir", { keyPath: "media_id" });
-			r.result.createObjectStore("bajas", { keyPath: "media_id" });
-		};
-		r.onsuccess = () => ok(r.result);
-		r.onerror = () => mal(r.error);
-	});
-}
-async function tx(almacen, f) {
-	const db = await idb$2();
-	await new Promise((ok, mal) => {
-		const t = db.transaction(almacen, "readwrite");
-		f(t.objectStore(almacen));
-		t.oncomplete = () => ok();
-		t.onerror = () => mal(t.error);
-	});
-}
-async function todo(almacen) {
-	const db = await idb$2();
-	return new Promise((ok, mal) => {
-		const q = db.transaction(almacen).objectStore(almacen).getAll();
-		q.onsuccess = () => ok(q.result);
-		q.onerror = () => mal(q.error);
-	});
-}
-async function sha256$1(b) {
-	const h = await crypto.subtle.digest("SHA-256", await b.arrayBuffer());
-	return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-function noEsta() {
-	return new DOMException("no está", "NotFoundError");
-}
-function fichaActual() {
-	return editId ? DB.find((f) => f && f.id === editId) || null : null;
-}
-async function dar(media_id) {
-	const p = pend.find((x) => x.media_id === media_id);
-	if (p) return p.blob;
-	const ya = bajados.get(media_id);
-	if (ya) return ya;
-	if (!navigator.onLine) {
-		fallas.set(media_id, "Sin conexión: la imagen está en el servidor");
-		throw noEsta();
-	}
-	const { data: fila, error } = await sb$1.from("casos_media").select("ruta, sha256").eq("id", media_id).maybeSingle();
-	if (error || !fila) {
-		fallas.set(media_id, error ? "No se pudo consultar el servidor" : "Todavía no está en el servidor");
-		throw noEsta();
-	}
-	const { data: firma, error: e2 } = await sb$1.storage.from("casos").createSignedUrl(fila.ruta, FIRMA_S);
-	if (e2 || !firma) {
-		fallas.set(media_id, "El servidor no entregó el archivo");
-		throw noEsta();
-	}
-	let r;
-	try {
-		r = await fetch(firma.signedUrl, { cache: "no-store" });
-	} catch {
-		fallas.set(media_id, "Sin conexión con el servidor");
-		throw noEsta();
-	}
-	if (!r.ok) {
-		fallas.set(media_id, `El servidor no entregó el archivo (HTTP ${r.status})`);
-		throw noEsta();
-	}
-	const b = await r.blob();
-	if (await sha256$1(b) !== fila.sha256) {
-		fallas.set(media_id, "Lo bajado no coincide con lo subido (sha256): no se muestra");
-		throw noEsta();
-	}
-	bajados.set(media_id, b);
-	fallas.delete(media_id);
-	return b;
-}
-function archivoHandle(nombre, ev) {
-	return {
-		kind: "file",
-		name: nombre,
-		async getFile() {
-			const it = itemDe(draft, nombre);
-			const id = [...pend].reverse().find((x) => x.evento_id === ev && x.archivo === nombre && (!it?.media_id || x.media_id === it.media_id))?.media_id || it?.media_id;
-			if (!id) throw noEsta();
-			const b = await dar(id);
-			return new File([b], nombre, { type: b.type });
-		},
-		async createWritable() {
-			const partes = [];
-			return {
-				async write(x) {
-					partes.push(x);
-				},
-				async close() {
-					const blob = new Blob(partes, { type: partes[0] instanceof Blob ? partes[0].type : "" });
-					const p = nuevoPendiente(ev, nombre, blob.size, await sha256$1(blob), crypto.randomUUID(), (/* @__PURE__ */ new Date()).toISOString());
-					const g = {
-						...p,
-						blob: blob.type === p.mime ? blob : new Blob([blob], { type: p.mime })
-					};
-					await tx("subir", (s) => s.put(g));
-					pend.push(g);
-				}
-			};
-		}
-	};
-}
-function carpeta(nombre) {
-	const f = fichaActual();
-	if (!f || draft.casoCarpeta && draft.casoCarpeta !== nombre) throw noEsta();
-	const ev = f.id;
-	const existe = (n) => !!itemDe(draft, n) || pend.some((x) => x.evento_id === ev && x.archivo === n);
-	return {
-		kind: "directory",
-		name: nombre,
-		async getFileHandle(n, o) {
-			if (!o?.create && !existe(n)) throw noEsta();
-			return archivoHandle(n, ev);
-		},
-		async removeEntry(n) {
-			const it = itemDe(draft, n);
-			if (it?.media_id) await quitar(String(it.media_id));
-		}
-	};
-}
-var raiz = {
-	kind: "directory",
-	name: "casos",
-	async getDirectoryHandle(n) {
-		return carpeta(n);
-	},
-	async queryPermission() {
-		return "granted";
-	},
-	async requestPermission() {
-		return "granted";
-	},
-	values() {
-		return { [Symbol.asyncIterator]: () => ({ next: async () => ({
-			done: true,
-			value: void 0
-		}) }) };
-	}
-};
-async function quitar(media_id) {
-	const i = pend.findIndex((x) => x.media_id === media_id);
-	if (i >= 0) {
-		pend.splice(i, 1);
-		await tx("subir", (s) => s.delete(media_id));
-		return;
-	}
-	if (bajas.some((b) => b.media_id === media_id)) return;
-	bajas.push({ media_id });
-	await tx("bajas", (s) => s.put({ media_id }));
-}
-async function anotarFichas() {
-	const r = anotar(DB, draft, pend);
-	for (const id of r.reemplazados) await quitar(id);
-	for (const p of pend) if (r.anotados.includes(p.media_id) && !p.anotado) {
-		p.anotado = true;
-		await tx("subir", (s) => s.put(p));
-	}
-	return r.cambio;
-}
-var pendientes = () => pend.length + bajas.length;
-async function subirMedia(enServidor) {
-	for (const p of [...pend]) {
-		if (!p.anotado || !enServidor(p.evento_id)) continue;
-		const { blob, anotado: _a, archivo: _n, creado: _c, ...fila } = p;
-		const { error: e1 } = await sb$1.from("casos_media").insert({
-			id: fila.media_id,
-			evento_id: fila.evento_id,
-			ruta: fila.ruta,
-			tipo: fila.tipo,
-			mime: fila.mime,
-			bytes: fila.bytes,
-			sha256: fila.sha256,
-			tapado: true
-		});
-		if (e1 && e1.code !== "23505") throw e1;
-		const { error: e2 } = await sb$1.storage.from("casos").upload(fila.ruta, blob, {
-			contentType: fila.mime,
-			upsert: false,
-			cacheControl: "0"
-		});
-		if (e2 && !/exists|Duplicate/i.test(e2.message) && e2.statusCode !== "409") throw e2;
-		bajados.set(p.media_id, blob);
-		pend.splice(pend.indexOf(p), 1);
-		await tx("subir", (s) => s.delete(p.media_id));
-	}
-	for (const b of [...bajas]) {
-		const { data: s } = await sb$1.auth.getSession();
-		const { error } = await sb$1.from("casos_media").update({
-			borrado_en: (/* @__PURE__ */ new Date()).toISOString(),
-			borrado_por: s.session?.user.id ?? null
-		}).eq("id", b.media_id).is("borrado_en", null);
-		if (error) throw error;
-		bajas.splice(bajas.indexOf(b), 1);
-		await tx("bajas", (st) => st.delete(b.media_id));
-	}
-}
-async function instalar(cliente) {
-	sb$1 = cliente;
-	[pend, bajas] = await Promise.all([todo("subir"), todo("bajas")]);
-	window.RNV_CASOS = {
-		raiz: () => raiz,
-		falta: (x) => x && x.media_id && fallas.get(x.media_id) || "Archivo no encontrado",
-		nota: () => `En el servidor (Storage privado; se ve con un link firmado de 10 minutos)${pend.length ? ` · ${pend.length} archivo${pend.length > 1 ? "s" : ""} esperando subir` : ""}`
-	};
-}
-// src/web/casos_local.ts
-async function sha256(b) {
-	const h = await crypto.subtle.digest("SHA-256", b);
-	return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-async function uuidDe(t) {
-	const h = await sha256(new TextEncoder().encode("rnv-media:" + t).buffer);
-	return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
-}
-var items = (f) => Array.isArray(f.imagenes) ? f.imagenes.filter((x) => x && typeof x === "object" && x.archivo) : [];
-function pendientesLocal() {
-	return DB.reduce((n, f) => n + (f ? items(f).filter((x) => !x.media_id).length : 0), 0);
-}
-var sinPermiso = false;
-var esperaPermiso = () => sinPermiso;
-async function subirMediaLocal(sb, enServidor) {
-	const conImagenes = DB.filter((f) => f && f.casoCarpeta && items(f).length && enServidor(f.id));
-	if (!conImagenes.length) {
-		sinPermiso = false;
-		return;
-	}
-	const raiz = await casoInit();
-	sinPermiso = !raiz;
-	if (!raiz) return;
-	let cambio = false;
-	for (const f of conImagenes) {
-		let dir;
-		try {
-			dir = await raiz.getDirectoryHandle(f.casoCarpeta);
-		} catch {
-			continue;
-		}
-		for (const it of items(f)) {
-			let file;
-			try {
-				file = await (await dir.getFileHandle(it.archivo)).getFile();
-			} catch {
-				continue;
-			}
-			if (it.media_id && (it.media_mod === void 0 || file.lastModified <= it.media_mod)) continue;
-			const buf = await file.arrayBuffer();
-			const h = await sha256(buf);
-			const media_id = await uuidDe(f.id + "/" + it.archivo + "/" + h);
-			if (it.media_id === media_id) {
-				it.media_mod = file.lastModified;
-				cambio = true;
-				continue;
-			}
-			const p = nuevoPendiente(f.id, it.archivo, buf.byteLength, h, media_id, (/* @__PURE__ */ new Date()).toISOString());
-			const { error: e1 } = await sb.from("casos_media").insert({
-				id: p.media_id,
-				evento_id: p.evento_id,
-				ruta: p.ruta,
-				tipo: p.tipo,
-				mime: p.mime,
-				bytes: p.bytes,
-				sha256: p.sha256,
-				tapado: true
-			});
-			if (e1 && e1.code !== "23505") throw e1;
-			const { error: e2 } = await sb.storage.from("casos").upload(p.ruta, new Blob([buf], { type: p.mime }), {
-				contentType: p.mime,
-				upsert: false,
-				cacheControl: "0"
-			});
-			if (e2 && !/exists|Duplicate/i.test(e2.message) && e2.statusCode !== "409") throw e2;
-			if (it.media_id) {
-				const { data: s } = await sb.auth.getSession();
-				await sb.from("casos_media").update({
-					borrado_en: (/* @__PURE__ */ new Date()).toISOString(),
-					borrado_por: s.session?.user.id ?? null
-				}).eq("id", it.media_id).is("borrado_en", null);
-			}
-			it.media_id = media_id;
-			it.media_mod = file.lastModified;
-			cambio = true;
-		}
-	}
-	if (cambio) save();
-}
 // src/web/sobre.ts
 var CIFRADO_VALOR = [
 	"casoMotivo",
@@ -23880,7 +23325,7 @@ var priv = null;
 var publica = () => pub;
 var privada = () => priv;
 var IDB$1 = "rnv_identidad";
-function idb$1() {
+function idb$2() {
 	return new Promise((ok, mal) => {
 		const r = indexedDB.open(IDB$1, 1);
 		r.onupgradeneeded = () => r.result.createObjectStore("kv");
@@ -23889,7 +23334,7 @@ function idb$1() {
 	});
 }
 async function kv(modo, clave, valor) {
-	const db = await idb$1();
+	const db = await idb$2();
 	return new Promise((ok, mal) => {
 		const t = db.transaction("kv", modo === "get" ? "readonly" : "readwrite");
 		const q = modo === "get" ? t.objectStore("kv").get(clave) : t.objectStore("kv").put(valor, clave);
@@ -24045,6 +23490,615 @@ function pedirFrase(env) {
 	});
 }
 var sinClaveTexto = () => esc("Juan todavía no creó la clave de la identidad cifrada: las cargas quedan en este teléfono hasta entonces");
+// src/web/jefe.ts
+var sb$2;
+var porPedir = [];
+function guardarPorPedir() {
+	try {
+		localStorage.setItem("rnv_por_pedir", JSON.stringify(porPedir));
+	} catch {}
+}
+var WEB_PUBLICADA = "https://jjmartinartesi-a11y.github.io/registro-neurovascular-web/";
+var linkDe = (clave, href = location.href) => (/^https?:/.test(href) ? href.split("#")[0] : WEB_PUBLICADA) + "#r=" + clave;
+async function llamar(cuerpo) {
+	const { data, error } = await sb$2.functions.invoke("residentes", { body: cuerpo });
+	if (error) {
+		let msg = error.message;
+		try {
+			const j = await error.context?.json();
+			if (j?.error) msg = j.error;
+		} catch {}
+		throw new Error(msg);
+	}
+	return data;
+}
+var campoLink = (userId) => "residenteClave." + userId;
+async function sha256Hex(t) {
+	const h = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)));
+	return Array.from(h, (x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function guardarLink(userId, clave) {
+	const pub = publica();
+	if (!pub) return "No hay clave del jefe en este dispositivo: el link no quedó guardado; copialo ahora.";
+	try {
+		const sobre = await cifrar(clave, campoLink(userId), pub);
+		await llamar({
+			accion: "sobre",
+			user_id: userId,
+			hash: await sha256Hex(clave),
+			sobre
+		});
+		return "";
+	} catch (e) {
+		return "El link no quedó guardado (" + e.message + "): copialo ahora.";
+	}
+}
+async function abrirLink(userId, sobre, priv = privada()) {
+	if (!priv || !esSobre(sobre)) return null;
+	try {
+		const c = await descifrar(sobre, campoLink(userId), priv);
+		return typeof c === "string" ? c : null;
+	} catch {
+		return null;
+	}
+}
+var mensajeLink = (nombre, l) => `Hola ${nombre}: este es tu link personal para cargar en el Registro Neurovascular. Abrilo una vez en tu celular y agregalo a la pantalla de inicio. No lo compartas: entra como vos.\n${l}`;
+function mostrarLink(nombre, clave, aviso) {
+	const l = linkDe(clave);
+	return `<div class="rnv-link"><p><b>Link de ${esc(nombre)}</b> — ${aviso ? esc(aviso) : "queda guardado en la lista, cifrado con tu clave."} Mandáselo sólo a esa persona.</p>
+    <input class="mono" readonly value="${esc(l)}" id="rnvLinkTxt">
+    <div><button type="button" class="btn sm" id="rnvLinkCopiar">Copiar</button>
+    <a class="btn sm primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(mensajeLink(nombre, l))}">Mandar por WhatsApp</a></div></div>`;
+}
+function celdaLink(x, clave) {
+	if (!x.activo || !x.clave) return "—";
+	if (!clave) return x.clave.link_cifrado ? "<span class=\"rnv-nota\">no se puede abrir en este dispositivo</span>" : "<span class=\"rnv-nota\">generado antes del 23/11: hace falta un link nuevo para verlo</span>";
+	const l = linkDe(clave);
+	return `<input class="mono rnv-link-fila" readonly value="${esc(l)}">
+    <div class="rnv-link-acc"><button type="button" class="btn sm" data-copiar="${esc(l)}">Copiar</button>
+    <a class="btn sm ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(mensajeLink(x.nombre, l))}">WhatsApp</a></div>`;
+}
+async function panelResidentes() {
+	const caja = document.createElement("div");
+	caja.id = "rnvCflBox";
+	document.body.appendChild(caja);
+	let extra = "";
+	const pintar = async () => {
+		let filas = "", err = "";
+		try {
+			const r = await llamar({ accion: "listar" });
+			const claves = await Promise.all(r.residentes.map((x) => x.activo && x.clave ? abrirLink(x.user_id, x.clave.link_cifrado) : Promise.resolve(null)));
+			filas = r.residentes.map((x, i) => `<tr data-id="${esc(x.user_id)}" data-n="${esc(x.nombre)}"><td>${esc(x.nombre)}</td>
+        <td>${x.activo ? x.clave ? x.clave.usada_en ? "entró el " + esc(x.clave.usada_en.slice(0, 10)) : "link sin usar" : "sin link" : "dado de baja"}</td>
+        <td class="rnv-link-td">${celdaLink(x, claves[i])}</td>
+        <td><button type="button" class="btn sm ghost" data-a="renombrar">Cambiar nombre</button> ${x.activo ? "<button type=\"button\" class=\"btn sm ghost\" data-a=\"link\">Link nuevo</button> <button type=\"button\" class=\"btn sm ghost\" data-a=\"baja\">Dar de baja</button>" : "<button type=\"button\" class=\"btn sm ghost\" data-a=\"reactivar\">Reactivar</button>"}</td></tr>`).join("");
+		} catch (e) {
+			err = e.message;
+		}
+		caja.innerHTML = `<div class="rnv-cfl"><h3>Residentes</h3>
+      <p class="rnv-nota">Cada residente entra con su link personal, sin contraseña ni códigos. Ve sólo lo que cargó y los
+      pedidos de reperfusión abiertos. Dar de baja corta su acceso; sus cargas quedan. Un residente que vuelve se reactiva
+      con un link nuevo. Los links se guardan cifrados con tu clave: sólo tus dispositivos los abren. Un link nuevo deja sin
+      efecto el anterior, pero quien ya entró sigue con su sesión.</p>
+      ${err ? `<p class="rnv-err">${esc(err)}</p>` : filas ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Link</th><th></th></tr></thead><tbody>${filas}</tbody></table>` : "<p>Todavía no hay residentes.</p>"}
+      ${extra}
+      <form id="rnvResAlta" class="rnv-res-alta"><input id="rnvResNombre" placeholder="Nombre del residente" minlength="3" required>
+      <button class="btn sm primary" type="submit">Dar de alta</button></form>
+      <button type="button" class="btn sm" id="rnvCflCerrar">Cerrar</button></div>`;
+		caja.querySelector("#rnvCflCerrar").addEventListener("click", () => caja.remove());
+		const copiar = async (v, el) => {
+			try {
+				await navigator.clipboard.writeText(v);
+				toast("Link copiado");
+			} catch {
+				el?.select();
+			}
+		};
+		caja.querySelector("#rnvLinkCopiar")?.addEventListener("click", () => {
+			const el = document.getElementById("rnvLinkTxt");
+			copiar(el.value, el);
+		});
+		caja.querySelectorAll("button[data-copiar]").forEach((b) => b.addEventListener("click", () => void copiar(b.dataset.copiar, b.closest("td")?.querySelector("input"))));
+		caja.querySelector("#rnvResAlta").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const nombre = document.getElementById("rnvResNombre").value.trim();
+			try {
+				const r = await llamar({
+					accion: "alta",
+					nombre
+				});
+				extra = mostrarLink(nombre, String(r.clave), await guardarLink(String(r.user_id), String(r.clave)));
+			} catch (e) {
+				extra = `<p class="rnv-err">${esc(e.message)}</p>`;
+			}
+			pintar();
+		});
+		caja.querySelectorAll("button[data-a]").forEach((b) => b.addEventListener("click", async () => {
+			const tr = b.closest("tr"), id = tr.dataset.id, nombre = tr.dataset.n;
+			const a = b.dataset.a;
+			if (a === "baja" && !confirm(`¿Dar de baja a ${nombre}? Su link deja de servir y su sesión se cierra.`)) return;
+			if (a === "link" && !confirm(`¿Link nuevo para ${nombre}? El anterior deja de servir (si ya entró, sigue con su sesión).`)) return;
+			let nuevo = "";
+			if (a === "renombrar") {
+				nuevo = (prompt("Nombre del residente", nombre) || "").trim();
+				if (nuevo.length < 3 || nuevo === nombre) return;
+			}
+			try {
+				const r = await llamar({
+					accion: a,
+					user_id: id,
+					...nuevo ? { nombre: nuevo } : {}
+				});
+				extra = a === "link" || a === "reactivar" ? mostrarLink(nombre, String(r.clave), await guardarLink(id, String(r.clave))) : a === "renombrar" ? `<p>Ahora se llama ${esc(nuevo)}.</p>` : `<p>${esc(nombre)} quedó dado de baja.</p>`;
+			} catch (e) {
+				extra = `<p class="rnv-err">${esc(e.message)}</p>`;
+			}
+			pintar();
+		}));
+	};
+	await pintar();
+}
+function marca(id, rp) {
+	const q = DB.find((x) => x && x.id === id);
+	if (q) {
+		q.repPedido = rp;
+		save();
+	}
+	if (draft && editId === id) draft.repPedido = rp;
+}
+function pedir(p) {
+	if (!porPedir.includes(p.id)) porPedir.push(p.id);
+	guardarPorPedir();
+	marca(p.id, {
+		estado: "pendiente",
+		pedido: nowISO(),
+		tl: p.trombolisis === true,
+		te: p.trombectomia === true
+	});
+	toast("Pedido a residentes: completar reperfusión de Nº " + (p.nOrden ?? "—") + " — sale con la sincronización");
+	return Promise.resolve(true);
+}
+async function sincronizarPedidos(enServidor) {
+	for (const id of [...porPedir]) {
+		if (!enServidor(id)) continue;
+		const { data: ya } = await sb$2.from("pedidos_reperfusion").select("id").eq("evento_id", id).in("estado", ["abierto", "parcial"]).is("borrado_en", null);
+		const q = DB.find((x) => x && x.id === id);
+		if (!ya?.length) {
+			const { error } = await sb$2.from("pedidos_reperfusion").insert({
+				evento_id: id,
+				iniciales: iniciales(q?.nombre) || null
+			});
+			if (error) throw error;
+		}
+		porPedir.splice(porPedir.indexOf(id), 1);
+		guardarPorPedir();
+		const p = DB.find((x) => x && x.id === id);
+		if (p) repCardWeb(p);
+	}
+	const { data } = await sb$2.from("pedidos_reperfusion").select("evento_id, estado, modificado_en").is("borrado_en", null).order("creado_en");
+	for (const r of data || []) {
+		const p = DB.find((x) => x && x.id === r.evento_id);
+		const est = r.estado === "abierto" ? "pendiente" : r.estado;
+		if (p?.repPedido && p.repPedido.estado !== est && p.repPedido.estado !== "error") marca(p.id, {
+			...p.repPedido,
+			estado: est,
+			resp: r.modificado_en
+		});
+	}
+}
+function repCardWeb(p) {
+	const old = document.getElementById("repCard");
+	if (old) old.remove();
+	const c = document.createElement("div");
+	c.id = "repCard";
+	c.className = "rnv-res-card rnv-flota";
+	c.innerHTML = `<b>Pedido de reperfusión creado</b><div>Nº ${esc(String(p.nOrden ?? "—"))} ya les aparece a los residentes en «Pedidos de reperfusión». ¿Les avisás al grupo?</div>
+    <div><button type="button" class="btn sm primary" id="repCardWa">Avisar por WhatsApp</button> <button type="button" class="btn sm ghost" id="repCardNo">Ahora no</button></div>`;
+	document.body.appendChild(c);
+	c.querySelector("#repCardWa").addEventListener("click", () => {
+		repAvisarWa(p);
+		c.remove();
+	});
+	c.querySelector("#repCardNo").addEventListener("click", () => c.remove());
+}
+function iniciar$1(cliente) {
+	sb$2 = cliente;
+	const w0 = window;
+	const vCfgApp = w0.vCfg;
+	w0.vCfg = () => {
+		vCfgApp();
+		const head = document.querySelector("#main .head");
+		if (!head || document.getElementById("rnvCfgRes")) return;
+		const c = document.createElement("div");
+		c.className = "card";
+		c.id = "rnvCfgRes";
+		c.style.cssText = "max-width:760px;margin-bottom:18px";
+		c.innerHTML = "<h3>Residentes</h3><div class=\"hint\">Quiénes cargan desde el celular: alta (con su link personal), cambio de nombre, link nuevo, baja y reactivación.</div><button type=\"button\" class=\"btn\" id=\"rnvCfgResBtn\">Administrar residentes</button>";
+		head.after(c);
+		c.querySelector("#rnvCfgResBtn").addEventListener("click", () => void panelResidentes());
+	};
+	if (view === "cfg") w0.vCfg && w0.vCfg();
+	try {
+		porPedir = JSON.parse(localStorage.getItem("rnv_por_pedir") || "[]");
+	} catch {
+		porPedir = [];
+	}
+	const w = window;
+	w.repPedir = pedir;
+	w.repWaTexto = (p) => {
+		const f = repFaltanApp(p).map((k) => REP_LAB_APP[k] || k);
+		const tr = [p.trombolisis === true ? "trombólisis" : "", p.trombectomia === true ? "trombectomía" : ""].filter(Boolean).join(" + ");
+		return "*** Unidad de Stroke - CUENTA 350.000 ***\n⏱️ *Pedido de reperfusión*\nCompletar los tiempos del Nº " + (p.nOrden ?? "—") + (tr ? " (" + tr + ")" : "") + (f.length ? "\nFalta: " + f.join(", ") : "") + "\nEntrá con tu link personal → «Pedidos de reperfusión».";
+	};
+	w.repEstadoTxt = (rp) => !rp ? "" : rp.estado === "error" ? "no se pudo pedir (" + (rp.msg || "error") + ")" : rp.estado === "completo" ? "completado por los residentes" : rp.estado === "parcial" ? "carga parcial de los residentes" : "pendiente para los residentes";
+}
+var MIME = {
+	jpg: "image/jpeg",
+	png: "image/png",
+	webp: "image/webp",
+	mp4: "video/mp4",
+	webm: "video/webm"
+};
+var extDe = (archivo) => (String(archivo).match(/\.([a-z0-9]+)$/i)?.[1] || "").toLowerCase();
+var rutaDe = (evento_id, media_id, ext) => `eventos/${evento_id}/${media_id}.${ext}`;
+function nuevoPendiente(evento_id, archivo, bytes, sha256, media_id, ahora) {
+	const ext = extDe(archivo);
+	const mime = MIME[ext];
+	if (!mime) throw new Error(`tipo de archivo no permitido (.${ext}): sólo JPEG, PNG, WebP, MP4 o WebM`);
+	if (bytes > 52428800) throw new Error(`pesa ${(bytes / 1048576).toFixed(1).replace(".", ",")} MB: el máximo es 50 MB`);
+	if (!/^[A-Za-z0-9_-]+$/.test(evento_id)) throw new Error("la ficha tiene un id que no sirve como ruta");
+	return {
+		media_id,
+		evento_id,
+		archivo,
+		ruta: rutaDe(evento_id, media_id, ext),
+		mime,
+		tipo: mime.startsWith("video/") ? "video" : "imagen",
+		bytes,
+		sha256,
+		creado: ahora
+	};
+}
+var items$1 = (f) => f && Array.isArray(f.imagenes) ? f.imagenes : [];
+function anotar$1(db, borrador, pendientes) {
+	const ultimo = /* @__PURE__ */ new Map();
+	for (const p of pendientes) {
+		if (p.anotado) continue;
+		const k = p.evento_id + "\0" + p.archivo;
+		const u = ultimo.get(k);
+		if (!u || u.creado <= p.creado) ultimo.set(k, p);
+	}
+	const reemplazados = /* @__PURE__ */ new Set(), anotados = /* @__PURE__ */ new Set();
+	let cambio = false;
+	for (const f of [...db, borrador]) {
+		if (!f || !f.id) continue;
+		for (const it of items$1(f)) {
+			const p = it && it.archivo ? ultimo.get(f.id + "\0" + it.archivo) : void 0;
+			if (!p) continue;
+			anotados.add(p.media_id);
+			if (it.media_id === p.media_id) continue;
+			if (it.media_id) reemplazados.add(it.media_id);
+			it.media_id = p.media_id;
+			cambio = true;
+		}
+	}
+	for (const p of pendientes) if (!p.anotado && !anotados.has(p.media_id) && ultimo.get(p.evento_id + "\0" + p.archivo) !== p) reemplazados.add(p.media_id);
+	for (const id of anotados) reemplazados.delete(id);
+	return {
+		cambio,
+		reemplazados: [...reemplazados],
+		anotados: [...anotados]
+	};
+}
+function itemDe(f, archivo) {
+	return items$1(f).find((it) => it && it.archivo === archivo);
+}
+// src/web/casos.ts
+var FIRMA_S = 600;
+var sb$1;
+var pend = [];
+var bajas = [];
+var bajados = /* @__PURE__ */ new Map();
+var fallas = /* @__PURE__ */ new Map();
+function idb$1() {
+	return new Promise((ok, mal) => {
+		const r = indexedDB.open("rnv_media", 1);
+		r.onupgradeneeded = () => {
+			r.result.createObjectStore("subir", { keyPath: "media_id" });
+			r.result.createObjectStore("bajas", { keyPath: "media_id" });
+		};
+		r.onsuccess = () => ok(r.result);
+		r.onerror = () => mal(r.error);
+	});
+}
+async function tx(almacen, f) {
+	const db = await idb$1();
+	await new Promise((ok, mal) => {
+		const t = db.transaction(almacen, "readwrite");
+		f(t.objectStore(almacen));
+		t.oncomplete = () => ok();
+		t.onerror = () => mal(t.error);
+	});
+}
+async function todo(almacen) {
+	const db = await idb$1();
+	return new Promise((ok, mal) => {
+		const q = db.transaction(almacen).objectStore(almacen).getAll();
+		q.onsuccess = () => ok(q.result);
+		q.onerror = () => mal(q.error);
+	});
+}
+async function sha256$1(b) {
+	const h = await crypto.subtle.digest("SHA-256", await b.arrayBuffer());
+	return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+function noEsta() {
+	return new DOMException("no está", "NotFoundError");
+}
+function fichaActual() {
+	return editId ? DB.find((f) => f && f.id === editId) || null : null;
+}
+async function dar(media_id) {
+	const p = pend.find((x) => x.media_id === media_id);
+	if (p) return p.blob;
+	const ya = bajados.get(media_id);
+	if (ya) return ya;
+	if (!navigator.onLine) {
+		fallas.set(media_id, "Sin conexión: la imagen está en el servidor");
+		throw noEsta();
+	}
+	const { data: fila, error } = await sb$1.from("casos_media").select("ruta, sha256").eq("id", media_id).maybeSingle();
+	if (error || !fila) {
+		fallas.set(media_id, error ? "No se pudo consultar el servidor" : "Todavía no está en el servidor");
+		throw noEsta();
+	}
+	const { data: firma, error: e2 } = await sb$1.storage.from("casos").createSignedUrl(fila.ruta, FIRMA_S);
+	if (e2 || !firma) {
+		fallas.set(media_id, "El servidor no entregó el archivo");
+		throw noEsta();
+	}
+	let r;
+	try {
+		r = await fetch(firma.signedUrl, { cache: "no-store" });
+	} catch {
+		fallas.set(media_id, "Sin conexión con el servidor");
+		throw noEsta();
+	}
+	if (!r.ok) {
+		fallas.set(media_id, `El servidor no entregó el archivo (HTTP ${r.status})`);
+		throw noEsta();
+	}
+	const b = await r.blob();
+	if (await sha256$1(b) !== fila.sha256) {
+		fallas.set(media_id, "Lo bajado no coincide con lo subido (sha256): no se muestra");
+		throw noEsta();
+	}
+	bajados.set(media_id, b);
+	fallas.delete(media_id);
+	return b;
+}
+function archivoHandle(nombre, ev) {
+	return {
+		kind: "file",
+		name: nombre,
+		async getFile() {
+			const it = itemDe(draft, nombre);
+			const id = [...pend].reverse().find((x) => x.evento_id === ev && x.archivo === nombre && (!it?.media_id || x.media_id === it.media_id))?.media_id || it?.media_id;
+			if (!id) throw noEsta();
+			const b = await dar(id);
+			return new File([b], nombre, { type: b.type });
+		},
+		async createWritable() {
+			const partes = [];
+			return {
+				async write(x) {
+					partes.push(x);
+				},
+				async close() {
+					const blob = new Blob(partes, { type: partes[0] instanceof Blob ? partes[0].type : "" });
+					const p = nuevoPendiente(ev, nombre, blob.size, await sha256$1(blob), crypto.randomUUID(), (/* @__PURE__ */ new Date()).toISOString());
+					const g = {
+						...p,
+						blob: blob.type === p.mime ? blob : new Blob([blob], { type: p.mime })
+					};
+					await tx("subir", (s) => s.put(g));
+					pend.push(g);
+				}
+			};
+		}
+	};
+}
+function carpeta(nombre) {
+	const f = fichaActual();
+	if (!f || draft.casoCarpeta && draft.casoCarpeta !== nombre) throw noEsta();
+	const ev = f.id;
+	const existe = (n) => !!itemDe(draft, n) || pend.some((x) => x.evento_id === ev && x.archivo === n);
+	return {
+		kind: "directory",
+		name: nombre,
+		async getFileHandle(n, o) {
+			if (!o?.create && !existe(n)) throw noEsta();
+			return archivoHandle(n, ev);
+		},
+		async removeEntry(n) {
+			const it = itemDe(draft, n);
+			if (it?.media_id) await quitar(String(it.media_id));
+		}
+	};
+}
+var raiz = {
+	kind: "directory",
+	name: "casos",
+	async getDirectoryHandle(n) {
+		return carpeta(n);
+	},
+	async queryPermission() {
+		return "granted";
+	},
+	async requestPermission() {
+		return "granted";
+	},
+	values() {
+		return { [Symbol.asyncIterator]: () => ({ next: async () => ({
+			done: true,
+			value: void 0
+		}) }) };
+	}
+};
+async function quitar(media_id) {
+	const i = pend.findIndex((x) => x.media_id === media_id);
+	if (i >= 0) {
+		pend.splice(i, 1);
+		await tx("subir", (s) => s.delete(media_id));
+		return;
+	}
+	if (bajas.some((b) => b.media_id === media_id)) return;
+	bajas.push({ media_id });
+	await tx("bajas", (s) => s.put({ media_id }));
+}
+async function anotarFichas() {
+	const r = anotar$1(DB, draft, pend);
+	for (const id of r.reemplazados) await quitar(id);
+	for (const p of pend) if (r.anotados.includes(p.media_id) && !p.anotado) {
+		p.anotado = true;
+		await tx("subir", (s) => s.put(p));
+	}
+	return r.cambio;
+}
+var pendientes = () => pend.length + bajas.length;
+async function subirMedia(enServidor) {
+	for (const p of [...pend]) {
+		if (!p.anotado || !enServidor(p.evento_id)) continue;
+		const { blob, anotado: _a, archivo: _n, creado: _c, ...fila } = p;
+		const { error: e1 } = await sb$1.from("casos_media").insert({
+			id: fila.media_id,
+			evento_id: fila.evento_id,
+			ruta: fila.ruta,
+			tipo: fila.tipo,
+			mime: fila.mime,
+			bytes: fila.bytes,
+			sha256: fila.sha256,
+			tapado: true
+		});
+		if (e1 && e1.code !== "23505") throw e1;
+		const { error: e2 } = await sb$1.storage.from("casos").upload(fila.ruta, blob, {
+			contentType: fila.mime,
+			upsert: false,
+			cacheControl: "0"
+		});
+		if (e2 && !/exists|Duplicate/i.test(e2.message) && e2.statusCode !== "409") throw e2;
+		bajados.set(p.media_id, blob);
+		pend.splice(pend.indexOf(p), 1);
+		await tx("subir", (s) => s.delete(p.media_id));
+	}
+	for (const b of [...bajas]) {
+		const { data: s } = await sb$1.auth.getSession();
+		const { error } = await sb$1.from("casos_media").update({
+			borrado_en: (/* @__PURE__ */ new Date()).toISOString(),
+			borrado_por: s.session?.user.id ?? null
+		}).eq("id", b.media_id).is("borrado_en", null);
+		if (error) throw error;
+		bajas.splice(bajas.indexOf(b), 1);
+		await tx("bajas", (st) => st.delete(b.media_id));
+	}
+}
+async function instalar(cliente) {
+	sb$1 = cliente;
+	[pend, bajas] = await Promise.all([todo("subir"), todo("bajas")]);
+	window.RNV_CASOS = {
+		raiz: () => raiz,
+		falta: (x) => x && x.media_id && fallas.get(x.media_id) || "Archivo no encontrado",
+		nota: () => `En el servidor (Storage privado; se ve con un link firmado de 10 minutos)${pend.length ? ` · ${pend.length} archivo${pend.length > 1 ? "s" : ""} esperando subir` : ""}`
+	};
+}
+// src/web/casos_local.ts
+async function sha256(b) {
+	const h = await crypto.subtle.digest("SHA-256", b);
+	return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function uuidDe(t) {
+	const h = await sha256(new TextEncoder().encode("rnv-media:" + t).buffer);
+	return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+var items = (f) => Array.isArray(f.imagenes) ? f.imagenes.filter((x) => x && typeof x === "object" && x.archivo) : [];
+function pendientesLocal() {
+	return DB.reduce((n, f) => n + (f ? items(f).filter((x) => !x.media_id).length : 0), 0);
+}
+var sinPermiso = false;
+var esperaPermiso = () => sinPermiso;
+async function subirMediaLocal(sb, enServidor, marca = () => {}) {
+	const conImagenes = DB.filter((f) => f && f.casoCarpeta && items(f).length && enServidor(f.id));
+	if (!conImagenes.length) {
+		sinPermiso = false;
+		return;
+	}
+	marca("casoInit");
+	const raiz = await casoInit(marca);
+	sinPermiso = !raiz;
+	marca(raiz ? "con permiso" : "sin permiso");
+	if (!raiz) return;
+	let nf = 0;
+	let cambio = false;
+	for (const f of conImagenes) {
+		nf++;
+		marca("carpeta " + nf + "/" + conImagenes.length);
+		let dir;
+		try {
+			dir = await raiz.getDirectoryHandle(f.casoCarpeta);
+		} catch {
+			continue;
+		}
+		let ni = 0;
+		for (const it of items(f)) {
+			marca("carpeta " + nf + "/" + conImagenes.length + " · archivo " + ++ni + "/" + items(f).length);
+			let file;
+			try {
+				file = await (await dir.getFileHandle(it.archivo)).getFile();
+			} catch {
+				continue;
+			}
+			if (it.media_id && (it.media_mod === void 0 || file.lastModified <= it.media_mod)) continue;
+			const buf = await file.arrayBuffer();
+			const h = await sha256(buf);
+			const media_id = await uuidDe(f.id + "/" + it.archivo + "/" + h);
+			if (it.media_id === media_id) {
+				it.media_mod = file.lastModified;
+				cambio = true;
+				continue;
+			}
+			const p = nuevoPendiente(f.id, it.archivo, buf.byteLength, h, media_id, (/* @__PURE__ */ new Date()).toISOString());
+			const { error: e1 } = await sb.from("casos_media").insert({
+				id: p.media_id,
+				evento_id: p.evento_id,
+				ruta: p.ruta,
+				tipo: p.tipo,
+				mime: p.mime,
+				bytes: p.bytes,
+				sha256: p.sha256,
+				tapado: true
+			});
+			if (e1 && e1.code !== "23505") throw e1;
+			const { error: e2 } = await sb.storage.from("casos").upload(p.ruta, new Blob([buf], { type: p.mime }), {
+				contentType: p.mime,
+				upsert: false,
+				cacheControl: "0"
+			});
+			if (e2 && !/exists|Duplicate/i.test(e2.message) && e2.statusCode !== "409") throw e2;
+			if (it.media_id) {
+				const { data: s } = await sb.auth.getSession();
+				await sb.from("casos_media").update({
+					borrado_en: (/* @__PURE__ */ new Date()).toISOString(),
+					borrado_por: s.session?.user.id ?? null
+				}).eq("id", it.media_id).is("borrado_en", null);
+			}
+			it.media_id = media_id;
+			it.media_mod = file.lastModified;
+			cambio = true;
+		}
+	}
+	marca("fin" + (cambio ? " (guarda)" : ""));
+	if (cambio) save();
+}
 // src/web/sync.ts
 var IDB = "rnv_sync";
 var sb;
@@ -24421,6 +24475,31 @@ function describir(e) {
 	if (x && (x.status === 401 || x.code === "PGRST301")) return "La sesión venció: volvé a entrar";
 	return "Error del servidor" + (x?.code ? ` (${x.code})` : x?.status ? ` (HTTP ${x.status})` : "") + (x?.message ? ": " + x.message.slice(0, 120) : "");
 }
+var DIAG = "registro_neurovascular_sync_diag";
+var diag = {
+	inicio: "",
+	paso: "",
+	en: "",
+	ms: {}
+};
+function anotar(paso) {
+	diag.paso = paso;
+	diag.en = (/* @__PURE__ */ new Date()).toISOString();
+	try {
+		localStorage.setItem(DIAG, JSON.stringify(diag));
+	} catch {}
+}
+async function medido(paso, f) {
+	const t = performance.now();
+	anotar(paso);
+	try {
+		return await f();
+	} finally {
+		diag.ms[paso] = Math.round(performance.now() - t);
+	}
+}
+var mediaEnCurso = null;
+var MEDIA_TOPE_MS = 45e3;
 async function sincronizar() {
 	if (!listo || !navigator.onLine) {
 		pintar();
@@ -24428,21 +24507,43 @@ async function sincronizar() {
 	}
 	await navigator.locks.request("rnv-sync", { ifAvailable: true }, async (lock) => {
 		if (!lock) return;
+		diag = {
+			inicio: (/* @__PURE__ */ new Date()).toISOString(),
+			paso: "",
+			en: "",
+			ms: {},
+			media: diag.media
+		};
 		try {
-			await subir();
+			await medido("subir", subir);
 			const enServidor = (id) => !!est.sombra[id] && !est.sombra[id].__borrada && !est.cola.some((o) => o.fila_id === id);
-			if (!LOCAL) await subirMedia(enServidor);
-			else await subirMediaLocal(sb, enServidor);
-			if (rol === "jefe") await sincronizarPedidos(enServidor);
-			await bajar();
-			if (rol === "jefe") await cargasResidentes();
-			if (rol === "residente") await refrescar();
+			if (rol === "jefe") await medido("pedidos", () => sincronizarPedidos(enServidor));
+			await medido("bajar", bajar);
+			if (rol === "jefe") await medido("validacion", cargasResidentes);
+			if (rol === "residente") await medido("refrescar", () => refrescar());
+			const nueva = !mediaEnCurso;
+			if (!mediaEnCurso) {
+				diag.media = "empezó " + (/* @__PURE__ */ new Date()).toISOString();
+				mediaEnCurso = (LOCAL ? subirMediaLocal(sb, enServidor, (x) => {
+					diag.media = x + " · " + (/* @__PURE__ */ new Date()).toISOString();
+					anotar("imagenes");
+				}) : subirMedia(enServidor)).then(() => {
+					diag.media = "terminó " + (/* @__PURE__ */ new Date()).toISOString();
+					anotar(diag.paso);
+				}).finally(() => {
+					mediaEnCurso = null;
+				});
+			}
+			const tope = new Promise((ok) => setTimeout(() => ok("tope"), MEDIA_TOPE_MS));
+			if ((nueva ? await medido("imagenes", () => Promise.race([mediaEnCurso || Promise.resolve(), tope])) : "tope") === "tope" && !/^sigue en curso/.test(diag.media || "")) diag.media = "sigue en curso (tope de 45 s) · " + diag.media;
 			ultimoError = "";
 			errorDeRed = false;
 		} catch (e) {
 			ultimoError = describir(e);
 			errorDeRed = esDeRed(e);
 		}
+		diag.fin = (/* @__PURE__ */ new Date()).toISOString();
+		anotar("fin");
 		pintar();
 	});
 }

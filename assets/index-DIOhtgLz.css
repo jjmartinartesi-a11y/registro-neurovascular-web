@@ -34,6 +34,10 @@
 .rnv-res-alta input,.rnv-link input{flex:1 1 220px;box-sizing:border-box;font:inherit;padding:6px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--ink)}
 .rnv-link{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:var(--radius-sm);background:var(--warn-wash)}
 .rnv-link p{margin:0;font-size:13px}
+.rnv-link-td{min-width:220px;max-width:340px}
+.rnv-link-fila{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--ink)}
+.rnv-link-acc{display:flex;gap:6px;margin-top:4px}
+@media (max-width:600px){.rnv-cfl table,.rnv-cfl tbody,.rnv-cfl tr,.rnv-cfl td{display:block}.rnv-cfl thead{display:none}.rnv-link-td{min-width:0;max-width:none}.rnv-cfl tr{border-bottom:1px solid var(--border);padding:6px 0}.rnv-cfl td{border:0}}
 body.rnv-sin-jefe .rnv-solo-jefe{display:none}
 
 /* Bloque F: la vista del residente. Sin menú lateral: arriba, quién es y tres pestañas. */

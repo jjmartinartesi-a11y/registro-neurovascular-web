@@ -23014,6 +23014,7 @@ function diferencias(sombra, db, elegible, ahora, nuevoId, permitido) {
 		for (const k of /* @__PURE__ */ new Set([...Object.keys(f), ...Object.keys(prev)])) {
 			if (k === "__borrada" || !ok(k, f)) continue;
 			if (permitido && !(k in prev) && vacio$1(f[k])) continue;
+			if (k in prev && vacio$1(f[k]) && vacio$1(prev[k])) continue;
 			if (!igual(f[k], prev[k])) campos[k] = {
 				nuevo: copia(f[k] ?? null),
 				base: copia(prev[k] ?? null)
